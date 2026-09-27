@@ -3,9 +3,9 @@ import QtQuick.Window
 import "theme"
 import "layouts"
 import "dialogs"
-import "pages"
 
-// 应用骨架: 无边框窗口 + 自定义标题栏 + 侧边导航 + 内容区
+// 应用骨架: main.qml 只负责模块布局与跨模块接线 (各模块内容归各模块自己管理):
+//   标题栏 / 侧栏(条目自管) / 内容区(页面自管) / (播放条待建) + 顶层弹窗
 // 无边框由 C++ DWM 方案实现 (main.cpp applyFrameless): 窗口保留原生样式, 标题栏被挤出可视区,
 // 因此 QML 不设 FramelessWindowHint; visible:false 由 C++ 应用 DWM 后统一 show
 Window {
@@ -20,7 +20,7 @@ Window {
         id: titleBar
         anchors { top: parent.top; left: parent.left; right: parent.right }
         appWindow: win
-        onSettingsClicked: { /* 页面系统就绪后切设置页 */ }
+        onSettingsClicked: { /* 设置页就绪后接入 */ }
         onLoginRequested: authDialog.open("login")
     }
 
@@ -31,33 +31,15 @@ Window {
             id: sideBar
             width: 160
             height: parent.height
-            selectedIndex: 0   // 默认选中"推荐"
-            model: ListModel {
-                ListElement { kind: "item"; page: 0; animated: true; text: "推荐" }   // 声纹动画(SVG无法自带动画, 只能用QML); page=View 中页面下标
-                ListElement { kind: "item"; page: 1; icon: "qrc:/qt/qml/cloudsong/qml/assets/icons/sidebar/mode.svg"; text: "听歌模式" }
-                ListElement { kind: "header"; headerText: "我的音乐" }
-                ListElement { kind: "item"; page: 2; icon: "qrc:/qt/qml/cloudsong/qml/assets/icons/sidebar/fav.svg"; text: "我喜欢的音乐" }
-                ListElement { kind: "item"; page: 3; icon: "qrc:/qt/qml/cloudsong/qml/assets/icons/sidebar/recent.svg"; text: "历史播放" }
-                ListElement { kind: "header"; headerText: "创建的歌单"; headerBtn: true }   // 小标签, 右侧小＋按钮; 自建歌单动态列在其下
-                ListElement { kind: "item"; page: 4; icon: "qrc:/qt/qml/cloudsong/qml/assets/icons/sidebar/playlist.svg"; text: "我的歌单" }   // 默认歌单条目
-                // 服务项(云漫游/歌单迁移/插件)暂不占侧栏, 之后放到不显眼处(如设置页)
-                ListElement { kind: "spacer" }   // 弹簧沉底: 选项靠上, 下方留白
-            }
-            onPageSwitchRequested: function(page) { view.currentIndex = page }   // 选中态 SideBar 自管
+            onPageSwitchRequested: function(page) { view.currentIndex = page }
             onCreateRequested: { /* 歌单系统就绪后新建歌单 */ }
         }
 
-        // 内容显示区 (页面挂载点: 子项即页面, 由侧栏 pageSwitchRequested 驱动切换)
+        // 内容显示区 (页面挂载点)
         View {
             id: view
             width: parent.width - sideBar.width
             height: parent.height
-
-            PlaceholderPage { title: "推荐" }
-            PlaceholderPage { title: "听歌模式" }
-            PlaceholderPage { title: "我喜欢的音乐" }
-            PlaceholderPage { title: "历史播放" }
-            PlaceholderPage { title: "我的歌单" }
         }
     }
 

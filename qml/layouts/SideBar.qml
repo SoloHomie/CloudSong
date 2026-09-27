@@ -14,7 +14,18 @@ Rectangle {
     color: "transparent"   // 原: AppCfg.materialIndex===0 ? Theme.neutral0 : transparent (materialIndex 产品专属已剥离)
 
     property int selectedIndex: 0
-    property var model: []   // ListModel, 角色: kind("header"=分组标签/headerText/headerBtn右侧小＋, "spacer"=弹性占位, "item"=导航项/icon/text/badge/badgeText/page(页面下标), "action"=底部操作按钮/icon/text)
+    // 导航内容归本模块管理 (main.qml 只负责布局, 不注入条目); 角色: kind("header"=分组标签/headerText/headerBtn右侧小＋, "spacer"=弹性占位, "item"=导航项/icon/text/badge/badgeText/page(页面下标), "action"=底部操作按钮/icon/text)
+    property var model: ListModel {
+        ListElement { kind: "item"; page: 0; animated: true; text: "推荐" }   // 声纹动画(SVG无法自带动画, 只能用QML); page=View 中页面下标
+        ListElement { kind: "item"; page: 1; icon: "qrc:/qt/qml/cloudsong/qml/assets/icons/sidebar/mode.svg"; text: "听歌模式" }
+        ListElement { kind: "header"; headerText: "我的音乐" }
+        ListElement { kind: "item"; page: 2; icon: "qrc:/qt/qml/cloudsong/qml/assets/icons/sidebar/fav.svg"; text: "我喜欢的音乐" }
+        ListElement { kind: "item"; page: 3; icon: "qrc:/qt/qml/cloudsong/qml/assets/icons/sidebar/recent.svg"; text: "历史播放" }
+        ListElement { kind: "header"; headerText: "创建的歌单"; headerBtn: true }   // 小标签, 右侧小＋按钮; 自建歌单动态列在其下
+        ListElement { kind: "item"; page: 4; icon: "qrc:/qt/qml/cloudsong/qml/assets/icons/sidebar/playlist.svg"; text: "我的歌单" }   // 默认歌单条目
+        // 服务项(云漫游/歌单迁移/插件)暂不占侧栏, 之后放到不显眼处(如设置页)
+        ListElement { kind: "spacer" }   // 弹簧沉底: 选项靠上, 下方留白
+    }
     signal pageSwitchRequested(int page)
     signal createRequested()
 
