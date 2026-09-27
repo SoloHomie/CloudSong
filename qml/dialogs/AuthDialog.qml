@@ -133,7 +133,8 @@ Popup {
                 visible: !root._isReset
                 width: 26; height: 26; radius: 6
                 anchors.right: parent.right; anchors.rightMargin: 14
-                anchors.verticalCenter: parent.verticalCenter
+                anchors.top: parent.top; anchors.topMargin: 14
+                //anchors.verticalCenter: parent.verticalCenter
                 color: closeAuthMouse.containsMouse ? Theme.hover_bg : "transparent"
                 Text {
                     anchors.centerIn: parent
