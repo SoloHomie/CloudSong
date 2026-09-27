@@ -1,0 +1,11 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# 构建产物 (x64=输出目录, CloudSong/=中间产物 IntDir)
+x64/
+CloudSong/
+
+# 日志
+*.log
