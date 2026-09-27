@@ -1,25 +1,97 @@
 import QtQuick
-import QtQuick.Layouts
 import "../theme"
 import "../pages"
 
-/// 内容显示区: 页面挂载点 (四大板块之一; 页面内容归本模块管理, main.qml 只传 currentIndex)
+// ═══════════════════════════════════════════════════════════════
+//  View — 内容显示区: 页面栈 (四大板块之一)
+//
+//  侧栏 5+2 主页面 = 根页面 (switchRoot); 详情/搜索/设置等 = push 入栈;
+//  TitleBar 后退/前进 绑定 canGoBack/canGoForward。
+//
+//  页面契约: 每页有 params 属性与 navigate(name, params) 信号;
+//  特殊名: "$back"=返回上一页, "$auth"=请求打开登录弹窗(转发 authRequested)。
+//  过渡动画与栈持久化待接 (当前即时切换)。
+// ═══════════════════════════════════════════════════════════════
 Rectangle {
     id: view
     color: Theme.bg_canvas
 
-    property int currentIndex: 0
+    property var stack: []
+    property int cursor: -1
+    property var rootNames: ["recommend", "listen", "favorite", "history", "sheets", "local", "downloads"]
 
-    StackLayout {
-        id: pageStack
-        anchors.fill: parent
-        currentIndex: view.currentIndex
+    readonly property bool canGoBack: cursor > 0
+    readonly property bool canGoForward: cursor < stack.length - 1
+    signal authRequested()
 
-        // 占位页逐个替换为真实页面
-        PlaceholderPage { title: "推荐" }
-        PlaceholderPage { title: "听歌模式" }
-        PlaceholderPage { title: "我喜欢的音乐" }
-        PlaceholderPage { title: "历史播放" }
-        PlaceholderPage { title: "我的歌单" }
+    // ── 导航 ──
+    function switchRoot(idx) {
+        stack = [{ name: rootNames[idx], params: {} }]
+        cursor = 0
     }
+    function push(name, params) {
+        if (name === "$back") { back(); return }
+        if (name === "$auth") { authRequested(); return }
+        var arr = stack.slice(0, cursor + 1)
+        arr.push({ name: name, params: params !== undefined ? params : {} })
+        stack = arr
+        cursor = arr.length - 1
+    }
+    function back() { if (cursor > 0) cursor-- }
+    function forward() { if (cursor < stack.length - 1) cursor++ }
+
+    function componentFor(name) {
+        switch (name) {
+        case "recommend":  return recommendComp
+        case "listen":     return listenComp
+        case "favorite":   return favoriteComp
+        case "history":    return historyComp
+        case "sheets":     return sheetsComp
+        case "local":      return localComp
+        case "downloads":  return downloadsComp
+        case "search":     return searchComp
+        case "sheet":      return sheetComp
+        case "album":      return albumComp
+        case "artist":     return artistComp
+        case "settings":   return settingsComp
+        case "theme":      return themeComp
+        case "plugins":    return pluginsComp
+        case "roam":       return roamComp
+        case "migrate":    return migrateComp
+        }
+        return recommendComp
+    }
+
+    Loader {
+        id: pageLoader
+        anchors.fill: parent
+        sourceComponent: view.cursor >= 0 ? view.componentFor(view.stack[view.cursor].name) : null
+        onLoaded: pageLoader.item.navigate.connect(view.push)
+    }
+
+    onCursorChanged: Qt.callLater(applyCurrent)
+    function applyCurrent() {
+        if (!pageLoader.item || view.cursor < 0) return
+        pageLoader.item.params = view.stack[view.cursor].params
+    }
+
+    Component.onCompleted: switchRoot(0)
+
+    // ── 页面组件注册 ──
+    Component { id: recommendComp;  RecommendPage {} }
+    Component { id: listenComp;     ListenModePage {} }
+    Component { id: favoriteComp;   FavoritePage {} }
+    Component { id: historyComp;    HistoryPage {} }
+    Component { id: sheetsComp;     MySheetsPage {} }
+    Component { id: localComp;      LocalMusicPage {} }
+    Component { id: downloadsComp;  DownloadPage {} }
+    Component { id: searchComp;     SearchPage {} }
+    Component { id: sheetComp;      SheetDetailPage {} }
+    Component { id: albumComp;      AlbumDetailPage {} }
+    Component { id: artistComp;     ArtistDetailPage {} }
+    Component { id: settingsComp;   SettingsPage {} }
+    Component { id: themeComp;      ThemePage {} }
+    Component { id: pluginsComp;    PluginManagerPage {} }
+    Component { id: roamComp;       CloudRoamPage {} }
+    Component { id: migrateComp;    MigratePage {} }
 }

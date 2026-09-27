@@ -30,6 +30,65 @@
         <file>qml/dialogs/RegisterForm.qml</file>
         <file>qml/dialogs/ResetPasswordForm.qml</file>
         <file>qml/pages/PlaceholderPage.qml</file>
+        <file>qml/mock/qmldir</file>
+        <file>qml/mock/MockData.qml</file>
+        <file>qml/mock/MockPlayback.qml</file>
+        <file>qml/components/display/IconImage.qml</file>
+        <file>qml/components/display/CoverArt.qml</file>
+        <file>qml/components/display/TabBar.qml</file>
+        <file>qml/components/display/PageHeader.qml</file>
+        <file>qml/components/display/StatusPlaceholder.qml</file>
+        <file>qml/components/business/SongToolbar.qml</file>
+        <file>qml/components/business/SongTable.qml</file>
+        <file>qml/components/business/MediaGrid.qml</file>
+        <file>qml/components/overlay/Popover.qml</file>
+        <file>qml/components/overlay/PopoverOption.qml</file>
+        <file>qml/components/controls/SearchBox.qml</file>
+        <file>qml/layouts/PlayerBar.qml</file>
+        <file>qml/layouts/QueueDrawer.qml</file>
+        <file>qml/pages/RecommendPage.qml</file>
+        <file>qml/pages/ListenModePage.qml</file>
+        <file>qml/pages/FavoritePage.qml</file>
+        <file>qml/pages/HistoryPage.qml</file>
+        <file>qml/pages/MySheetsPage.qml</file>
+        <file>qml/pages/LocalMusicPage.qml</file>
+        <file>qml/pages/DownloadPage.qml</file>
+        <file>qml/pages/SearchPage.qml</file>
+        <file>qml/pages/SheetDetailPage.qml</file>
+        <file>qml/pages/AlbumDetailPage.qml</file>
+        <file>qml/pages/ArtistDetailPage.qml</file>
+        <file>qml/pages/SettingsPage.qml</file>
+        <file>qml/pages/ThemePage.qml</file>
+        <file>qml/pages/PluginManagerPage.qml</file>
+        <file>qml/pages/CloudRoamPage.qml</file>
+        <file>qml/pages/MigratePage.qml</file>
+        <file>qml/assets/icons/player/chevron-left.svg</file>
+        <file>qml/assets/icons/player/chevron-right.svg</file>
+        <file>qml/assets/icons/player/chevron-down.svg</file>
+        <file>qml/assets/icons/player/search.svg</file>
+        <file>qml/assets/icons/player/x.svg</file>
+        <file>qml/assets/icons/player/play.svg</file>
+        <file>qml/assets/icons/player/pause.svg</file>
+        <file>qml/assets/icons/player/prev.svg</file>
+        <file>qml/assets/icons/player/next.svg</file>
+        <file>qml/assets/icons/player/repeat.svg</file>
+        <file>qml/assets/icons/player/repeat-one.svg</file>
+        <file>qml/assets/icons/player/shuffle.svg</file>
+        <file>qml/assets/icons/player/heart.svg</file>
+        <file>qml/assets/icons/player/heart-fill.svg</file>
+        <file>qml/assets/icons/player/download.svg</file>
+        <file>qml/assets/icons/player/queue.svg</file>
+        <file>qml/assets/icons/player/volume.svg</file>
+        <file>qml/assets/icons/player/speed.svg</file>
+        <file>qml/assets/icons/player/quality.svg</file>
+        <file>qml/assets/icons/player/lyrics.svg</file>
+        <file>qml/assets/icons/player/music.svg</file>
+        <file>qml/assets/icons/player/clock.svg</file>
+        <file>qml/assets/icons/player/folder.svg</file>
+        <file>qml/assets/icons/player/user.svg</file>
+        <file>qml/assets/icons/player/trash.svg</file>
+        <file>qml/assets/icons/player/list.svg</file>
+        <file>qml/assets/icons/player/plus.svg</file>
         <file>qml/components/display/SoundBars.qml</file>
         <file>qml/components/overlay/ModalOverlay.qml</file>
         <file>qml/components/overlay/InfoPopup.qml</file>

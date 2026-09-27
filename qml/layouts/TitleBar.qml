@@ -2,6 +2,8 @@ import QtQuick
 import QtQuick.Effects
 import "../theme"
 import "../components/buttons"
+import "../components/controls"
+import "../components/display"
 
 /// ──────────────────────────────────────────────────────────
 ///  自定义标题栏 (自 BallsHackPro 移植: 保留骨架+窗口控制,
@@ -13,7 +15,10 @@ Item {
     default property alias content: contentRow.data
     property alias rightContent: rightRow.data
     signal settingsClicked()
+    signal searchRequested(string query)
+    property var navigation: null   // View 页面栈: {back(), forward(), canGoBack, canGoForward}
     height: 44
+    z: 20   // 搜索历史面板需盖住内容区
 
     // ── 账户状态 (C++ 回写; 移植自 Glowling) ──
     property bool   loggedIn: false
@@ -50,14 +55,40 @@ Item {
         }
     }
 
+    // ── 后退/前进 (绑定 View 页面栈) ──
+    Row {
+        id: navRow
+        anchors { left: parent.left; leftMargin: 8; verticalCenter: parent.verticalCenter }
+        spacing: 2
+        NavBtn {
+            icon: "qrc:/qt/qml/cloudsong/qml/assets/icons/player/chevron-left.svg"
+            enabled: root.navigation !== null && root.navigation.canGoBack
+            onClicked: if (root.navigation) root.navigation.back()
+        }
+        NavBtn {
+            icon: "qrc:/qt/qml/cloudsong/qml/assets/icons/player/chevron-right.svg"
+            enabled: root.navigation !== null && root.navigation.canGoForward
+            onClicked: if (root.navigation) root.navigation.forward()
+        }
+    }
+
     // ── 自定义内容区 ──
     Row {
         id: contentRow
-        anchors.left: parent.left
-        anchors.leftMargin: 10
+        anchors.left: navRow.right
+        anchors.leftMargin: 6
         anchors.verticalCenter: parent.verticalCenter
         height: parent.height
         spacing: 3
+    }
+
+    // ── 全局搜索 (居中) ──
+    SearchBox {
+        id: searchBox
+        anchors { horizontalCenter: parent.horizontalCenter; verticalCenter: parent.verticalCenter }
+        width: 300
+        height: 30
+        onSearchRequested: function(q) { root.searchRequested(q) }
     }
 
     // ── 右侧自定义内容区 ──
@@ -178,6 +209,35 @@ Item {
             icon: "qrc:/qt/qml/cloudsong/qml/assets/window/窗体-关闭.svg"
             hoverBg: Qt.rgba(0.82, 0.14, 0.14, 0.9)
             onClicked: { if (root.appWindow) root.appWindow.close() }
+        }
+    }
+
+    // ── 圆形图标按钮 (导航用, 28×28) ──
+    component NavBtn: Item {
+        width: 28
+        height: 28
+        property string icon: ""
+        property bool enabled: true
+        signal clicked()
+
+        Rectangle {
+            visible: navMouse.containsMouse && parent.enabled
+            anchors.fill: parent
+            radius: 14
+            color: Theme.hover_bg
+        }
+        IconImage {
+            anchors.centerIn: parent
+            source: parent.icon
+            size: 16
+            color: parent.enabled ? Theme.text_primary : Theme.text_disabled
+        }
+        MouseArea {
+            id: navMouse
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: parent.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+            onClicked: if (parent.enabled) parent.clicked()
         }
     }
 }

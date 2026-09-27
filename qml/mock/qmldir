@@ -1,0 +1,2 @@
+singleton MockData 1.0 MockData.qml
+singleton MockPlayback 1.0 MockPlayback.qml
