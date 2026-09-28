@@ -92,6 +92,9 @@
         <file>qml/components/display/SoundBars.qml</file>
         <file>qml/components/overlay/ModalOverlay.qml</file>
         <file>qml/components/overlay/InfoPopup.qml</file>
+        <file>qml/components/overlay/DialogShell.qml</file>
+        <file>qml/components/overlay/EnterFade.qml</file>
+        <file>qml/components/overlay/ExitFade.qml</file>
         <file>qml/components/cards/PlanCard.qml</file>
         <file>qml/assets/form/eye-open.svg</file>
         <file>qml/assets/form/eye-closed.svg</file>
