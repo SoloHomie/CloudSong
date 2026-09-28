@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import "../theme"
 import "../components/buttons"
 import "../components/display"
+import "../components/overlay"
 
 // ═══════════════════════════════════════════════════════════════════════════════
 //  AccountChip — 顶栏账户入口 + 账户菜单 (纯 UI 骨架)
@@ -143,6 +144,9 @@ Item {
         modal: false
         focus: true
         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+        transformOrigin: Item.TopRight   // 右对齐下拉, 缩放锚定触发钮右上角
+        enter: EnterFade {}
+        exit: ExitFade {}
 
         background: Rectangle {
             color: Theme.bg_card

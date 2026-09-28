@@ -1,10 +1,12 @@
 import QtQuick
+import QtQuick.Layouts
 import "../theme"
 import "../mock"
 import "../components/display"
 import "../components/business"
 import "../components/buttons"
 import "../components/controls"
+import "../components/overlay"
 
 // ═══════════════════════════════════════════════════════════════
 //  MySheetsPage — 我的歌单 (自建歌单 + 收藏歌单两组网格 + 新建)
@@ -82,60 +84,65 @@ Item {
         }
     }
 
-    // ── 新建歌单 (简易占位弹窗) ──
-    Rectangle {
-        visible: root.newSheetDialogOpen
-        anchors.fill: parent
-        color: Qt.rgba(0, 0, 0, 0.35)
-        MouseArea { anchors.fill: parent; onClicked: root.newSheetDialogOpen = false }
+    // ── 新建歌单 (统一窗体 DialogShell, 内容=名称输入+按钮) ──
+    DialogShell {
+        id: newSheetDialog
+        title: "新建歌单"
+        width: 360
+        // Esc/点外关闭不经 root.newSheetDialogOpen → onClosed 回写, 保证下次能再开
+        onClosed: root.newSheetDialogOpen = false
 
-        Rectangle {
-            anchors.centerIn: parent
-            width: 360
-            height: 150
-            radius: 10
-            color: Theme.bg_page
-            border { width: 1; color: Theme.border_default }
-
-            Text {
-                anchors { top: parent.top; topMargin: 18; left: parent.left; leftMargin: 20 }
-                text: "新建歌单"
-                font { family: "Microsoft YaHei UI"; pixelSize: 15; weight: Font.Bold }
-                color: Theme.text_primary
-            }
-            SuretyTextField {
-                id: nameInput
-                anchors { top: parent.top; topMargin: 48; left: parent.left; leftMargin: 20; right: parent.right; rightMargin: 20 }
-                height: 32
-                placeholder: "歌单名称"
-                font.pixelSize: 13
-            }
-            Row {
-                anchors { right: parent.right; rightMargin: 20; bottom: parent.bottom; bottomMargin: 16 }
-                spacing: 10
-                SuretyBtn {
-                    height: 28
-                    text: "取消"
-                    variant: "ghost"
-                    font.pixelSize: 12
-                    onClicked: { root.newSheetDialogOpen = false; nameInput.text = "" }
-                }
-                SuretyBtn {
-                    height: 28
-                    text: "创建"
-                    variant: "primary"
-                    font.pixelSize: 12
-                    onClicked: {
-                        var n = nameInput.text.trim()
-                        if (n !== "") {
-                            root.mySheets = root.mySheets.concat([{ id: "m" + Date.now(), title: n,
-                                                                    subtitle: "我", count: 0, seed: 2, platform: "本地" }])
+        content: Component {
+            Item {
+                implicitHeight: body.implicitHeight + 38
+                ColumnLayout {
+                    id: body
+                    anchors { fill: parent; leftMargin: 20; rightMargin: 20; topMargin: 18; bottomMargin: 20 }
+                    spacing: 14
+                    SuretyTextField {
+                        id: nameInput
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 32
+                        placeholder: "歌单名称"
+                        font.pixelSize: 13
+                    }
+                    RowLayout {
+                        Layout.alignment: Qt.AlignRight
+                        spacing: 10
+                        SuretyBtn {
+                            height: 28
+                            text: "取消"
+                            variant: "ghost"
+                            font.pixelSize: 12
+                            onClicked: { root.newSheetDialogOpen = false; nameInput.text = "" }
                         }
-                        root.newSheetDialogOpen = false
-                        nameInput.text = ""
+                        SuretyBtn {
+                            height: 28
+                            text: "创建"
+                            variant: "primary"
+                            font.pixelSize: 12
+                            onClicked: {
+                                var n = nameInput.text.trim()
+                                if (n !== "") {
+                                    root.mySheets = root.mySheets.concat([{ id: "m" + Date.now(), title: n,
+                                                                            subtitle: "我", count: 0, seed: 2, platform: "本地" }])
+                                }
+                                root.newSheetDialogOpen = false
+                                nameInput.text = ""
+                            }
+                        }
                     }
                 }
             }
+        }
+    }
+
+    // 开合驱动: 页面布尔 → 窗体 open/close
+    Connections {
+        target: root
+        function onNewSheetDialogOpenChanged() {
+            if (root.newSheetDialogOpen) newSheetDialog.open()
+            else newSheetDialog.close()
         }
     }
 }

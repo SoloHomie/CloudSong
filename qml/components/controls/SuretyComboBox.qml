@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import QtQuick.Controls
 import "../../theme"
 import "../layout"
+import "../overlay"
 
 Item {
     id: root
@@ -160,18 +161,8 @@ Item {
         padding: 8
         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
 
-        enter: Transition {
-            ParallelAnimation {
-                NumberAnimation { property: "opacity"; from: 0.0; to: 1.0; duration: 180; easing.type: Easing.OutCubic }
-                NumberAnimation { property: "scale"; from: 0.92; to: 1.0; duration: 220; easing.type: Easing.OutBack }
-            }
-        }
-        exit: Transition {
-            ParallelAnimation {
-                NumberAnimation { property: "opacity"; from: 1.0; to: 0.0; duration: 120; easing.type: Easing.InCubic }
-                NumberAnimation { property: "scale"; from: 1.0; to: 0.92; duration: 150; easing.type: Easing.InCubic }
-            }
-        }
+        enter: EnterFade {}
+        exit: ExitFade {}
         transformOrigin: Item.Top
 
         background: Rectangle {

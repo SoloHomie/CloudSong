@@ -1,12 +1,11 @@
 import QtQuick
-import QtQuick.Controls
-import QtQuick.Effects
 import QtQuick.Layouts
+import QtQuick.Effects
 import "../theme"
 import "../components/overlay"
 
 // ═══════════════════════════════════════════════════════════════════════════════
-//  AuthDialog — 登录 / 注册 / 重置密码 浮层 (居中模态, 不占页面)
+//  AuthDialog — 登录 / 注册 / 重置密码 浮层 (统一窗体 DialogShell, 仅内容不同)
 //
 //  ⚠ 零业务逻辑: 所有表单动作只做转发, 由 C++ AuthService 处理:
 //      loginRequested / registerRequested / sendCodeRequested / resetRequested ...
@@ -17,7 +16,7 @@ import "../components/overlay"
 //    authDialog.open()            // 默认登录页
 //    authDialog.open("register")  // 直接到注册页
 // ═══════════════════════════════════════════════════════════════════════════════
-Popup {
+DialogShell {
     id: root
 
     // 模式: "login" | "register" | "reset"
@@ -42,131 +41,55 @@ Popup {
     property int  countdown: 0
     property bool rememberMe: true
 
-    width: 380
-    anchors.centerIn: Overlay.overlay
-    padding: 0
-    modal: true
-    focus: true
-    closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
-    Overlay.modal: ModalOverlay { }
+    // ── 窗体头部 ──
+    title: root._isLogin ? qsTr("登录CloudSong") : root._isRegister ? qsTr("注册账号") : qsTr("重置密码")
+    // 副标题只在登录页显示; 其余模式空串 → 不占位, 标题块随之上移 (2026-09-19 用户指定)
+    subtitle: root._isLogin ? qsTr("登录后可同步存储在云上的音乐与订阅状态") : ""
+    // 重置页隐藏关闭钮 (2026-09-19 用户指定: 流程中不直接收摊, 用 ← 返回登录; 点弹窗外 / Esc 仍可关)
+    showClose: !root._isReset
 
-    background: Rectangle {
-        color: Theme.bg_page
-        radius: 12
-        border.width: 1
-        border.color: Theme.border_standard
-    }
-
-    contentItem: ColumnLayout {
-        spacing: 0
-
-        // ═══ 头部: 标题 + 关闭 ═══
-        Item {
-            Layout.fillWidth: true
-            // 标题块留白: 上 = 下 = 左 = 20 (2026-09-18 用户指定) —— 高度 = 块高 + 40
-            // 无副标题的页面块高自然收缩 (2026-09-19 用户指定: 副标题不占位, 高度直接为 0);
-            // smoothH + Behavior 与表单区同参数, 头部收缩也走过渡
-            property real smoothH: titleCol.implicitHeight + 40
-            Behavior on smoothH { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
-            Layout.preferredHeight: smoothH
-
-            Column {
-                id: titleCol
-                anchors.left: parent.left
-                // 重置页左侧有返回钮, 标题让位 (其余模式保持 上=下=左=20)
-                anchors.leftMargin: backBtn.visible ? 48 : 20
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 2
-
-                Text {
-                    text: root._isLogin ? qsTr("登录CloudSong") : root._isRegister ? qsTr("注册账号") : qsTr("重置密码")
-                    color: Theme.text_primary
-                    font.family: "Microsoft YaHei UI"
-                    font.pixelSize: 16; font.weight: Font.Bold
-                }
-                Text {
-                    // 副标题只在登录页显示; 其余模式不占位 (高度 0), 标题块随之上移
-                    visible: root._isLogin
-                    text: qsTr("登录后可同步存储在云上的音乐与订阅状态")
-                    color: Theme.text_secondary
-                    font.family: "Microsoft YaHei UI"
-                    font.pixelSize: 12
+    // 返回钮 (2026-09-19): 重置页退回登录 —— 返回是"退上一步", 放顶部左侧,
+    // 与右上角关闭钮对称。注册页底部的"已有账号？登录"是横向岔路, 语义不同, 不动。
+    headerLeft: Component {
+        Rectangle {
+            visible: root._isReset
+            width: 26; height: 26; radius: 6
+            color: backMouse.containsMouse ? Theme.hover_bg : "transparent"
+            // 返回图标 (2026-09-19 用户指定 返回_return.svg): 48 网格 / 4 描边, 与标题栏齿轮同族。
+            // 源图自带白描边 → 走 colorization 上色 (与 TitleBar 图标键同法), 悬停换色不换图
+            Image {
+                anchors.centerIn: parent
+                width: 16; height: 16
+                source: "qrc:/qt/qml/cloudsong/qml/assets/icons/返回.svg"
+                sourceSize: Qt.size(32, 32)
+                fillMode: Image.PreserveAspectFit
+                smooth: true; antialiasing: true
+                layer.enabled: true
+                layer.effect: MultiEffect {
+                    colorizationColor: backMouse.containsMouse ? Theme.text_primary : Theme.text_secondary
+                    colorization: 1.0
                 }
             }
-
-            // 返回钮 (2026-09-19): 重置页退回登录 —— 返回是"退上一步", 放顶部左侧,
-            // 与右上角关闭钮对称。注册页底部的"已有账号？登录"是横向岔路, 语义不同, 不动。
-            Rectangle {
-                id: backBtn
-                visible: root._isReset
-                width: 26; height: 26; radius: 6
-                anchors.left: parent.left; anchors.leftMargin: 14
-                anchors.verticalCenter: parent.verticalCenter
-                color: backMouse.containsMouse ? Theme.hover_bg : "transparent"
-                // 返回图标 (2026-09-19 用户指定 返回_return.svg): 48 网格 / 4 描边, 与标题栏齿轮同族。
-                // 源图自带白描边 → 走 colorization 上色 (与 TitleBar 图标键同法), 悬停换色不换图
-                Image {
-                    anchors.centerIn: parent
-                    width: 16; height: 16
-                    source: "qrc:/qt/qml/cloudsong/qml/assets/icons/返回.svg"
-                    sourceSize: Qt.size(32, 32)
-                    fillMode: Image.PreserveAspectFit
-                    smooth: true; antialiasing: true
-                    layer.enabled: true
-                    layer.effect: MultiEffect {
-                        colorizationColor: backMouse.containsMouse ? Theme.text_primary : Theme.text_secondary
-                        colorization: 1.0
-                    }
-                }
-                MouseArea {
-                    id: backMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.mode = "login"
-                }
-            }
-
-            // 关闭钮 — 重置页隐藏 (2026-09-19 用户指定: 流程中不直接收摊, 用 ← 返回登录;
-            // 点弹窗外 / Esc 仍可关)
-            Rectangle {
-                visible: !root._isReset
-                width: 26; height: 26; radius: 6
-                anchors.right: parent.right; anchors.rightMargin: 14
-                anchors.top: parent.top; anchors.topMargin: 14
-                //anchors.verticalCenter: parent.verticalCenter
-                color: closeAuthMouse.containsMouse ? Theme.hover_bg : "transparent"
-                Text {
-                    anchors.centerIn: parent
-                    text: "✕"
-                    color: closeAuthMouse.containsMouse ? Theme.text_primary : Theme.text_secondary
-                    font.pixelSize: 12
-                }
-                MouseArea {
-                    id: closeAuthMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.close()
-                }
-            }
-
-            Rectangle {
-                width: parent.width; height: 1
-                anchors.bottom: parent.bottom
-                color: Theme.border_default
+            MouseArea {
+                id: backMouse
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.mode = "login"
             }
         }
+    }
 
-        // ═══ 表单区 ═══
+    // ── 表单区 ──
+    // 经壳的 content Loader 注入, Layout 附加属性不生效 → 用 implicitHeight 驱动窗体高度。
+    // 高度只跟当前表单走 —— StackLayout 的隐式高度取三个表单的最大值 (注册最长),
+    // 须把自身钉在当前表单自然高度上; smoothH + Behavior: 模式切换时高度走过渡,
+    // 弹窗跟着平滑变高/变矮 (2026-09-18 用户指定)
+    content: Component {
         Item {
-            Layout.fillWidth: true
-            // 高度只跟当前表单走 —— StackLayout 的隐式高度取三个表单的最大值 (注册最长),
-            // 登录/重置时下方会空出一截 (用户 2026-09-18: "里面好像有 item 弹簧")
-            // smoothH + Behavior: 模式切换时高度走过渡, 弹窗跟着平滑变高/变矮 (2026-09-18)
+            implicitHeight: smoothH
             property real smoothH: formStack.height + 40
             Behavior on smoothH { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
-            Layout.preferredHeight: smoothH
             // 过渡期间裁掉尚未展开 (或正在收回) 的表单部分, 不让它溢出弹窗底
             clip: true
 
@@ -178,8 +101,6 @@ Popup {
                 anchors.leftMargin: 20
                 anchors.rightMargin: 20
                 anchors.topMargin: 18
-                // StackLayout 会把子项拉伸到自身高度 —— 先把自身钉在当前表单的自然高度上,
-                // 子项才不会被拉长出多余空白 (注册页的校验行会随输入出现, 高度自然会变)
                 height: root._isLogin ? loginForm.implicitHeight
                       : root._isRegister ? registerCol.implicitHeight
                       : resetForm.implicitHeight
@@ -225,6 +146,5 @@ Popup {
                 }
             }
         }
-
     }
 }

@@ -104,13 +104,46 @@ Item {
     // ── 历史面板 ──
     Rectangle {
         id: panel
-        visible: root.panelOpen
+        visible: false
+        opacity: 0
+        scale: 0.96
+        transformOrigin: Item.Top
         anchors { top: inputBox.bottom; topMargin: 8; horizontalCenter: parent.horizontalCenter }
         width: root.width
         height: panelCol.implicitHeight + 24
         radius: 10
         color: Theme.bg_card
         border { width: 1; color: Theme.border_standard }
+
+        // 出现/关闭过渡 (2026-09-28): 原 visible 绑定致关闭瞬间消失, 改 imperative 动画
+        Connections {
+            target: root
+            function onPanelOpenChanged() {
+                if (root.panelOpen) {
+                    panelHide.stop()
+                    panel.visible = true
+                    panel.opacity = 0
+                    panel.scale = 0.96
+                    panelShow.start()
+                } else {
+                    panelShow.stop()
+                    panelHide.start()
+                }
+            }
+        }
+        ParallelAnimation {
+            id: panelShow
+            NumberAnimation { target: panel; property: "opacity"; from: 0; to: 1; duration: 140; easing.type: Easing.OutCubic }
+            NumberAnimation { target: panel; property: "scale"; from: 0.96; to: 1; duration: 180; easing.type: Easing.OutBack }
+        }
+        SequentialAnimation {
+            id: panelHide
+            ParallelAnimation {
+                NumberAnimation { target: panel; property: "opacity"; from: 1; to: 0; duration: 100; easing.type: Easing.InCubic }
+                NumberAnimation { target: panel; property: "scale"; from: 1; to: 0.98; duration: 110; easing.type: Easing.InCubic }
+            }
+            ScriptAction { script: panel.visible = false }
+        }
 
         Column {
             id: panelCol
