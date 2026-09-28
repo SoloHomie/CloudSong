@@ -22,7 +22,6 @@ Item {
     property bool downloadLyric: false
     property int qualityIdx: 0            // 0标准 1较高 2无损
     property string downloadDir: "C:\\Users\\Lenovo\\Music"
-    property var qualityNames: ["标准品质", "较高品质", "无损品质"]
 
     Flickable {
         anchors.fill: parent
@@ -97,8 +96,14 @@ Item {
                 title: "播放"
                 RowSetting {
                     title: "默认音质"
-                    subtitle: root.qualityNames[root.qualityIdx]
-                    onClicked: root.qualityIdx = (root.qualityIdx + 1) % 3
+                    ctrlReserve: 290   // 横向分段选择占位更宽, 标题区让出更多
+                    SuretyTagSelector {
+                        anchors.verticalCenter: parent.verticalCenter
+                        displayMode: "segment"
+                        selectedIndex: root.qualityIdx
+                        model: [ { label: "标准品质" }, { label: "较高品质" }, { label: "无损品质" } ]
+                        onTagSelected: function(i) { root.qualityIdx = i }
+                    }
                 }
                 RowSetting {
                     title: "桌面歌词"
@@ -243,6 +248,7 @@ Item {
         height: 52
         property string title: ""
         property string subtitle: ""
+        property int ctrlReserve: 170   // 右侧控件保留宽度 (音质等横向分段选择需更大)
         signal clicked()
         default property alias ctrl: ctrlRow.data
         property bool hover: rowMouse.containsMouse
@@ -260,7 +266,7 @@ Item {
             onClicked: rs.clicked()
         }
         Column {
-            anchors { left: rs.left; leftMargin: 14; right: rs.right; rightMargin: 170; verticalCenter: rs.verticalCenter }
+            anchors { left: rs.left; leftMargin: 14; right: rs.right; rightMargin: rs.ctrlReserve; verticalCenter: rs.verticalCenter }
             spacing: 2
             Text {
                 width: parent.width

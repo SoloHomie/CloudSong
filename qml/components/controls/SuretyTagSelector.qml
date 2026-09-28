@@ -76,6 +76,11 @@ Item {
         : Math.max(root.minimumWidth, _tagFlow.childrenRect.width)
     Layout.preferredHeight: displayMode === "segment" ? segmentHeight  : Math.max(tagHeight, _tagFlow.childrenRect.height)
 
+    // ── 非 Layout 场景自带尺寸 (2026-09-28 设置页音质行: 组件放进 Row/锚点直接用,
+    //    原 Item 根宽高为 0 会溢出; segment 模式取分段条实际尺寸, tag 模式维持原依赖 Layout 拉伸) ──
+    width:  displayMode === "segment" ? segmentBar.width : 0
+    height: displayMode === "segment" ? segmentHeight : 0
+
     // ── 信号 ──
     signal tagSelected(int index)
 
