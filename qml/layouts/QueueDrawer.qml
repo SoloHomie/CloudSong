@@ -28,11 +28,15 @@ Item {
         id: panel
         // 2026-09-28 修复: 原 anchors.right 与 x 绑定冲突, 锚点覆盖 x → 面板永远钉在右缘,
         // open 只切换了遮罩显隐 → 抽屉"关不了"。去掉 right 锚点, 位置全由 x 绑定决定
-        // (x 引用 parent.width, 窗口缩放时自动跟随)
+        //
+        // 2026-09-28 二修: Behavior 不能挂在 x 上 —— x 依赖 parent.width, 拉伸窗口/最大化时
+        // 动画追不上宽度变化, 面板滞留在右缘露出。动画改挂偏移量 slideOffset,
+        // x 实时跟随宽度: 关闭态恒在可视区外, 缩放窗口零残影; 开合动画手感不变
         anchors { top: parent.top; bottom: parent.bottom }
         width: 320
-        x: root.open ? parent.width - width : parent.width
-        Behavior on x { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }   // 一次性滑入过场
+        property real slideOffset: root.open ? width : 0   // 关=0 → x=parent.width 完全藏起; 开=width
+        Behavior on slideOffset { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+        x: parent.width - slideOffset
         color: Theme.bg_page
 
         Rectangle {
