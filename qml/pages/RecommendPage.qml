@@ -167,6 +167,7 @@ Item {
                             color: Theme.text_primary
                             size: 14
                             MouseArea {
+                                z: 1   // 行级 rowMouse 声明在后会压住本图标, 抬升 z 才能收到点击
                                 anchors.fill: parent
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: { MockPlayback.loadQueue(MockData.songsForSheet(t.seed, 10)) }

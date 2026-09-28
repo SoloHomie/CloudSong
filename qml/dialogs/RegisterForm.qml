@@ -40,6 +40,11 @@ ColumnLayout {
         return /[A-Za-z]/.test(password) && /[0-9]/.test(password)
     }
     function passwordsMatch(a, b) { return a.length > 0 && a === b }
+    function isValidUsername(name) {
+        var n = String(name || "").trim()
+        if (n.length < 2 || n.length > 20) return false
+        return n.indexOf(" ") < 0
+    }
     function passwordStrength(password) {
         if (!password.length) return 0
         var score = 0
@@ -57,13 +62,15 @@ ColumnLayout {
     // ── 校验状态（全部委托给 C++ ValidationService）──
     readonly property bool _emailTouched: regEmail.text !== ""
     readonly property bool _emailFormat: _emailTouched && root.isValidEmail(regEmail.text)
+    readonly property bool _userTouched: regUsername.text !== ""
+    readonly property bool _userValid: root.isValidUsername(regUsername.text)
     readonly property bool _codeTouched: regCode.text !== ""
     readonly property bool _codeOk: _codeTouched && regCode.text.trim().length >= 4
     readonly property bool _pwTouched: regPassword.text !== ""
     readonly property bool _pwValid: root.isValidPassword(regPassword.text)
     readonly property bool _confirmTouched: regConfirm.text !== ""
     readonly property bool _pwMatch: _confirmTouched && root.passwordsMatch(regPassword.text, regConfirm.text)
-    readonly property bool _formValid: _emailFormat && _codeOk && _pwTouched && _pwValid && _pwMatch
+    readonly property bool _formValid: _emailFormat && _userValid && _codeOk && _pwTouched && _pwValid && _pwMatch
 
     readonly property int _strength: root.passwordStrength(regPassword.text)
     readonly property var _strengthLabel: [qsTr("弱"), qsTr("中"), qsTr("强")]
@@ -71,6 +78,10 @@ ColumnLayout {
 
     SuretyTextField { id: regEmail; Layout.fillWidth: true; Layout.preferredHeight: 36; placeholder: qsTr("请输入邮箱地址"); customBg: Theme.bg_input; customBorder: Theme.border_standard }
     Text { visible: _emailTouched && !_emailFormat; text: qsTr("· 邮箱格式不正确"); color: Theme.danger_fg; font.pixelSize: 12; font.family: "Microsoft YaHei UI" }
+
+    // 2026-09-28 打磨: 信号契约含 username, 原表单缺此字段且把邮箱当用户名传两次, 补上
+    SuretyTextField { id: regUsername; Layout.fillWidth: true; Layout.preferredHeight: 36; placeholder: qsTr("用户名（2-20 位，不能含空格）"); customBg: Theme.bg_input; customBorder: Theme.border_standard }
+    Text { visible: _userTouched && !_userValid; text: qsTr("· 用户名 2-20 位，不能含空格"); color: Theme.danger_fg; font.pixelSize: 12; font.family: "Microsoft YaHei UI" }
 
     RowLayout { Layout.fillWidth: true; spacing: 6
         SuretyTextField { id: regCode; Layout.fillWidth: true; Layout.preferredHeight: 36; placeholder: qsTr("请输入邮箱验证码"); customBg: Theme.bg_input; customBorder: Theme.border_standard }
@@ -112,7 +123,7 @@ ColumnLayout {
     SuretyBtn { Layout.fillWidth: true; Layout.topMargin: 3; Layout.preferredHeight: 32
         text: (root.loading && _formValid) ? qsTr("注册中...") : qsTr("注册")
         variant: "primary"; enabled: _formValid && !root.loading; font.weight: Font.Bold
-        onClicked: root.registerClicked(regEmail.text, regEmail.text, regPassword.text, regConfirm.text, regCode.text) }
+        onClicked: root.registerClicked(regEmail.text, regUsername.text.trim(), regPassword.text, regConfirm.text, regCode.text) }
 
     RowLayout { Layout.alignment: Qt.AlignHCenter; spacing: 3
         Text { text: qsTr("已有账号？"); color: Theme.text_secondary; font.pixelSize: 12; font.family: "Microsoft YaHei UI" }

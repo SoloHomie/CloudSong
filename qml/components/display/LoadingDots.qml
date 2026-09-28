@@ -5,6 +5,10 @@ import QtQuick
 //  用法:
 //    LoadingDots { running: true }
 //    LoadingDots { running: true; dotColor: "#c5ff00" }   // 荧光黄
+//
+//  2026-09-28 打磨: 原实现为每点一个无限 SequentialAnimation,
+//  本机垂直同步全局关闭 → 连续动画驱动渲染循环空转吃满 CPU;
+//  改为 33ms Timer 手动推进全局相位, 各点按相位差计算形态 (同 SoundBars 方案)。
 // ═══════════════════════════════════════════════════════════════════════════════
 
 Item {
@@ -17,6 +21,31 @@ Item {
 
     implicitWidth:  dotCount * dotSize + (dotCount - 1) * 4
     implicitHeight: dotSize * 3 + 7
+
+    // ── 节拍 (与原动画节奏一致) ──
+    // 总周期 = 单点起落 240+240ms + 首尾停顿各 (dotCount-1)*120ms
+    readonly property int periodMs: 480 + (dotCount - 1) * 120
+    readonly property real riseFrac: 240 / periodMs
+    readonly property real fallFrac: 240 / periodMs
+    property int tMs: 0
+
+    function ease(x) { return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2 }
+
+    // 点 i 在 tMs 时刻的振幅 k ∈ [0,1] (0=静止, 1=峰值)
+    function ampAt(i, t) {
+        var p = ((t / periodMs) - i * 120 / periodMs) % 1
+        if (p < 0) p += 1
+        if (p < riseFrac) return ease(p / riseFrac)
+        if (p < riseFrac + fallFrac) return ease(1 - (p - riseFrac) / fallFrac)
+        return 0
+    }
+
+    Timer {
+        interval: 33
+        running: root.running
+        repeat: true
+        onTriggered: { root.tMs += 33; if (root.tMs >= root.periodMs) root.tMs -= root.periodMs }
+    }
 
     Row {
         anchors.centerIn: parent
@@ -31,51 +60,15 @@ Item {
                 height: root.dotSize
                 radius: root.dotSize / 2
                 color: root.dotColor
-                opacity: 0.45   // 静止时半透明, 波浪推进时提亮
 
+                readonly property real k: root.ampAt(index, root.tMs)
+                opacity: 0.45 + 0.55 * k
+                // 与原实现一致: 只纵向拉伸 (yScale), 横向不变
                 transform: Scale {
-                    id: stretch
-                    origin.x: dot.width  / 2
+                    origin.x: dot.width / 2
                     origin.y: dot.height / 2
                     xScale: 1
-                }
-
-                SequentialAnimation {
-                    running: root.running
-                    loops: Animation.Infinite
-
-                    PauseAnimation { duration: index * 120 }
-
-                    PropertyAction { target: stretch; property: "yScale"; value: 1 }
-                    PropertyAction { target: dot;     property: "opacity"; value: 0.45 }
-
-                    ParallelAnimation {
-                        NumberAnimation {
-                            target: stretch; property: "yScale"
-                            to: 2.0; duration: 240
-                            easing.type: Easing.InOutCubic
-                        }
-                        NumberAnimation {
-                            target: dot; property: "opacity"
-                            to: 1.0; duration: 240
-                            easing.type: Easing.InOutCubic
-                        }
-                    }
-
-                    ParallelAnimation {
-                        NumberAnimation {
-                            target: stretch; property: "yScale"
-                            to: 1.0; duration: 240
-                            easing.type: Easing.InOutCubic
-                        }
-                        NumberAnimation {
-                            target: dot; property: "opacity"
-                            to: 0.45; duration: 240
-                            easing.type: Easing.InOutCubic
-                        }
-                    }
-
-                    PauseAnimation { duration: (root.dotCount - 1 - index) * 120 }
+                    yScale: 1 + dot.k
                 }
             }
         }

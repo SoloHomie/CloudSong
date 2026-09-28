@@ -204,6 +204,7 @@ Item {
                 color: s.liked ? Theme.accent : Theme.text_hint
                 size: 16
                 MouseArea {
+                    z: 1   // 行级 rowMouse 声明在后会压住本图标, 抬升 z 才能收到点击
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
                     onClicked: { s.liked = !s.liked; root.likeToggled(s); root.refreshModel() }
@@ -215,6 +216,7 @@ Item {
                 color: Theme.text_hint
                 size: 16
                 MouseArea {
+                    z: 1   // 同喜欢图标: 须抬到行级 rowMouse 之上
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
                     onClicked: root.downloadRequested(s)

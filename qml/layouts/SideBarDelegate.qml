@@ -18,14 +18,15 @@ Rectangle {
 
     signal clicked()
 
+    // 2026-09-28 打磨: 原硬编码 rgba 蓝, 改为跟随 Theme.accent (深浅色主题一致)
     color: {
-        if (isSelected)              return Qt.rgba(0.12, 0.44, 0.92, 0.15)
-        if (mouseArea.containsMouse) return Qt.rgba(0.12, 0.44, 0.92, 0.08)
+        if (isSelected)              return Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.15)
+        if (mouseArea.containsMouse) return Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.08)
         return "transparent"
     }
 
     border.width: isSelected ? 1 : 0
-    border.color: isSelected ? Qt.rgba(0.12, 0.44, 0.92, 0.50) : "transparent"
+    border.color: isSelected ? Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.50) : "transparent"
     Behavior on color       { ColorAnimation { duration: 150 } }
     Behavior on border.color { ColorAnimation { duration: 150 } }
 

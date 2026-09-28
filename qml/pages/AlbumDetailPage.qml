@@ -43,11 +43,20 @@ Item {
 
             Row {
                 spacing: 8
-                Text {
-                    text: "专辑"
+                // 与 SheetDetailPage 的类型标签同构: pill 底 + 小字
+                Rectangle {
                     anchors.verticalCenter: parent.verticalCenter
-                    font { family: "Microsoft YaHei UI"; pixelSize: 11 }
-                    color: Theme.tag_preset_fg
+                    height: 18
+                    width: typeText.implicitWidth + 12
+                    radius: 9
+                    color: Theme.tag_preset_bg
+                    Text {
+                        id: typeText
+                        anchors.centerIn: parent
+                        text: "专辑"
+                        font { family: "Microsoft YaHei UI"; pixelSize: 10 }
+                        color: Theme.tag_preset_fg
+                    }
                 }
                 Rectangle {
                     anchors.verticalCenter: parent.verticalCenter

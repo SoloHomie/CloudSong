@@ -14,6 +14,9 @@ Window {
     visible: false
     width: 960
     height: 640
+    // SongTable 固定列宽约 538 + 侧栏 160 + 余量; 再窄列宽会挤成负数
+    minimumWidth: 800
+    minimumHeight: 500
     title: "CloudSong"
     color: Theme.bg_canvas
 

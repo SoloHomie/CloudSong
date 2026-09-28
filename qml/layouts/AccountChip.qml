@@ -212,7 +212,7 @@ Item {
                             anchors.centerIn: parent
                             text: root.pro
                                   ? (root.planName || "Pro") + " · " + root.badgeTip
-                                  : "免费版 · 升级解锁灯兽魔法"
+                                  : "免费版 · 升级解锁云漫游"
                             color: root.pro ? Theme.purple_fg : Theme.text_secondary
                             font.family: "Microsoft YaHei UI"
                             font.pixelSize: 13
@@ -269,7 +269,7 @@ Item {
                 SuretyBtn {
                     anchors.fill: parent
                     anchors.margins: 8
-                    text: "升级 Pro · 解锁状态映射"
+                    text: "升级云漫游 · 多端同步"
                     variant: "primary"
                     cornerRadius: 6
                     font.pixelSize: 13; font.weight: Font.Bold

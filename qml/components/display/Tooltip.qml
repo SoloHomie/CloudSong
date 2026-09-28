@@ -145,7 +145,8 @@ Item {
     //  显示 / 隐藏
     // ═══════════════════════════════════════════════════════
     function _dismiss() {
-        if (root._tip) { root._tip._doHide(); root._tip = null }
+        // 2026-09-28 打磨: 原实现只置 null 不销毁, 每次显示都在 contentItem 上残留隐形 tip
+        if (root._tip) { root._tip._doHide(); root._tip.destroy(); root._tip = null }
         if (root._timer) { root._timer.stop(); root._timer.destroy(); root._timer = null }
     }
 

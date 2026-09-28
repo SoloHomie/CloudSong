@@ -264,7 +264,8 @@ Item {
                             color: Theme.accent
                         }
                         Rectangle {
-                            x: volTrack.width * playback.volume - 5
+                            // volume=1 时圆钮中心在轨道右端, 收进轨道内不溢出
+                            x: Math.min(volTrack.width - 10, Math.max(0, volTrack.width * playback.volume - 5))
                             anchors.verticalCenter: parent.verticalCenter
                             width: 10
                             height: 10
