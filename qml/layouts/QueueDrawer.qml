@@ -55,13 +55,13 @@ Item {
                 spacing: 2
                 Text {
                     text: "播放队列"
-                    font { family: "Microsoft YaHei UI"; pixelSize: 15; weight: Font.Bold }
+                    font { family: Theme.fontFamily; pixelSize: 15; weight: Font.Bold }
                     color: Theme.text_primary
                 }
                 Text {
                     visible: playback.queue.count > 0
                     text: "共 " + playback.queue.count + " 首"
-                    font { family: "Microsoft YaHei UI"; pixelSize: 11 }
+                    font { family: Theme.fontFamily; pixelSize: 11 }
                     color: Theme.text_secondary
                 }
             }
@@ -70,7 +70,7 @@ Item {
                 visible: playback.queue.count > 0
                 anchors { right: closeBtn.left; rightMargin: 14; verticalCenter: parent.verticalCenter }
                 text: "清空"
-                font { family: "Microsoft YaHei UI"; pixelSize: 12 }
+                font { family: Theme.fontFamily; pixelSize: 12 }
                 color: Theme.accent_text
                 MouseArea {
                     anchors.fill: parent
@@ -136,7 +136,7 @@ Item {
                     visible: !current
                     anchors.centerIn: parent
                     text: index + 1
-                    font { family: "Microsoft YaHei UI"; pixelSize: 12 }
+                    font { family: Theme.fontFamily; pixelSize: 12 }
                     color: Theme.text_hint
                 }
                 SoundBars {
@@ -156,7 +156,7 @@ Item {
                     width: parent.width
                     elide: Text.ElideRight
                     text: modelData.title !== undefined ? modelData.title : ""
-                    font { family: "Microsoft YaHei UI"; pixelSize: 13; weight: current ? Font.Bold : Font.Normal }
+                    font { family: Theme.fontFamily; pixelSize: 13; weight: current ? Font.Bold : Font.Normal }
                     color: current ? Theme.accent_text : Theme.text_primary
                 }
                 Text {
@@ -164,7 +164,7 @@ Item {
                     elide: Text.ElideRight
                     text: (modelData.artist !== undefined ? modelData.artist : "") +
                           (modelData.platform !== undefined && modelData.platform !== "" ? " · " + modelData.platform : "")
-                    font { family: "Microsoft YaHei UI"; pixelSize: 11 }
+                    font { family: Theme.fontFamily; pixelSize: 11 }
                     color: Theme.text_secondary
                 }
             }

@@ -108,7 +108,7 @@ Rectangle {
             color: readOnly ? Theme.text_hint : Theme.text_primary
             font.pixelSize: 14
             font.weight: Font.Bold
-            font.family: "Microsoft YaHei UI"
+            font.family: Theme.fontFamily
             verticalAlignment: TextInput.AlignVCenter
             clip: true
             selectByMouse: true

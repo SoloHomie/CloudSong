@@ -10,7 +10,7 @@ Rectangle {
     property color accentColor: Theme.accent_text
     property real bgOpacity: 0.12
     property int fontSize: 15
-    property string fontFamily: "Arial"
+    property string fontFamily: Theme.fontFamily
 
     color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, root.bgOpacity)
 

@@ -26,21 +26,21 @@ Rectangle {
             Layout.alignment: Qt.AlignHCenter
             text: plan.name || ""
             color: Theme.text_secondary
-            font { pixelSize: 12; weight: Font.Bold; family: "Microsoft YaHei UI" }
+            font { pixelSize: 12; weight: Font.Bold; family: Theme.fontFamily }
         }
 
         Text {
             Layout.alignment: Qt.AlignHCenter
             text: "¥" + ((plan.amount || 0) / 100).toFixed(0)
             color: Theme.text_primary
-            font { pixelSize: 24; weight: Font.Bold; family: "Microsoft YaHei UI" }
+            font { pixelSize: 24; weight: Font.Bold; family: Theme.fontFamily }
         }
 
         Text {
             Layout.alignment: Qt.AlignHCenter
             text: (plan.days || 0) + " 天"
             color: Theme.text_hint
-            font { pixelSize: 11; family: "Microsoft YaHei UI" }
+            font { pixelSize: 11; family: Theme.fontFamily }
         }
 
         SuretyBtn {

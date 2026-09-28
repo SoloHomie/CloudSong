@@ -49,7 +49,7 @@ ColumnLayout {
         Text {
             text: qsTr("保存登录信息")
             color: Theme.text_secondary; font.pixelSize: 12
-            font.family: "Microsoft YaHei UI"
+            font.family: Theme.fontFamily
             Layout.alignment: Qt.AlignVCenter
         }
         SuretySwitch {
@@ -62,7 +62,7 @@ ColumnLayout {
         Text {
             text: qsTr("忘记密码？")
             color: Theme.accent_text; font.pixelSize: 12
-            font.family: "Microsoft YaHei UI"
+            font.family: Theme.fontFamily
             Layout.alignment: Qt.AlignVCenter
             MouseArea {
                 anchors.fill: parent; cursorShape: Qt.PointingHandCursor
@@ -83,8 +83,8 @@ ColumnLayout {
     }
 
     RowLayout { Layout.alignment: Qt.AlignHCenter; Layout.topMargin: 3; spacing: 3
-        Text { text: qsTr("还没有账号？"); color: Theme.text_secondary; font.pixelSize: 12; font.family: "Microsoft YaHei UI" }
-        Text { text: qsTr("去注册"); color: Theme.accent_text; font.pixelSize: 12; font.family: "Microsoft YaHei UI"
+        Text { text: qsTr("还没有账号？"); color: Theme.text_secondary; font.pixelSize: 12; font.family: Theme.fontFamily }
+        Text { text: qsTr("去注册"); color: Theme.accent_text; font.pixelSize: 12; font.family: Theme.fontFamily
             MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: root.switchToRegister() } }
     }
 }

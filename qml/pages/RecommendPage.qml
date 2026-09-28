@@ -44,7 +44,7 @@ Item {
             Text {
                 x: 24
                 text: "精选歌单"
-                font { family: "Microsoft YaHei UI"; pixelSize: 15; weight: Font.Bold }
+                font { family: Theme.fontFamily; pixelSize: 15; weight: Font.Bold }
                 color: Theme.text_primary
             }
             MediaGrid {
@@ -62,7 +62,7 @@ Item {
             Text {
                 x: 24
                 text: "今日热歌"
-                font { family: "Microsoft YaHei UI"; pixelSize: 15; weight: Font.Bold }
+                font { family: Theme.fontFamily; pixelSize: 15; weight: Font.Bold }
                 color: Theme.text_primary
             }
             SongToolbar {
@@ -100,7 +100,7 @@ Item {
             Text {
                 x: 24
                 text: "官方榜"
-                font { family: "Microsoft YaHei UI"; pixelSize: 15; weight: Font.Bold }
+                font { family: Theme.fontFamily; pixelSize: 15; weight: Font.Bold }
                 color: Theme.text_primary
             }
             MediaGrid {
@@ -118,7 +118,7 @@ Item {
             Text {
                 x: 24
                 text: "更多榜单"
-                font { family: "Microsoft YaHei UI"; pixelSize: 15; weight: Font.Bold }
+                font { family: Theme.fontFamily; pixelSize: 15; weight: Font.Bold }
                 color: Theme.text_primary
             }
             Column {
@@ -138,7 +138,7 @@ Item {
                             width: 24
                             text: index + 1
                             horizontalAlignment: Text.AlignHCenter
-                            font { family: "Microsoft YaHei UI"; pixelSize: 13; weight: Font.Bold }
+                            font { family: Theme.fontFamily; pixelSize: 13; weight: Font.Bold }
                             color: index < 3 ? Theme.accent : Theme.text_hint
                         }
                         Column {
@@ -149,14 +149,14 @@ Item {
                                 width: parent.width
                                 elide: Text.ElideRight
                                 text: t.title
-                                font { family: "Microsoft YaHei UI"; pixelSize: 13 }
+                                font { family: Theme.fontFamily; pixelSize: 13 }
                                 color: Theme.text_primary
                             }
                             Text {
                                 width: parent.width
                                 elide: Text.ElideRight
                                 text: t.top3.join(" / ")
-                                font { family: "Microsoft YaHei UI"; pixelSize: 11 }
+                                font { family: Theme.fontFamily; pixelSize: 11 }
                                 color: Theme.text_secondary
                             }
                         }

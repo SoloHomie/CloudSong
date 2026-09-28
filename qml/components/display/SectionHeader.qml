@@ -30,7 +30,7 @@ Item {
             color: Theme.text_primary
             font.pixelSize: root.fontSize
             font.weight: Font.Bold
-            font.family: "Microsoft YaHei UI"
+            font.family: Theme.fontFamily
             anchors.verticalCenter: parent.verticalCenter
         }
     }

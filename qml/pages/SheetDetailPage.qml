@@ -56,7 +56,7 @@ Item {
                         id: typeText
                         anchors.centerIn: parent
                         text: root.kind === "toplist" ? "榜单" : (root.mine ? "自建歌单" : "歌单")
-                        font { family: "Microsoft YaHei UI"; pixelSize: 10 }
+                        font { family: Theme.fontFamily; pixelSize: 10 }
                         color: Theme.tag_preset_fg
                     }
                 }
@@ -71,7 +71,7 @@ Item {
                         id: pfText
                         anchors.centerIn: parent
                         text: root.platform
-                        font { family: "Microsoft YaHei UI"; pixelSize: 10 }
+                        font { family: Theme.fontFamily; pixelSize: 10 }
                         color: Theme.tag_preset_fg
                     }
                 }
@@ -81,14 +81,14 @@ Item {
                 width: parent.width
                 elide: Text.ElideRight
                 text: root.title
-                font { family: "Microsoft YaHei UI"; pixelSize: 22; weight: Font.Bold }
+                font { family: Theme.fontFamily; pixelSize: 22; weight: Font.Bold }
                 color: Theme.text_primary
             }
             Text {
                 width: parent.width
                 text: "共 " + root.songs.length + " 首" + (root.desc !== "" ? " · " + root.desc : "")
                 elide: Text.ElideRight
-                font { family: "Microsoft YaHei UI"; pixelSize: 12 }
+                font { family: Theme.fontFamily; pixelSize: 12 }
                 color: Theme.text_secondary
             }
 
@@ -127,6 +127,7 @@ Item {
                     Popover {
                         id: morePop
                         panelWidth: 140
+                        placement: "below"
                         anchors { top: parent.bottom; topMargin: 8; horizontalCenter: parent.horizontalCenter }
                         PopoverOption { text: "下载全部"; onSelected: morePop.open = false }
                         PopoverOption { text: "编辑歌单信息"; visible: root.mine; onSelected: morePop.open = false }

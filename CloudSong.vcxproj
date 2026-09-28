@@ -71,6 +71,10 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
+    <PreBuildEvent>
+      <!-- 字体二进制资源 (18MB 内嵌 qrc 会 C1060 撑爆 cl 前端堆, 故外挂 rcc; 两配置都生成) -->
+      <Command>$(QTDIR)\bin\rcc.exe -binary "$(ProjectDir)fonts.qrc" -o "$(OutDir)fonts.rcc"</Command>
+    </PreBuildEvent>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -85,6 +89,10 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
     </ClCompile>
+    <PreBuildEvent>
+      <!-- 字体二进制资源 (18MB 内嵌 qrc 会 C1060 撑爆 cl 前端堆, 故外挂 rcc) -->
+      <Command>$(QTDIR)\bin\rcc.exe -binary "$(ProjectDir)fonts.qrc" -o "$(OutDir)fonts.rcc"</Command>
+    </PreBuildEvent>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>false</GenerateDebugInformation>

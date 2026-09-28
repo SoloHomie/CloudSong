@@ -52,7 +52,7 @@ Item {
         id: measure
         visible: false
         font.pixelSize: root.fontSize
-        font.family: "Microsoft YaHei UI"
+        font.family: Theme.fontFamily
     }
 
     function _recalcMaxWidth() {
@@ -112,7 +112,7 @@ Item {
                 color: Theme.text_primary
                 font.pixelSize: root.fontSize
                 font.weight: root.fontBold ? Font.Bold : Font.Normal
-                font.family: "Microsoft YaHei UI"
+                font.family: Theme.fontFamily
                 elide: Text.ElideRight
                 horizontalAlignment: root.textCenter ? Text.AlignHCenter : Text.AlignLeft
             }
@@ -200,7 +200,7 @@ Item {
                     color: Theme.text_primary
                     font.pixelSize: root.fontSize
                     font.weight: root.fontBold ? Font.Bold : Font.Normal
-                    font.family: "Microsoft YaHei UI"
+                    font.family: Theme.fontFamily
                 }
 
                 onClicked: {

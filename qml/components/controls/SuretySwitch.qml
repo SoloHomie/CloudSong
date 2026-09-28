@@ -73,7 +73,7 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         text: root.label
         color: root.enabled ? clr_label : clr_label_disabled
-        font.family: "Microsoft YaHei UI"
+        font.family: Theme.fontFamily
         font.pixelSize: root.labelFontSize > 0 ? root.labelFontSize : Math.max(10, root.height * 0.58)
         visible: root.label !== ""
         width: root.labelWidth > 0 ? root.labelWidth : implicitWidth

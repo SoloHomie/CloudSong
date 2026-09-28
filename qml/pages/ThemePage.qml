@@ -54,12 +54,12 @@ Item {
                     spacing: 2
                     Text {
                         text: modelData.name
-                        font { family: "Microsoft YaHei UI"; pixelSize: 13; weight: sel ? Font.Bold : Font.Normal }
+                        font { family: Theme.fontFamily; pixelSize: 13; weight: sel ? Font.Bold : Font.Normal }
                         color: Theme.text_primary
                     }
                     Text {
                         text: modelData.desc
-                        font { family: "Microsoft YaHei UI"; pixelSize: 11 }
+                        font { family: Theme.fontFamily; pixelSize: 11 }
                         color: Theme.text_secondary
                     }
                 }
@@ -75,7 +75,7 @@ Item {
                     Text {
                         anchors.centerIn: parent
                         text: "✓"
-                        font { family: "Microsoft YaHei UI"; pixelSize: 12 }
+                        font { family: Theme.fontFamily; pixelSize: 12 }
                         color: "#ffffff"
                     }
                 }

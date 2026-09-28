@@ -73,14 +73,14 @@ Item {
             anchors { top: cover.bottom; topMargin: 8; left: parent.left; right: parent.right }
             elide: Text.ElideRight
             text: it.title
-            font { family: "Microsoft YaHei UI"; pixelSize: 13 }
+            font { family: Theme.fontFamily; pixelSize: 13 }
             color: Theme.text_primary
         }
         Text {
             anchors { top: cover.bottom; topMargin: 26; left: parent.left; right: parent.right }
             elide: Text.ElideRight
             text: it.subtitle !== undefined ? it.subtitle : ""
-            font { family: "Microsoft YaHei UI"; pixelSize: 11 }
+            font { family: Theme.fontFamily; pixelSize: 11 }
             color: Theme.text_secondary
         }
 

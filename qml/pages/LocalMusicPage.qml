@@ -122,7 +122,7 @@ Item {
                     Text {
                         anchors { left: parent.left; leftMargin: 48 + modelData.depth * 18; verticalCenter: parent.verticalCenter }
                         text: modelData.name
-                        font { family: "Microsoft YaHei UI"; pixelSize: 13 }
+                        font { family: Theme.fontFamily; pixelSize: 13 }
                         color: Theme.text_primary
                     }
                     MouseArea {

@@ -1,10 +1,13 @@
 import QtQuick
 import QtQuick.Effects
+import QtQuick.Window
 import "../../theme"
 
 // ──────────────────────────────────────────────────────────────
 //  IconImage — 单色 SVG 图标 (白色源图 + 着色)
 //  用法: IconImage { source: "qrc:.../play.svg"; color: Theme.accent; size: 16 }
+//  sourceSize 按实际渲染像素 × DPR 逐像素栅格化, 抗锯齿
+//  (固定 64px 源再缩小到 21/26px 会因线性滤波缩样出现锯齿)
 // ──────────────────────────────────────────────────────────────
 Image {
     id: root
@@ -12,7 +15,8 @@ Image {
     property real size: 16
     width: size
     height: size
-    sourceSize: Qt.size(64, 64)
+    sourceSize: Qt.size(Math.max(1, Math.ceil(size * Screen.devicePixelRatio)),
+                        Math.max(1, Math.ceil(size * Screen.devicePixelRatio)))
     fillMode: Image.PreserveAspectFit
     smooth: true
     antialiasing: true

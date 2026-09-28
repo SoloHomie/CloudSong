@@ -99,7 +99,7 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             text: root.userName
             color: Theme.text_secondary
-            font.family: "Microsoft YaHei UI"
+            font.family: Theme.fontFamily
             font.pixelSize: 13
             elide: Text.ElideRight
             width: Math.min(implicitWidth, 90)
@@ -189,13 +189,13 @@ Item {
                             Text {
                                 text: root.userName
                                 color: Theme.text_primary
-                                font.family: "Microsoft YaHei UI"
+                                font.family: Theme.fontFamily
                                 font.pixelSize: 14; font.weight: Font.Bold
                             }
                             Text {
                                 text: root.email
                                 color: Theme.text_secondary
-                                font.family: "Microsoft YaHei UI"
+                                font.family: Theme.fontFamily
                                 font.pixelSize: 13
                                 elide: Text.ElideRight
                                 width: 160
@@ -218,7 +218,7 @@ Item {
                                   ? (root.planName || "Pro") + " · " + root.badgeTip
                                   : "免费版 · 升级解锁云漫游"
                             color: root.pro ? Theme.purple_fg : Theme.text_secondary
-                            font.family: "Microsoft YaHei UI"
+                            font.family: Theme.fontFamily
                             font.pixelSize: 13
                         }
                     }
@@ -243,7 +243,7 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     text: menuItem.label
                     color: Theme.text_primary
-                    font.family: "Microsoft YaHei UI"
+                    font.family: Theme.fontFamily
                     font.pixelSize: 13
                 }
                 Text {
@@ -251,7 +251,7 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     text: menuItem.hint
                     color: Theme.text_secondary
-                    font.family: "Microsoft YaHei UI"
+                    font.family: Theme.fontFamily
                     font.pixelSize: 13
                 }
                 MouseArea {

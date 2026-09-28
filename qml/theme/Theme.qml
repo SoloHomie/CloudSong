@@ -3,6 +3,14 @@ pragma Singleton
 
 QtObject {
     // =========================================================================
+    //  界面字体 (2026-09-28 抽离统一入口: 全部组件 family 引用此 token,
+    //  换字体只改这里 / 由设置页「界面字体」赋值; 非 readonly, 待 C++ ConfigService 持久化)
+    //  字体资源 = qml/assets/fonts/MiSans-Regular.ttf + MiSans-Bold.ttf (qrc 内嵌),
+    //  main.qml FontLoader 注册; 新增字体 = 加资源 + FontLoader + 此处选项
+    // =========================================================================
+    property string fontFamily: "MiSans VF"
+
+    // =========================================================================
     //  Active Scheme — 0=浅色 1=深色 2=跟随系统
     // =========================================================================
     readonly property bool isDark: {

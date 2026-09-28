@@ -49,7 +49,7 @@ Item {
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 text: "来源:"
-                font { family: "Microsoft YaHei UI"; pixelSize: 12 }
+                font { family: Theme.fontFamily; pixelSize: 12 }
                 color: Theme.text_hint
             }
             Repeater {
@@ -64,7 +64,7 @@ Item {
                         id: srcText
                         anchors.centerIn: parent
                         text: modelData.name
-                        font { family: "Microsoft YaHei UI"; pixelSize: 11 }
+                        font { family: Theme.fontFamily; pixelSize: 11 }
                         color: isOn ? "#ffffff" : Theme.text_secondary
                     }
                     MouseArea {
@@ -90,7 +90,7 @@ Item {
         spacing: 12
         Text {
             text: "热门搜索"
-            font { family: "Microsoft YaHei UI"; pixelSize: 14; weight: Font.Bold }
+            font { family: Theme.fontFamily; pixelSize: 14; weight: Font.Bold }
             color: Theme.text_primary
         }
         Row {
@@ -106,7 +106,7 @@ Item {
                         id: tagText
                         anchors.centerIn: parent
                         text: modelData
-                        font { family: "Microsoft YaHei UI"; pixelSize: 12 }
+                        font { family: Theme.fontFamily; pixelSize: 12 }
                         color: Theme.text_primary
                     }
                     MouseArea {

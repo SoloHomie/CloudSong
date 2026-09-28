@@ -31,7 +31,7 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             visible: root.title !== ""
             text: root.title
-            font { family: "Microsoft YaHei UI"; pixelSize: 15; weight: Font.Bold }
+            font { family: Theme.fontFamily; pixelSize: 15; weight: Font.Bold }
             color: Theme.text_primary
         }
 
@@ -42,7 +42,7 @@ Item {
             width: parent.width
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.Wrap
-            font { family: "Microsoft YaHei UI"; pixelSize: 13 }
+            font { family: Theme.fontFamily; pixelSize: 13 }
             color: Theme.text_secondary
         }
 

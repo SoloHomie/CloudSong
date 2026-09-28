@@ -70,7 +70,7 @@ Item {
                     width: parent.width
                     elide: Text.ElideRight
                     text: t.name
-                    font { family: "Microsoft YaHei UI"; pixelSize: 13 }
+                    font { family: Theme.fontFamily; pixelSize: 13 }
                     color: Theme.text_primary
                 }
                 // 进行中: 进度条; 已完成: 大小/路径; 暂停/失败: 状态说明
@@ -92,7 +92,7 @@ Item {
                     text: t.status === "done" ? t.size + " · 已下载到本地目录"
                          : t.status === "paused" ? t.size + " · 已暂停"
                          : t.status === "error" ? t.size + " · 下载失败, 点击重试" : ""
-                    font { family: "Microsoft YaHei UI"; pixelSize: 11 }
+                    font { family: Theme.fontFamily; pixelSize: 11 }
                     color: t.status === "error" ? Theme.danger : Theme.text_secondary
                 }
             }
@@ -102,7 +102,7 @@ Item {
                 anchors { right: parent.right; rightMargin: 24; verticalCenter: parent.verticalCenter }
                 text: t.status === "downloading" ? t.progress + "%"
                     : t.status === "done" ? "打开文件夹" : "重试"
-                font { family: "Microsoft YaHei UI"; pixelSize: 12 }
+                font { family: Theme.fontFamily; pixelSize: 12 }
                 color: t.status === "done" ? Theme.text_secondary : Theme.accent_text
             }
 

@@ -60,14 +60,14 @@ Popup {
                 Text {
                     text: root.title
                     color: Theme.text_primary
-                    font.family: "Microsoft YaHei UI"
+                    font.family: Theme.fontFamily
                     font.pixelSize: 16; font.weight: Font.Bold
                 }
                 Text {
                     visible: root.subtitle !== ""
                     text: root.subtitle
                     color: Theme.text_secondary
-                    font.family: "Microsoft YaHei UI"
+                    font.family: Theme.fontFamily
                     font.pixelSize: 12
                 }
             }

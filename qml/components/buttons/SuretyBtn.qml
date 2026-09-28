@@ -25,7 +25,7 @@ Rectangle {
 
     // 字体 — 默认 15px，外部可通过 font.pixelSize 覆盖
     property font   font: Qt.font({
-        family:     "Microsoft YaHei UI",
+        family:     Theme.fontFamily,
         pixelSize: 13,
         weight:     Font.Medium
     })

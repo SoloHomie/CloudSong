@@ -56,7 +56,7 @@ Rectangle {
                             anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
                             text: headerText
                             color: Theme.text_hint
-                            font { family: "Microsoft YaHei UI"; pixelSize: 12; weight: Font.Bold }
+                            font { family: Theme.fontFamily; pixelSize: 13; weight: Font.Bold }
                         }
                         // 标签右侧小添加按钮 (headerBtn: true 时显示, 如"创建的歌单"; 无背景, 仅图标)
                         Rectangle {

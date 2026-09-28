@@ -54,7 +54,7 @@ Item {
                         id: typeText
                         anchors.centerIn: parent
                         text: "专辑"
-                        font { family: "Microsoft YaHei UI"; pixelSize: 10 }
+                        font { family: Theme.fontFamily; pixelSize: 10 }
                         color: Theme.tag_preset_fg
                     }
                 }
@@ -69,7 +69,7 @@ Item {
                         id: pfText
                         anchors.centerIn: parent
                         text: root.platform
-                        font { family: "Microsoft YaHei UI"; pixelSize: 10 }
+                        font { family: Theme.fontFamily; pixelSize: 10 }
                         color: Theme.tag_preset_fg
                     }
                 }
@@ -79,14 +79,14 @@ Item {
                 width: parent.width
                 elide: Text.ElideRight
                 text: root.title
-                font { family: "Microsoft YaHei UI"; pixelSize: 22; weight: Font.Bold }
+                font { family: Theme.fontFamily; pixelSize: 22; weight: Font.Bold }
                 color: Theme.text_primary
             }
             Text {
                 width: parent.width
                 elide: Text.ElideRight
                 text: root.artist + (root.date !== "" ? " · " + root.date : "") + " · 共 " + root.songs.length + " 首"
-                font { family: "Microsoft YaHei UI"; pixelSize: 12 }
+                font { family: Theme.fontFamily; pixelSize: 12 }
                 color: Theme.text_secondary
             }
 

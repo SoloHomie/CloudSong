@@ -159,7 +159,7 @@ Rectangle {
                 // 文字颜色
                 color: readOnly ? _textReadOnly : _text
                 font.pixelSize: 13
-                font.family: "Microsoft YaHei UI"
+                font.family: Theme.fontFamily
 
                 // 换行
                 wrapMode: Text.WordWrap

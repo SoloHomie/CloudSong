@@ -77,11 +77,11 @@ ColumnLayout {
     readonly property var _strengthColor: [Theme.danger_fg, Theme.warning_fg, Theme.success_fg]
 
     SuretyTextField { id: regEmail; Layout.fillWidth: true; Layout.preferredHeight: 36; placeholder: qsTr("请输入邮箱地址"); customBg: Theme.bg_input; customBorder: Theme.border_standard }
-    Text { visible: _emailTouched && !_emailFormat; text: qsTr("· 邮箱格式不正确"); color: Theme.danger_fg; font.pixelSize: 12; font.family: "Microsoft YaHei UI" }
+    Text { visible: _emailTouched && !_emailFormat; text: qsTr("· 邮箱格式不正确"); color: Theme.danger_fg; font.pixelSize: 12; font.family: Theme.fontFamily }
 
     // 2026-09-28 打磨: 信号契约含 username, 原表单缺此字段且把邮箱当用户名传两次, 补上
     SuretyTextField { id: regUsername; Layout.fillWidth: true; Layout.preferredHeight: 36; placeholder: qsTr("用户名（2-20 位，不能含空格）"); customBg: Theme.bg_input; customBorder: Theme.border_standard }
-    Text { visible: _userTouched && !_userValid; text: qsTr("· 用户名 2-20 位，不能含空格"); color: Theme.danger_fg; font.pixelSize: 12; font.family: "Microsoft YaHei UI" }
+    Text { visible: _userTouched && !_userValid; text: qsTr("· 用户名 2-20 位，不能含空格"); color: Theme.danger_fg; font.pixelSize: 12; font.family: Theme.fontFamily }
 
     RowLayout { Layout.fillWidth: true; spacing: 6
         SuretyTextField { id: regCode; Layout.fillWidth: true; Layout.preferredHeight: 36; placeholder: qsTr("请输入邮箱验证码"); customBg: Theme.bg_input; customBorder: Theme.border_standard }
@@ -93,7 +93,7 @@ ColumnLayout {
 
     // 超时保护：15 秒后强制恢复（网络超时等异常情况）
     Timer { id: protectTimer; interval: 15000; onTriggered: { sendingCode = false } }
-    Text { visible: _codeTouched && !_codeOk; text: qsTr("· 验证码至少 4 位"); color: Theme.danger_fg; font.pixelSize: 12; font.family: "Microsoft YaHei UI" }
+    Text { visible: _codeTouched && !_codeOk; text: qsTr("· 验证码至少 4 位"); color: Theme.danger_fg; font.pixelSize: 12; font.family: Theme.fontFamily }
 
     PasswordField { id: regPassword; Layout.fillWidth: true; Layout.preferredHeight: 36; placeholder: qsTr("请输入密码（6-20 位，需含字母+数字）") }
 
@@ -104,7 +104,7 @@ ColumnLayout {
                 color: index <= root._strength ? root._strengthColor[root._strength] : Theme.border_default
                 Behavior on color { ColorAnimation { duration: 200 } } } }
         Text { visible: _pwTouched; text: _strengthLabel[root._strength]; color: _strengthColor[root._strength]
-            font.pixelSize: 12; font.weight: Font.DemiBold; font.family: "Microsoft YaHei UI"; Layout.leftMargin: 4 }
+            font.pixelSize: 12; font.weight: Font.DemiBold; font.family: Theme.fontFamily; Layout.leftMargin: 4 }
     }
 
     ColumnLayout { visible: _pwTouched && !_pwValid; spacing: 2
@@ -114,11 +114,11 @@ ColumnLayout {
             { ok: /[a-zA-Z]/.test(regPassword.text), msg: qsTr("· 需包含至少一个字母") },
             { ok: /[0-9]/.test(regPassword.text), msg: qsTr("· 需包含至少一个数字") }
         ]; delegate: Text { required property var modelData
-            visible: !modelData.ok; text: modelData.msg; color: Theme.danger_fg; font.pixelSize: 12; font.family: "Microsoft YaHei UI" } }
+            visible: !modelData.ok; text: modelData.msg; color: Theme.danger_fg; font.pixelSize: 12; font.family: Theme.fontFamily } }
     }
 
     SuretyTextField { id: regConfirm; Layout.fillWidth: true; Layout.preferredHeight: 36; placeholder: qsTr("请再次输入密码"); echoMode: TextInput.Password; customBg: Theme.bg_input; customBorder: Theme.border_standard }
-    Text { visible: _confirmTouched && !_pwMatch; text: qsTr("· 两次输入的密码不一致"); color: Theme.danger_fg; font.pixelSize: 12; font.family: "Microsoft YaHei UI" }
+    Text { visible: _confirmTouched && !_pwMatch; text: qsTr("· 两次输入的密码不一致"); color: Theme.danger_fg; font.pixelSize: 12; font.family: Theme.fontFamily }
 
     SuretyBtn { Layout.fillWidth: true; Layout.topMargin: 3; Layout.preferredHeight: 32
         text: (root.loading && _formValid) ? qsTr("注册中...") : qsTr("注册")
@@ -126,12 +126,12 @@ ColumnLayout {
         onClicked: root.registerClicked(regEmail.text, regUsername.text.trim(), regPassword.text, regConfirm.text, regCode.text) }
 
     RowLayout { Layout.alignment: Qt.AlignHCenter; spacing: 3
-        Text { text: qsTr("已有账号？"); color: Theme.text_secondary; font.pixelSize: 12; font.family: "Microsoft YaHei UI" }
-        Text { text: qsTr("登录"); color: Theme.accent_text; font.pixelSize: 12; font.family: "Microsoft YaHei UI"
+        Text { text: qsTr("已有账号？"); color: Theme.text_secondary; font.pixelSize: 12; font.family: Theme.fontFamily }
+        Text { text: qsTr("登录"); color: Theme.accent_text; font.pixelSize: 12; font.family: Theme.fontFamily
             MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: root.switchToLogin() } }
     }
 
     Text { Layout.alignment: Qt.AlignHCenter
         text: qsTr("注册即表示同意") + " <a href='#'>" + qsTr("服务条款") + "</a> " + qsTr("和") + " <a href='#'>" + qsTr("隐私政策") + "</a>"
-        color: Theme.text_secondary; font.pixelSize: 12; font.family: "Microsoft YaHei UI"; textFormat: Text.RichText }
+        color: Theme.text_secondary; font.pixelSize: 12; font.family: Theme.fontFamily; textFormat: Text.RichText }
 }

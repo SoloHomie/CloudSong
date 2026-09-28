@@ -6,7 +6,7 @@ import "../components/display"
 Rectangle {
     id: root
     width: parent ? parent.width : 80
-    height: 30
+    height: 32
     radius: 5
 
     property string iconImage: ""
@@ -66,8 +66,8 @@ Rectangle {
         Text {
             anchors.verticalCenter: parent.verticalCenter
             text: sideText
-            font.pixelSize: 13; font.weight: Font.Bold
-            font.family: "Microsoft YaHei UI"
+            font.pixelSize: 14; font.weight: Font.Bold
+            font.family: Theme.fontFamily
             color: isSelected ? Theme.accent_text
                  : mouseArea.containsMouse ? Theme.text_primary
                  : Theme.text_secondary
@@ -85,7 +85,7 @@ Rectangle {
                 anchors.centerIn: parent
                 text: root.badgeText
                 color: Theme.purple_fg
-                font.pixelSize: 8; font.weight: Font.Bold
+                font.pixelSize: 9; font.weight: Font.Bold
                 font.family: "JetBrains Mono"
             }
         }

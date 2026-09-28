@@ -24,7 +24,7 @@ ColumnLayout {
     function clear() { resetEmail.text=""; resetCode.text=""; resetNewPassword.text=""; resetConfirm.text="" }
 
     Text { text: qsTr("请输入您的邮箱，获取验证码后即可在本页面重置密码。")
-        color: Theme.text_secondary; font.pixelSize: 12; font.family: "Microsoft YaHei UI"
+        color: Theme.text_secondary; font.pixelSize: 12; font.family: Theme.fontFamily
         wrapMode: Text.WordWrap; Layout.fillWidth: true }
 
     SuretyTextField { id: resetEmail; Layout.fillWidth: true; Layout.preferredHeight: 36; placeholder: qsTr("邮箱地址"); customBg: Theme.bg_input; customBorder: Theme.border_standard }

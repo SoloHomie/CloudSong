@@ -41,7 +41,7 @@ Item {
                 width: parent.width - 14 - 8 - (clearBtn.visible ? 22 : 0) - 4
                 clip: true
                 selectByMouse: true
-                font { family: "Microsoft YaHei UI"; pixelSize: 12 }
+                font { family: Theme.fontFamily; pixelSize: 12 }
                 color: Theme.input_text
 
                 onActiveFocusChanged: {
@@ -88,7 +88,7 @@ Item {
             visible: inputField.text === "" && !inputField.activeFocus
             anchors { left: parent.left; leftMargin: 34; verticalCenter: parent.verticalCenter }
             text: "搜索音乐 / 专辑 / 歌手 / 歌单"
-            font { family: "Microsoft YaHei UI"; pixelSize: 12 }
+            font { family: Theme.fontFamily; pixelSize: 12 }
             color: Theme.input_placeholder
         }
         MouseArea {
@@ -156,14 +156,14 @@ Item {
                 Text {
                     anchors { left: parent.left; verticalCenter: parent.verticalCenter }
                     text: "搜索历史"
-                    font { family: "Microsoft YaHei UI"; pixelSize: 12; weight: Font.Bold }
+                    font { family: Theme.fontFamily; pixelSize: 12; weight: Font.Bold }
                     color: Theme.text_secondary
                 }
                 Text {
                     visible: MockData.searchHistory.length > 0
                     anchors { right: parent.right; verticalCenter: parent.verticalCenter }
                     text: "清空历史"
-                    font { family: "Microsoft YaHei UI"; pixelSize: 12 }
+                    font { family: Theme.fontFamily; pixelSize: 12 }
                     color: Theme.accent_text
                     MouseArea {
                         anchors.fill: parent
@@ -189,7 +189,7 @@ Item {
                             id: chipText
                             anchors.centerIn: parent
                             text: modelData
-                            font { family: "Microsoft YaHei UI"; pixelSize: 12 }
+                            font { family: Theme.fontFamily; pixelSize: 12 }
                             color: Theme.text_primary
                         }
                         MouseArea {
@@ -204,7 +204,7 @@ Item {
             Text {
                 visible: MockData.searchHistory.length === 0
                 text: "暂无搜索历史"
-                font { family: "Microsoft YaHei UI"; pixelSize: 12 }
+                font { family: Theme.fontFamily; pixelSize: 12 }
                 color: Theme.text_hint
             }
         }

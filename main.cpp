@@ -3,6 +3,8 @@
 #include <QQmlContext>
 #include <QQuickWindow>
 #include <QAbstractNativeEventFilter>
+#include <QFontDatabase>
+#include <QResource>
 #include <windows.h>
 #include <windowsx.h>
 #include "appconfig.h"
@@ -106,6 +108,19 @@ int main(int argc, char *argv[])
 #endif
 
     QGuiApplication app(argc, argv);
+
+    // ── 全局 UI 字体 (2026-09-28 用户拍板 MiSans; C++ 加载, QML 只按 Theme.fontFamily 引用) ──
+    // 可变字体 wght 轴不被 Qt 驱动 → 实例化 Regular/Bold 两份静态同 family, 按 usWeightClass 匹配;
+    // 字体约 18MB, 内嵌 qml.qrc 会撑爆 32 位 cl 前端堆 (C1060) → 外挂 fonts.rcc
+    // (PreBuildEvent rcc -binary 生成到输出目录), 运行时注册; 文件缺失则回退系统字体
+    const QString rccPath = QCoreApplication::applicationDirPath() + QStringLiteral("/fonts.rcc");
+    if (QResource::registerResource(rccPath)) {
+        QFontDatabase::addApplicationFont(QStringLiteral(":/fonts/qml/assets/fonts/MiSans-Regular.ttf"));
+        QFontDatabase::addApplicationFont(QStringLiteral(":/fonts/qml/assets/fonts/MiSans-Bold.ttf"));
+    }
+    // 全局默认字体: 未显式写 family 的组件 (Qt 内建控件等) 也走 MiSans;
+    // QML 侧显式 family 由 Theme.fontFamily token 控制
+    app.setFont(QFont(QStringLiteral("MiSans VF")));
 
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("AppCfg", AppConfig::instance());

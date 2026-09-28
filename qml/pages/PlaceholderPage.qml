@@ -12,6 +12,6 @@ Rectangle {
         anchors.centerIn: parent
         text: root.title
         color: Theme.text_hint
-        font { family: "Microsoft YaHei UI"; pixelSize: 14 }
+        font { family: Theme.fontFamily; pixelSize: 14 }
     }
 }

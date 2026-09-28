@@ -1,0 +1,9 @@
+<RCC>
+    <!-- 全局 UI 字体 (2026-09-28): MiSans 静态化 Regular/Bold, 单独 rcc 二进制外挂
+         原因: 18MB 字体内嵌 qml.qrc 令 qrc_qml.cpp 超 32 位 cl 前端堆 (C1060)
+         构建时 PreBuildEvent 生成 fonts.rcc 到输出目录, main.cpp 运行时 registerResource -->
+    <qresource prefix="/fonts">
+        <file>qml/assets/fonts/MiSans-Regular.ttf</file>
+        <file>qml/assets/fonts/MiSans-Bold.ttf</file>
+    </qresource>
+</RCC>

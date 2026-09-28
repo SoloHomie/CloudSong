@@ -27,7 +27,7 @@ Item {
                     id: tabText
                     anchors.centerIn: parent
                     text: modelData.text
-                    font { family: "Microsoft YaHei UI"; pixelSize: 14; weight: active ? Font.Bold : Font.Normal }
+                    font { family: Theme.fontFamily; pixelSize: 14; weight: active ? Font.Bold : Font.Normal }
                     color: active ? Theme.text_primary : Theme.text_secondary
                 }
                 Rectangle {

@@ -6,33 +6,41 @@ import "../components/overlay"
 
 // ═══════════════════════════════════════════════════════════════
 //  PlayerBar — 底部播放条 (原版 MusicFree PlayerBar 三列同构)
-//   左: 封面 + 信息两行 / 中: 桌面歌词开关 + 播放控制 / 右: 音质·倍速·音量 + 队列
+//   左: 封面 + 爱心 + 信息两行 / 中: 仅上一曲·播放·下一曲(2026-09-28 用户拍板) / 右: 下载·音质·音量·歌词·循环·队列
 //   全部状态来自注入的 playback (当前 MockPlayback, 待换 C++ PlaybackService);
 //   进度 250ms 步进 (playback Timer), 无连续动画
 // ═══════════════════════════════════════════════════════════════
 Item {
     id: root
-    height: 72
+    height: 74
     property QtObject playback: null
     signal openQueueRequested()
     signal showListenModeRequested()
 
-    // ── 顶部进度条 (点击跳进度) ──
-    Rectangle {
-        id: progressTrack
+    // ── 顶部进度条 (点击跳进度, hover 变亮; 热区 12px, 视觉轨道 3px 太难点中) ──
+    Item {
+        id: progressHit
         anchors { top: parent.top; left: parent.left; right: parent.right }
-        height: 3
-        color: Theme.border_default
+        height: 12
         Rectangle {
-            id: progressFill
-            anchors { top: parent.top; bottom: parent.bottom; left: parent.left }
-            width: (playback.duration > 0)
-                   ? progressTrack.width * Math.min(1, Math.max(0, playback.position / playback.duration))
-                   : 0
-            color: Theme.accent
+            id: progressTrack
+            anchors { top: parent.top; left: parent.left; right: parent.right }
+            height: 3
+            color: progMouse.containsMouse ? Theme.d6 : Theme.border_default
+            Behavior on color { ColorAnimation { duration: 150 } }
+            Rectangle {
+                id: progressFill
+                anchors { top: parent.top; bottom: parent.bottom; left: parent.left }
+                width: (playback.duration > 0)
+                       ? progressTrack.width * Math.min(1, Math.max(0, playback.position / playback.duration))
+                       : 0
+                color: Theme.accent
+            }
         }
         MouseArea {
+            id: progMouse
             anchors.fill: parent
+            hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             onClicked: function(mouse) {
                 if (playback.duration > 0)
@@ -48,8 +56,8 @@ Item {
 
         // 封面 (点击进入听歌模式)
         Item {
-            width: 48
-            height: 48
+            width: 52
+            height: 52
             anchors.verticalCenter: parent.verticalCenter
             CoverArt { anchors.fill: parent; seed: playback.seed }
             MouseArea {
@@ -59,28 +67,48 @@ Item {
             }
         }
 
+        // 爱心 (靠左: 封面旁; 未喜欢=普通图标色, 已喜欢=红心且 hover 不变白)
+        BarBtn {
+            icon: playback.favorite ? "qrc:/qt/qml/cloudsong/qml/assets/icons/player/heart-fill.svg"
+                                    : "qrc:/qt/qml/cloudsong/qml/assets/icons/player/heart.svg"
+            iconColor: playback.favorite ? Theme.danger_fg : "transparent"
+            fixedColor: playback.favorite
+            tip: "喜欢"
+            onClicked: playback.toggleFavorite()
+        }
+
         Column {
             anchors.verticalCenter: parent.verticalCenter
-            width: 210
-            spacing: 5
+            // 窗口窄时信息列收缩, 优先保住中控与右侧工具 (最小 800 宽; 左组仅封面+爱心+信息, 右组已含歌词+循环)
+            width: Math.max(100, Math.min(210, root.width - 690))
+            spacing: 4
 
-            // 行1: 歌名 · 歌手 · 平台
-            Row {
+            // 行1: 歌名
+            Text {
                 width: parent.width
+                elide: Text.ElideRight
+                text: playback.title !== "" ? playback.title : "未在播放"
+                font { family: Theme.fontFamily; pixelSize: 14 }
+                color: Theme.text_primary
+            }
+
+            // 行2: 歌手 · 平台徽标 · 时间
+            Row {
                 height: 16
-                spacing: 6
+                spacing: 8
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    width: Math.min(implicitWidth, parent.width - 52)
+                    width: Math.min(implicitWidth, parent.width - 140)
                     elide: Text.ElideRight
-                    text: (playback.title !== "" ? playback.title + " · " + playback.artist : "未在播放")
-                    font { family: "Microsoft YaHei UI"; pixelSize: 13 }
-                    color: Theme.text_primary
+                    visible: playback.artist !== ""
+                    text: playback.artist
+                    font { family: Theme.fontFamily; pixelSize: 12 }
+                    color: Theme.text_secondary
                 }
                 Rectangle {
                     anchors.verticalCenter: parent.verticalCenter
                     visible: playback.platform !== ""
-                    height: 16
+                    height: 15
                     width: pbText.implicitWidth + 12
                     radius: 8
                     color: Theme.tag_preset_bg
@@ -88,73 +116,43 @@ Item {
                         id: pbText
                         anchors.centerIn: parent
                         text: playback.platform
-                        font { family: "Microsoft YaHei UI"; pixelSize: 10 }
+                        font { family: Theme.fontFamily; pixelSize: 10 }
                         color: Theme.tag_preset_fg
                     }
-                }
-            }
-
-            // 行2: 喜欢 / 下载 / 时间
-            Row {
-                height: 14
-                spacing: 14
-                IconImage {
-                    anchors.verticalCenter: parent.verticalCenter
-                    size: 14
-                    source: playback.favorite ? "qrc:/qt/qml/cloudsong/qml/assets/icons/player/heart-fill.svg"
-                                             : "qrc:/qt/qml/cloudsong/qml/assets/icons/player/heart.svg"
-                    color: playback.favorite ? Theme.accent : Theme.text_hint
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: playback.toggleFavorite()
-                    }
-                }
-                IconImage {
-                    anchors.verticalCenter: parent.verticalCenter
-                    size: 14
-                    source: "qrc:/qt/qml/cloudsong/qml/assets/icons/player/download.svg"
-                    color: Theme.text_hint
-                    // 下载动作待接 C++ DownloadManager
                 }
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: MockData.fmtTime(playback.position) + " / " + MockData.fmtTime(playback.duration)
-                    font { family: "Microsoft YaHei UI"; pixelSize: 11 }
-                    color: Theme.text_hint
+                    font { family: Theme.fontFamily; pixelSize: 12 }
+                    color: Theme.text_secondary   // text_hint 4.12:1 不达标, 次级色 6.2:1
                 }
             }
         }
+
     }
 
-    // ── 中: 桌面歌词开关 + 播放控制 + 循环 ──
+    // ── 中: 仅上一曲 / 播放 / 下一曲 (2026-09-28 用户拍板) ──
     Row {
         anchors { horizontalCenter: parent.horizontalCenter; verticalCenter: parent.verticalCenter }
-        spacing: 14
+        spacing: 16
 
         BarBtn {
-            icon: "qrc:/qt/qml/cloudsong/qml/assets/icons/player/lyrics.svg"
-            active: playback.desktopLyric
-            onClicked: playback.desktopLyric = !playback.desktopLyric
-        }
-        BarBtn {
             icon: "qrc:/qt/qml/cloudsong/qml/assets/icons/player/prev.svg"
+            tip: "上一首"
             onClicked: playback.prev()
         }
 
-        // 播放/暂停 (主按钮)
-        Rectangle {
-            width: 38
-            height: 38
-            radius: 19
+        // 播放/暂停 (主按钮; 无背景, 图标常驻主题蓝, hover/pressed 变白)
+        Item {
+            width: 44
+            height: 44
             anchors.verticalCenter: parent.verticalCenter
-            color: playMouse.containsMouse ? Theme.accent_hover : Theme.accent
             IconImage {
                 anchors.centerIn: parent
-                size: 16
+                size: 26
                 source: playback.playing ? "qrc:/qt/qml/cloudsong/qml/assets/icons/player/pause.svg"
                                         : "qrc:/qt/qml/cloudsong/qml/assets/icons/player/play.svg"
-                color: "#ffffff"
+                color: (playMouse.containsMouse || playMouse.pressed) ? "#ffffff" : Theme.accent
             }
             MouseArea {
                 id: playMouse
@@ -163,25 +161,35 @@ Item {
                 cursorShape: Qt.PointingHandCursor
                 onClicked: playback.playPause()
             }
+            Tooltip {
+                text: playback.playing ? "暂停" : "播放"
+                shown: playMouse.containsMouse
+                delay: 0   // hover 即展示
+                radius: 8
+                bgColor: Theme.bg_card
+                borderColor: Theme.border_standard
+                anchorItem: parent
+            }
         }
 
         BarBtn {
             icon: "qrc:/qt/qml/cloudsong/qml/assets/icons/player/next.svg"
+            tip: "下一首"
             onClicked: playback.next()
-        }
-        BarBtn {
-            icon: playback.loopMode === 0 ? "qrc:/qt/qml/cloudsong/qml/assets/icons/player/repeat.svg"
-                 : playback.loopMode === 1 ? "qrc:/qt/qml/cloudsong/qml/assets/icons/player/repeat-one.svg"
-                 : "qrc:/qt/qml/cloudsong/qml/assets/icons/player/shuffle.svg"
-            active: playback.loopMode !== 0
-            onClicked: playback.toggleLoop()
         }
     }
 
-    // ── 右: 音质 / 倍速 / 音量 / 队列 ──
+    // ── 右: 下载 / 音质 / 音量 / 队列 ──
     Row {
         anchors { right: parent.right; rightMargin: 16; verticalCenter: parent.verticalCenter }
-        spacing: 12
+        spacing: 10
+
+        // 下载 (动作待接 C++ DownloadManager)
+        BarBtn {
+            icon: "qrc:/qt/qml/cloudsong/qml/assets/icons/player/download.svg"
+            tip: "下载"
+            onClicked: {}
+        }
 
         // 音质
         Item {
@@ -191,7 +199,9 @@ Item {
             BarBtn {
                 id: qualityBtn
                 icon: "qrc:/qt/qml/cloudsong/qml/assets/icons/player/quality.svg"
-                onClicked: { qualityPop.open = !qualityPop.open; speedPop.open = false; volumePop.open = false }
+                tip: "音质"
+                suppressTip: qualityPop.open
+                onClicked: { qualityPop.open = !qualityPop.open; volumePop.open = false }
             }
             Popover {
                 id: qualityPop
@@ -199,94 +209,77 @@ Item {
                 anchors { bottom: parent.top; bottomMargin: 8; horizontalCenter: parent.horizontalCenter }
                 PopoverOption { text: "标准品质"; active: playback.quality === "标准品质"; onSelected: { playback.quality = "标准品质"; qualityPop.open = false } }
                 PopoverOption { text: "较高品质"; active: playback.quality === "较高品质"; onSelected: { playback.quality = "较高品质"; qualityPop.open = false } }
+                PopoverOption { text: "极高品质"; active: playback.quality === "极高品质"; onSelected: { playback.quality = "极高品质"; qualityPop.open = false } }
                 PopoverOption { text: "无损品质"; active: playback.quality === "无损品质"; onSelected: { playback.quality = "无损品质"; qualityPop.open = false } }
+                PopoverOption { text: "Hi-Res";   active: playback.quality === "Hi-Res";   onSelected: { playback.quality = "Hi-Res";   qualityPop.open = false } }
             }
         }
 
-        // 倍速
-        Item {
-            id: speedWrap
-            width: speedBtn.width
-            height: speedBtn.height
-            BarBtn {
-                id: speedBtn
-                text: playback.rate.toString() + "x"
-                active: playback.rate !== 1.0
-                onClicked: { speedPop.open = !speedPop.open; qualityPop.open = false; volumePop.open = false }
-            }
-            Popover {
-                id: speedPop
-                panelWidth: 120
-                anchors { bottom: parent.top; bottomMargin: 8; horizontalCenter: parent.horizontalCenter }
-                PopoverOption { text: "0.5x";  active: playback.rate === 0.5;  onSelected: { playback.setRate(0.5);  speedPop.open = false } }
-                PopoverOption { text: "0.75x"; active: playback.rate === 0.75; onSelected: { playback.setRate(0.75); speedPop.open = false } }
-                PopoverOption { text: "1.0x";  active: playback.rate === 1.0;  onSelected: { playback.setRate(1.0);  speedPop.open = false } }
-                PopoverOption { text: "1.25x"; active: playback.rate === 1.25; onSelected: { playback.setRate(1.25); speedPop.open = false } }
-                PopoverOption { text: "1.5x";  active: playback.rate === 1.5;  onSelected: { playback.setRate(1.5);  speedPop.open = false } }
-                PopoverOption { text: "2.0x";  active: playback.rate === 2.0;  onSelected: { playback.setRate(2.0);  speedPop.open = false } }
-            }
-        }
-
-        // 音量
+        // 音量 (hover 即弹竖向调节条, 不再弹 tooltip; 点击直接开关音量; 移出按钮与面板 300ms 后关闭)
         Item {
             id: volumeWrap
             width: volumeBtn.width
             height: volumeBtn.height
             BarBtn {
                 id: volumeBtn
-                icon: "qrc:/qt/qml/cloudsong/qml/assets/icons/player/volume.svg"
-                onClicked: { volumePop.open = !volumePop.open; qualityPop.open = false; speedPop.open = false }
+                icon: playback.volume === 0 ? "qrc:/qt/qml/cloudsong/qml/assets/icons/player/volume-mute.svg"
+                                            : "qrc:/qt/qml/cloudsong/qml/assets/icons/player/volume-notice.svg"
+                onHoverEntered: { volCloseTimer.stop(); volumePop.open = true; qualityPop.open = false }
+                onHoverExited: volCloseTimer.restart()
+                onClicked: playback.toggleMute()   // 点击直接开关音量
+            }
+            Timer {
+                id: volCloseTimer
+                interval: 300
+                onTriggered: volumePop.open = false
             }
             Popover {
                 id: volumePop
-                panelWidth: 210
+                panelWidth: 40
+                spacing: 8
                 anchors { bottom: parent.top; bottomMargin: 8; horizontalCenter: parent.horizontalCenter }
-                Row {
-                    height: 28
-                    spacing: 10
-                    IconImage {
-                        anchors.verticalCenter: parent.verticalCenter
-                        size: 14
-                        source: "qrc:/qt/qml/cloudsong/qml/assets/icons/player/volume.svg"
-                        color: Theme.text_secondary
-                    }
+                // 悬停联动: 鼠标进面板取消关闭计时, 移出面板重启计时 (拖拽中不关)
+                onHoveredChanged: { if (hovered) volCloseTimer.stop(); else volCloseTimer.restart() }
+
+                // 竖向调节条 (顶部=100%, 底部=0; 热区 28 宽, 视觉轨道 4px 居中; 轨道上下各留 12, 把手到顶/到底不贴气泡边)
+                Item {
+                    id: volHit
+                    width: 28
+                    height: 160
+                    anchors.horizontalCenter: parent.horizontalCenter
                     Rectangle {
                         id: volTrack
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: 130
-                        height: 4
+                        anchors { top: parent.top; topMargin: 12; bottom: parent.bottom; bottomMargin: 12; horizontalCenter: parent.horizontalCenter }
+                        width: 4
                         radius: 2
                         color: Theme.border_default
                         Rectangle {
-                            anchors { top: parent.top; bottom: parent.bottom; left: parent.left }
-                            width: volTrack.width * playback.volume
+                            anchors { bottom: parent.bottom; horizontalCenter: parent.horizontalCenter }
+                            height: volTrack.height * playback.volume
+                            width: 4
                             radius: 2
                             color: Theme.accent
                         }
                         Rectangle {
-                            // volume=1 时圆钮中心在轨道右端, 收进轨道内不溢出
-                            x: Math.min(volTrack.width - 10, Math.max(0, volTrack.width * playback.volume - 5))
-                            anchors.verticalCenter: parent.verticalCenter
-                            width: 10
-                            height: 10
-                            radius: 5
+                            // 圆钮挂在 volTrack 内 (轨道坐标系), volume=1 时中心在轨道顶端, 收进轨道内不溢出
+                            y: Math.max(0, Math.min(volTrack.height - 14, volTrack.height * (1 - playback.volume) - 7))
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            width: 14
+                            height: 14
+                            radius: 7
                             color: "#ffffff"
                             border { width: 1; color: Theme.border_standard }
                         }
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: function(mouse) { playback.setVolume(mouse.x / volTrack.width) }
-                            onPositionChanged: function(mouse) {
-                                if (pressed) playback.setVolume(mouse.x / volTrack.width)
-                            }
-                        }
                     }
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: Math.round(playback.volume * 100) + "%"
-                        font { family: "Microsoft YaHei UI"; pixelSize: 12 }
-                        color: Theme.text_secondary
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onPressed: volCloseTimer.stop()   // 拖拽期间不关面板
+                        onReleased: { if (!volumePop.hovered) volCloseTimer.restart() }
+                        onClicked: function(mouse) { playback.setVolume(Math.max(0, Math.min(1, 1 - (mouse.y - volTrack.y) / volTrack.height))) }
+                        onPositionChanged: function(mouse) {
+                            if (pressed) playback.setVolume(Math.max(0, Math.min(1, 1 - (mouse.y - volTrack.y) / volTrack.height)))
+                        }
                     }
                 }
             }
@@ -300,49 +293,85 @@ Item {
             color: Theme.border_standard
         }
 
+        // 桌面歌词 / 循环模式 (随右侧工具区)
+        BarBtn {
+            icon: "qrc:/qt/qml/cloudsong/qml/assets/icons/player/lyrics.svg"
+            tip: "桌面歌词"
+            active: playback.desktopLyric
+            onClicked: playback.desktopLyric = !playback.desktopLyric
+        }
+        BarBtn {
+            icon: playback.loopMode === 0 ? "qrc:/qt/qml/cloudsong/qml/assets/icons/player/repeat.svg"
+                 : playback.loopMode === 1 ? "qrc:/qt/qml/cloudsong/qml/assets/icons/player/repeat-one.svg"
+                 : "qrc:/qt/qml/cloudsong/qml/assets/icons/player/shuffle.svg"
+            tip: "循环模式"
+            active: playback.loopMode !== 0
+            onClicked: playback.toggleLoop()
+        }
+
         // 队列
         BarBtn {
             icon: "qrc:/qt/qml/cloudsong/qml/assets/icons/player/queue.svg"
+            tip: "播放队列"
             onClicked: root.openQueueRequested()
         }
     }
 
-    // ── 圆形图标按钮 (28×28, hover 高亮) ──
+    // ── 图标按钮 (32×32; 无背景, hover/pressed 图标变白; 播放条内一律上下居中) ──
     component BarBtn: Item {
-        width: 28
-        height: 28
+        width: 32
+        height: 32
+        anchors.verticalCenter: parent.verticalCenter
         property string icon: ""
         property string text: ""
+        property string tip: ""
+        property bool suppressTip: false   // 弹出面板打开时抑制悬停提示 (防盖住 Popover)
         property bool active: false
         property bool enabled: true
+        property color activeColor: Theme.accent      // active 时图标色
+        property bool fixedColor: false               // true 时 iconColor 恒生效, hover 不变白 (已喜欢红心)
+        property color iconColor: "transparent"       // 非透明=固定色, 覆盖 active/常规逻辑
         signal clicked()
+        signal hoverEntered()   // hover 打开模式 (音量调节条) 用
+        signal hoverExited()
 
-        Rectangle {
-            visible: btnMouse.containsMouse
-            anchors.fill: parent
-            radius: 14
-            color: Theme.hover_bg
-        }
         IconImage {
             visible: parent.icon !== ""
             anchors.centerIn: parent
             source: parent.icon
-            size: 16
-            color: parent.active ? Theme.accent : (parent.enabled ? Theme.text_primary : Theme.text_disabled)
+            size: 21
+            color: (parent.fixedColor && parent.iconColor.a > 0) ? parent.iconColor
+                 : (btnMouse.containsMouse || btnMouse.pressed) ? "#ffffff"
+                 : (parent.iconColor.a > 0) ? parent.iconColor
+                 : parent.active ? parent.activeColor
+                 : (parent.enabled ? Theme.text_primary : Theme.text_disabled)
         }
         Text {
             visible: parent.text !== ""
             anchors.centerIn: parent
             text: parent.text
-            font { family: "Microsoft YaHei UI"; pixelSize: 12; weight: parent.active ? Font.Bold : Font.Normal }
-            color: parent.active ? Theme.accent_text : Theme.text_primary
+            font { family: Theme.fontFamily; pixelSize: 12; weight: parent.active ? Font.Bold : Font.Normal }
+            color: (btnMouse.containsMouse || btnMouse.pressed) ? "#ffffff"
+                 : parent.active ? Theme.accent_text
+                 : Theme.text_primary
         }
         MouseArea {
             id: btnMouse
             anchors.fill: parent
             hoverEnabled: true
             cursorShape: parent.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+            onEntered: parent.hoverEntered()
+            onExited: parent.hoverExited()
             onClicked: if (parent.enabled) parent.clicked()
+        }
+        Tooltip {
+            text: parent.tip
+            shown: btnMouse.containsMouse && parent.tip !== "" && !parent.suppressTip
+            delay: 0   // hover 即展示
+            radius: 8
+            bgColor: Theme.bg_card
+            borderColor: Theme.border_standard
+            anchorItem: parent
         }
     }
 }

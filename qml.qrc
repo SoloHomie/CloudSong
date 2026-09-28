@@ -9,6 +9,7 @@
         <file>qml/components/controls/SuretyCheckBox.qml</file>
         <file>qml/components/controls/SuretySwitch.qml</file>
         <file>qml/components/controls/SuretyTagSelector.qml</file>
+        <file>qml/components/controls/CategoryBar.qml</file>
         <file>qml/components/controls/PasswordField.qml</file>
         <file>qml/components/controls/KeyBindChip.qml</file>
         <file>qml/components/buttons/SuretyBtn.qml</file>
@@ -78,8 +79,9 @@
         <file>qml/assets/icons/player/heart-fill.svg</file>
         <file>qml/assets/icons/player/download.svg</file>
         <file>qml/assets/icons/player/queue.svg</file>
-        <file>qml/assets/icons/player/volume.svg</file>
-        <file>qml/assets/icons/player/speed.svg</file>
+        <file>qml/assets/icons/player/volume-notice.svg</file>
+        <file>qml/assets/icons/player/volume-mute.svg</file>
+        <file>qml/assets/icons/player/check.svg</file>
         <file>qml/assets/icons/player/quality.svg</file>
         <file>qml/assets/icons/player/lyrics.svg</file>
         <file>qml/assets/icons/player/music.svg</file>

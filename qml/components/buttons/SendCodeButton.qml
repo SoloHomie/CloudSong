@@ -26,7 +26,7 @@ Rectangle {
         text: sending ? "发送中..." : (countdown > 0 ? countdown + "s 后重发" : "发送验证码")
         color: _disabled ? Theme.text_disabled : Theme.text_bright
         font.pixelSize: 12; font.weight: Font.Bold
-        font.family: "Microsoft YaHei UI"
+        font.family: Theme.fontFamily
     }
 
     MouseArea {

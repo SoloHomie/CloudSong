@@ -45,7 +45,7 @@ Item {
                 width: parent.width
                 elide: Text.ElideRight
                 text: root.name
-                font { family: "Microsoft YaHei UI"; pixelSize: 22; weight: Font.Bold }
+                font { family: Theme.fontFamily; pixelSize: 22; weight: Font.Bold }
                 color: Theme.text_primary
             }
             Text {
@@ -53,7 +53,7 @@ Item {
                 elide: Text.ElideRight
                 visible: root.desc !== ""
                 text: root.desc + (root.platform !== "" ? " · " + root.platform : "")
-                font { family: "Microsoft YaHei UI"; pixelSize: 12 }
+                font { family: Theme.fontFamily; pixelSize: 12 }
                 color: Theme.text_secondary
             }
 

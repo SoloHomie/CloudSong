@@ -33,14 +33,14 @@ Item {
     Row {
         id: headerRow
         anchors { top: parent.top; left: parent.left; right: parent.right }
-        height: 32
+        height: 34
         Text {
             width: root.colIdx
             height: parent.height
             verticalAlignment: Text.AlignVCenter
             horizontalAlignment: Text.AlignHCenter
             text: "#"
-            font { family: "Microsoft YaHei UI"; pixelSize: 12 }
+            font { family: Theme.fontFamily; pixelSize: 13 }
             color: Theme.text_hint
         }
         Text {
@@ -48,7 +48,7 @@ Item {
             height: parent.height
             verticalAlignment: Text.AlignVCenter
             text: "标题"
-            font { family: "Microsoft YaHei UI"; pixelSize: 12 }
+            font { family: Theme.fontFamily; pixelSize: 13 }
             color: Theme.text_hint
         }
         Text {
@@ -56,7 +56,7 @@ Item {
             height: parent.height
             verticalAlignment: Text.AlignVCenter
             text: "歌手"
-            font { family: "Microsoft YaHei UI"; pixelSize: 12 }
+            font { family: Theme.fontFamily; pixelSize: 13 }
             color: Theme.text_hint
         }
         Text {
@@ -64,7 +64,7 @@ Item {
             height: parent.height
             verticalAlignment: Text.AlignVCenter
             text: root.timeColumn ? "时间" : "专辑"
-            font { family: "Microsoft YaHei UI"; pixelSize: 12 }
+            font { family: Theme.fontFamily; pixelSize: 13 }
             color: Theme.text_hint
         }
         Text {
@@ -73,7 +73,7 @@ Item {
             verticalAlignment: Text.AlignVCenter
             horizontalAlignment: Text.AlignRight
             text: "时长"
-            font { family: "Microsoft YaHei UI"; pixelSize: 12 }
+            font { family: Theme.fontFamily; pixelSize: 13 }
             color: Theme.text_hint
         }
         Item { width: root.colAct; height: parent.height }
@@ -103,7 +103,7 @@ Item {
 
     component SongRow: Item {
         width: songList.width
-        height: 40
+        height: 44
         property var s: modelData
         property bool hover: rowMouse.containsMouse
 
@@ -117,7 +117,7 @@ Item {
                 visible: !hover
                 anchors.centerIn: parent
                 text: index + 1
-                font { family: "Microsoft YaHei UI"; pixelSize: 12 }
+                font { family: Theme.fontFamily; pixelSize: 13 }
                 color: Theme.text_hint
             }
             IconImage {
@@ -140,7 +140,7 @@ Item {
                 width: Math.min(implicitWidth, parent.width - 46)
                 elide: Text.ElideRight
                 text: s.title
-                font { family: "Microsoft YaHei UI"; pixelSize: 13 }
+                font { family: Theme.fontFamily; pixelSize: 14 }
                 color: Theme.text_primary
             }
             Rectangle {
@@ -154,7 +154,7 @@ Item {
                     id: platformText
                     anchors.centerIn: parent
                     text: s.platform
-                    font { family: "Microsoft YaHei UI"; pixelSize: 10 }
+                    font { family: Theme.fontFamily; pixelSize: 10 }
                     color: Theme.tag_preset_fg
                 }
             }
@@ -167,7 +167,7 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             elide: Text.ElideRight
             text: s.artist !== undefined ? s.artist : ""
-            font { family: "Microsoft YaHei UI"; pixelSize: 13 }
+            font { family: Theme.fontFamily; pixelSize: 14 }
             color: Theme.text_secondary
         }
         Text {
@@ -177,7 +177,7 @@ Item {
             elide: Text.ElideRight
             text: root.timeColumn ? (s.playTime !== undefined ? s.playTime : "")
                                    : (s.album !== undefined ? s.album : "")
-            font { family: "Microsoft YaHei UI"; pixelSize: 13 }
+            font { family: Theme.fontFamily; pixelSize: 14 }
             color: Theme.text_secondary
         }
 
@@ -188,7 +188,7 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             horizontalAlignment: Text.AlignRight
             text: MockData.fmtTime(s.duration)
-            font { family: "Microsoft YaHei UI"; pixelSize: 12 }
+            font { family: Theme.fontFamily; pixelSize: 13 }
             color: Theme.text_hint
         }
 

@@ -12,6 +12,7 @@ import "../../theme"
 //    shown          显示/隐藏
 //    fontSize       字号 (默认 14)
 //    maxWidth       最大宽度 (默认 280)
+//    radius         圆角 (默认 4, PlayerBar 悬停提示覆为 8)
 //    delay          悬停延迟 ms (默认 0)
 //    duration       自动消失 ms (0=手动)
 //    anchorItem     锚定目标
@@ -27,11 +28,12 @@ Item {
     property string text:          ""
     property bool   shown:         false
     property int    fontSize:      14
-    property font   labelFont:     Qt.font({ pixelSize: 11, family: "Microsoft YaHei UI" })
+    property font   labelFont:     Qt.font({ pixelSize: 11, family: Theme.fontFamily })
     property int    maxWidth:      280
     property int    maxLines:      8
     property color  bgColor:       Theme.border_default
     property color  borderColor:   Theme.border_standard
+    property int    radius:        4
     property int    delay:         0
     property int    duration:      0
     property var    anchorItem:    null
@@ -62,7 +64,7 @@ Item {
             z: 2147483647
             clip: false
             color: root.bgColor
-            radius: 4
+            radius: root.radius
             border.width: 1
             border.color: root.borderColor
 

@@ -151,7 +151,7 @@ Item {
                             anchors.centerIn: parent; text: root.step
                             color: root.step === 1 ? Theme.text_bright : Theme.text_secondary 
                             font.pixelSize: root.stepFontSize; font.weight: Font.Bold
-                            font.family: "Microsoft YaHei UI"
+                            font.family: Theme.fontFamily
                         }
                     }
 
@@ -165,14 +165,14 @@ Item {
                             color: Theme.text_primary
                             font.pixelSize: root.titleFontSize
                             font.weight: root.titleBold ? Font.Bold : Font.Normal
-                            font.family: "Microsoft YaHei UI"
+                            font.family: Theme.fontFamily
                             elide: Text.ElideRight
                         }
                         Text {
                             Layout.fillWidth: true
                             text: root.subtitle; color: Theme.text_hint
                             font.pixelSize: root.subtitleFontSize
-                            font.family: "Microsoft YaHei UI"
+                            font.family: Theme.fontFamily
                             wrapMode: Text.WordWrap
                             visible: root.subtitle !== ""
                         }

@@ -25,6 +25,7 @@ QtObject {
     property int    loopMode: 0      // 0=列表循环 1=单曲循环 2=随机
     property real   rate: 1.0
     property real   volume: 0.7
+    property real   _preMute: 0.7   // 静音前音量 (toggleMute 恢复用)
     property bool   favorite: false
     property bool   desktopLyric: false
     property string quality: "标准品质"
@@ -71,6 +72,10 @@ QtObject {
     function toggleLoop() { loopMode = (loopMode + 1) % 3 }
     function setRate(r) { rate = r }
     function setVolume(v) { volume = Math.max(0, Math.min(1, v)) }
+    function toggleMute() {   // 静音/恢复 (接口名与 C++ PlaybackService 对齐)
+        if (volume > 0) { _preMute = volume; volume = 0 }
+        else volume = _preMute
+    }
     function toggleFavorite() {
         favorite = !favorite
         if (currentIndex >= 0) queue.setProperty(currentIndex, "liked", favorite)

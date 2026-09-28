@@ -49,7 +49,7 @@ Item {
             Text {
                 x: 24
                 text: "自建歌单"
-                font { family: "Microsoft YaHei UI"; pixelSize: 15; weight: Font.Bold }
+                font { family: Theme.fontFamily; pixelSize: 15; weight: Font.Bold }
                 color: Theme.text_primary
             }
             MediaGrid {
@@ -67,7 +67,7 @@ Item {
             Text {
                 x: 24
                 text: "收藏的歌单"
-                font { family: "Microsoft YaHei UI"; pixelSize: 15; weight: Font.Bold }
+                font { family: Theme.fontFamily; pixelSize: 15; weight: Font.Bold }
                 color: Theme.text_primary
             }
             MediaGrid {

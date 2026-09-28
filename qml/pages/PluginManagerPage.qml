@@ -60,14 +60,14 @@ Item {
                     width: parent.width
                     elide: Text.ElideRight
                     text: p.name + "  v" + p.version
-                    font { family: "Microsoft YaHei UI"; pixelSize: 13 }
+                    font { family: Theme.fontFamily; pixelSize: 13 }
                     color: Theme.text_primary
                 }
                 Text {
                     width: parent.width
                     elide: Text.ElideRight
                     text: p.desc
-                    font { family: "Microsoft YaHei UI"; pixelSize: 11 }
+                    font { family: Theme.fontFamily; pixelSize: 11 }
                     color: Theme.text_secondary
                 }
             }

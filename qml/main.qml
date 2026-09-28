@@ -21,6 +21,9 @@ Window {
     title: "CloudSong"
     color: Theme.bg_canvas
 
+    // 全局 UI 字体: main.cpp QFontDatabase::addApplicationFont 加载 (MiSans Regular/Bold 两份),
+    // QML 侧全部组件经 Theme.fontFamily token 引用
+
     TitleBar {
         id: titleBar
         anchors { top: parent.top; left: parent.left; right: parent.right }

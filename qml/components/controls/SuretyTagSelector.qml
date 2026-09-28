@@ -44,7 +44,7 @@ Item {
     // ── 通用外观 ──
     property color selectedTextColor:  Theme.text_bright
     property color textColor:          Theme.text_secondary
-    property string fontFamily:       "Microsoft YaHei UI"
+    property string fontFamily:       Theme.fontFamily
     property int   fontSize:           12
     property bool  enabled:            true
     property int   minimumWidth:       160    // 组件最小宽度，外部可覆盖
@@ -231,7 +231,7 @@ Item {
         property color  segmentSelColor: Theme.accent
         property color  selectedTextColor: Theme.text_bright
         property color  textColor:    Theme.text_secondary
-        property string fontFamily:   "Microsoft YaHei UI"
+        property string fontFamily:   Theme.fontFamily
         property int   fontSize:      12
 
         signal segmentClicked()

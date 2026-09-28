@@ -140,7 +140,7 @@ Item {
         color: root.labelColor
         font.pixelSize: root.fontSize
         font.weight: root.fontWeight
-        font.family: "Microsoft YaHei UI"
+        font.family: Theme.fontFamily
         opacity: root.enabled ? (hoverMA.containsMouse ? 1 : 0.85) : 0.4
         Behavior on opacity { NumberAnimation { duration: 200 } }
         Behavior on x       { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }

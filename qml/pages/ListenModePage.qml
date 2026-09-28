@@ -62,7 +62,7 @@ Item {
         Text {
             anchors.verticalCenter: parent.verticalCenter
             text: MockPlayback.title !== "" ? MockPlayback.title + " · " + MockPlayback.artist : "听歌模式"
-            font { family: "Microsoft YaHei UI"; pixelSize: 14 }
+            font { family: Theme.fontFamily; pixelSize: 14 }
             color: Theme.text_primary
         }
     }
@@ -107,14 +107,14 @@ Item {
                         width: parent.width
                         elide: Text.ElideRight
                         text: MockPlayback.title !== "" ? MockPlayback.title : "未在播放"
-                        font { family: "Microsoft YaHei UI"; pixelSize: 18; weight: Font.Bold }
+                        font { family: Theme.fontFamily; pixelSize: 18; weight: Font.Bold }
                         color: Theme.text_primary
                     }
                     Text {
                         width: parent.width
                         elide: Text.ElideRight
                         text: MockPlayback.artist !== "" ? MockPlayback.artist + " · " + MockPlayback.album : "从下方播放条选择歌曲"
-                        font { family: "Microsoft YaHei UI"; pixelSize: 12 }
+                        font { family: Theme.fontFamily; pixelSize: 12 }
                         color: Theme.text_secondary
                     }
                 }
@@ -151,7 +151,7 @@ Item {
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: modelData.t
-                        font { family: "Microsoft YaHei UI"; pixelSize: root.lyricFontSize; weight: index === root.curLyric ? Font.Bold : Font.Normal }
+                        font { family: Theme.fontFamily; pixelSize: root.lyricFontSize; weight: index === root.curLyric ? Font.Bold : Font.Normal }
                         color: index === root.curLyric ? Theme.accent_text : Theme.text_primary
                         opacity: index === root.curLyric ? 1.0 : 0.5
                     }
@@ -159,7 +159,7 @@ Item {
                         anchors.horizontalCenter: parent.horizontalCenter
                         visible: root.showTrans && modelData.tt !== ""
                         text: modelData.tt
-                        font { family: "Microsoft YaHei UI"; pixelSize: 13 }
+                        font { family: Theme.fontFamily; pixelSize: 13 }
                         color: Theme.text_secondary
                         opacity: index === root.curLyric ? 1.0 : 0.45
                     }
@@ -195,7 +195,7 @@ Item {
             id: chipText
             anchors.centerIn: parent
             text: parent.text
-            font { family: "Microsoft YaHei UI"; pixelSize: 12 }
+            font { family: Theme.fontFamily; pixelSize: 12 }
             color: parent.active ? "#ffffff" : Theme.text_primary
         }
         MouseArea {
