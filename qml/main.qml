@@ -7,8 +7,9 @@ import "mock"
 
 // 应用骨架: main.qml 只负责模块布局与跨模块接线 (各模块内容归各模块自己管理):
 //   标题栏 / 侧栏(条目自管) / 内容区(View 页面栈) / 播放条 / 队列抽屉 + 顶层弹窗
-// 无边框由 C++ DWM 方案实现 (main.cpp applyFrameless): 窗口保留原生样式, 标题栏被挤出可视区,
-// 因此 QML 不设 FramelessWindowHint; visible:false 由 C++ 应用 DWM 后统一 show
+// 无边框由 C++ DWM 方案实现 (main.cpp applyFrameless, BallsHackPro 同款): NCCALCSIZE 仅恢复 top,
+// 标题栏区域并入客户区, 左右下三边保留原生边框; QML 不设 FramelessWindowHint;
+// visible:false 由 C++ 应用后统一 show
 Window {
     id: win
     visible: false
