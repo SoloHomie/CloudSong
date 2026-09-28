@@ -5,6 +5,7 @@ import "../components/display"
 import "../components/buttons"
 import "../components/controls"
 import "../components/layout"
+import "../components/panels"
 
 // ═══════════════════════════════════════════════════════════
 //  SettingsPage — 设置页 (上侧分类 + 下侧内容)
@@ -77,23 +78,35 @@ Item {
             width: Math.min(parent.width - 48, 680)
             spacing: 18
 
-            // ── 服务 ──
-            Column {
+            // ── 服务 (2026-09-29 用户拍板: 原跳独立页改为折叠卡内嵌, 内容即面板组件) ──
+            SuretyCollapse {
                 visible: root.catIdx === 0
                 width: parent.width
-                RowSetting {
-                    title: "云漫游"
-                    subtitle: "歌单与播放进度多设备同步 · ¥3/月"
-                    clickable: true
-                    onClicked: root.navigate("roam")
-                    Badge { text: "P1" }
+                title: "云漫游"
+                subtitle: "歌单与播放进度多设备同步 · ¥3/月"
+                open: true
+                titlePadding: 12
+                titleFontSize: 14
+                subtitleFontSize: 11
+                content: Component {
+                    RoamPanel {
+                        onNavigate: function(name, params) { root.navigate(name, params) }
+                    }
                 }
-                RowSetting {
-                    title: "歌单迁移"
-                    subtitle: "从 MusicFree 备份导入歌单 · 一次性买断"
-                    clickable: true
-                    onClicked: root.navigate("migrate")
-                    Badge { text: "P1" }
+            }
+            SuretyCollapse {
+                visible: root.catIdx === 0
+                width: parent.width
+                title: "歌单迁移"
+                subtitle: "截图 / 链接 / 文本 / 备份 → CloudSong 歌单 · 一次性买断"
+                open: false
+                titlePadding: 12
+                titleFontSize: 14
+                subtitleFontSize: 11
+                content: Component {
+                    MigratePanel {
+                        onNavigate: function(name, params) { root.navigate(name, params) }
+                    }
                 }
             }
 
@@ -103,9 +116,14 @@ Item {
                 width: parent.width
                 RowSetting {
                     title: "主题"
-                    subtitle: ["浅色", "深色", "跟随系统"][AppCfg.themeIndex]
-                    clickable: true
-                    onClicked: root.navigate("theme")
+                    ctrlReserve: 290   // 同默认音质: 三段分段条占位
+                    SuretyTagSelector {
+                        anchors.verticalCenter: parent.verticalCenter
+                        displayMode: "segment"
+                        selectedIndex: AppCfg.themeIndex
+                        model: [ { label: "浅色" }, { label: "深色" }, { label: "跟随系统" } ]
+                        onTagSelected: function(i) { AppCfg.themeIndex = i }
+                    }
                 }
                 RowSetting {
                     title: "界面字体"
@@ -242,16 +260,17 @@ Item {
                 }
             }
 
-            // ── 插件 ──
-            Column {
+            // ── 插件 (2026-09-29 用户拍板: 同折叠卡内嵌, 不再跳页) ──
+            SuretyCollapse {
                 visible: root.catIdx === 5
                 width: parent.width
-                RowSetting {
-                    title: "插件管理"
-                    subtitle: "已启用 " + MockData.plugins.filter(function(p) { return p.enabled }).length + " 个插件"
-                    clickable: true
-                    onClicked: root.navigate("plugins")
-                }
+                title: "插件管理"
+                subtitle: "已启用 " + MockData.plugins.filter(function(p) { return p.enabled }).length + " 个插件 · 兼容 MusicFree 插件协议"
+                open: true
+                titlePadding: 12
+                titleFontSize: 14
+                subtitleFontSize: 11
+                content: Component { PluginsPanel {} }
             }
 
             // ── 关于 (BallsHackPro 同款布局: 品牌头部区 + 折叠卡) ──
@@ -483,8 +502,10 @@ Item {
         }
     }
 
-    // ── 设置行 (2026-09-28 用户拍板: 行本体不接任何鼠标事件, 只有行内组件可交互;
-    //    clickable=true 时右侧自动渲染可点箭头组件, 由箭头承载点击) ──
+    // ── 设置行 (2026-09-28 用户拍板: 行本体不接任何鼠标事件, 只有行内组件可交互。
+    //    2026-09-29 增补: clickable 导航行(云漫游/迁移/主题/插件等)行体全行可点+悬停反馈,
+    //    点击层声明在最底层, 不抢行内组件; 含交互控件(开关/下拉)的行 clickable=false,
+    //    点击层不激活, 铁律照旧) ──
     component RowSetting: Item {
         id: rs
         width: parent.width
@@ -495,6 +516,22 @@ Item {
         property bool clickable: false
         signal clicked()
         default property alias ctrl: ctrlRow.data
+
+        // 全行点击层 (最底层; 仅 clickable 行激活, 含交互控件的行不可见不拦截)
+        Rectangle {
+            visible: rs.clickable
+            anchors.fill: parent
+            radius: 8
+            color: rowMouse.containsMouse ? Theme.hover_bg : "transparent"
+        }
+        MouseArea {
+            id: rowMouse
+            visible: rs.clickable
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: rs.clicked()
+        }
 
         Column {
             anchors { left: rs.left; leftMargin: 14; right: rs.right; rightMargin: rs.ctrlReserve; verticalCenter: rs.verticalCenter }
@@ -521,7 +558,7 @@ Item {
             anchors { right: rs.right; rightMargin: rs.clickable ? 38 : 14; verticalCenter: rs.verticalCenter }
             spacing: 8
         }
-        // 进入箭头 (唯一可点区域; 行本体无鼠标事件)
+        // 进入箭头 (视觉提示; 行体同样可点, 两者都发 clicked)
         IconImage {
             visible: rs.clickable
             anchors { right: rs.right; rightMargin: 14; verticalCenter: rs.verticalCenter }
@@ -534,22 +571,6 @@ Item {
                 cursorShape: Qt.PointingHandCursor
                 onClicked: rs.clicked()
             }
-        }
-    }
-
-    // ── P1 小徽标 ──
-    component Badge: Rectangle {
-        height: 16
-        width: badgeText.implicitWidth + 10
-        radius: 8
-        property string text: ""
-        color: Theme.tag_preset_bg
-        Text {
-            id: badgeText
-            anchors.centerIn: parent
-            text: parent.text
-            font { family: Theme.fontFamily; pixelSize: 10 }
-            color: Theme.tag_preset_fg
         }
     }
 }

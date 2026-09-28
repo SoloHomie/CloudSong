@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Effects
 import "../theme"
 import "../components/buttons"
-import "../components/controls"
+import "../components/controls/search"
 import "../components/display"
 
 /// ──────────────────────────────────────────────────────────

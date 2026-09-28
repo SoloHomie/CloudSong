@@ -17,7 +17,11 @@ QtObject {
         switch (AppCfg.themeIndex) {
             case 0: return false
             case 1: return true
-            case 2: return Qt.styleHints.colorScheme !== Qt.Light
+            // 跟随系统。注意 ColorScheme 是 scoped 枚举, 必须 Qt.ColorScheme.Light;
+            // 无作用域的 Qt.Light 恒 undefined → !== 恒真 → 永远深色 (2026-09-29 修复)。
+            // (qmllint 报 styleHints 无 colorScheme member = builtins 把 QStyleHints 标成
+            // QObject 的类型信息缺漏, 运行时 Q_PROPERTY 正常可取, 忽略该告警)
+            case 2: return Qt.styleHints.colorScheme !== Qt.ColorScheme.Light
             default: return true
         }
     }

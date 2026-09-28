@@ -54,10 +54,6 @@ Rectangle {
         case "album":      return albumComp
         case "artist":     return artistComp
         case "settings":   return settingsComp
-        case "theme":      return themeComp
-        case "plugins":    return pluginsComp
-        case "roam":       return roamComp
-        case "migrate":    return migrateComp
         }
         return recommendComp
     }
@@ -90,8 +86,4 @@ Rectangle {
     Component { id: albumComp;      AlbumDetailPage {} }
     Component { id: artistComp;     ArtistDetailPage {} }
     Component { id: settingsComp;   SettingsPage {} }
-    Component { id: themeComp;      ThemePage {} }
-    Component { id: pluginsComp;    PluginManagerPage {} }
-    Component { id: roamComp;       CloudRoamPage {} }
-    Component { id: migrateComp;    MigratePage {} }
 }

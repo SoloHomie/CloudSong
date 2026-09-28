@@ -21,6 +21,9 @@
         <file>qml/components/layout/ScrollPage.qml</file>
         <file>qml/components/layout/SuretyCollapse.qml</file>
         <file>qml/components/layout/SuretyScrollBar.qml</file>
+        <file>qml/components/panels/RoamPanel.qml</file>
+        <file>qml/components/panels/MigratePanel.qml</file>
+        <file>qml/components/panels/PluginsPanel.qml</file>
         <file>qml/layouts/TitleBar.qml</file>
         <file>qml/layouts/SideBar.qml</file>
         <file>qml/layouts/SideBarDelegate.qml</file>
@@ -44,7 +47,9 @@
         <file>qml/components/business/MediaGrid.qml</file>
         <file>qml/components/overlay/Popover.qml</file>
         <file>qml/components/overlay/PopoverOption.qml</file>
-        <file>qml/components/controls/SearchBox.qml</file>
+        <file>qml/components/controls/search/SearchBox.qml</file>
+        <file>qml/components/controls/search/SearchPanel.qml</file>
+        <file>qml/components/controls/search/SearchRow.qml</file>
         <file>qml/layouts/PlayerBar.qml</file>
         <file>qml/layouts/QueueDrawer.qml</file>
         <file>qml/pages/RecommendPage.qml</file>
@@ -59,10 +64,6 @@
         <file>qml/pages/AlbumDetailPage.qml</file>
         <file>qml/pages/ArtistDetailPage.qml</file>
         <file>qml/pages/SettingsPage.qml</file>
-        <file>qml/pages/ThemePage.qml</file>
-        <file>qml/pages/PluginManagerPage.qml</file>
-        <file>qml/pages/CloudRoamPage.qml</file>
-        <file>qml/pages/MigratePage.qml</file>
         <file>qml/assets/icons/player/chevron-left.svg</file>
         <file>qml/assets/icons/player/chevron-right.svg</file>
         <file>qml/assets/icons/player/chevron-down.svg</file>

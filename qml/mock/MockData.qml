@@ -140,17 +140,35 @@ QtObject {
     ]
 
     // ── 搜索历史 ──
-    property var searchHistory: ["周杰伦", "晴天", "民谣"]
+    // 示例种子 (2026-09-29 用户要看效果; 覆盖歌手/歌名/歌单词/英文词,
+    // 超 8 条可验证面板滚动 + "周"前缀双命中验证建议面板, 接 C++ 服务后清空)
+    property var searchHistory: ["周杰伦", "晴天", "民谣", "陈奕迅", "lofi 学习",
+                                  "七里香", "网易云热歌", "周深", "钢琴曲", "beyond",
+                                  "海阔天空", "City Pop"]
 
     function addSearchHistory(q) {
         var arr = searchHistory.slice()
         var i = arr.indexOf(q)
         if (i >= 0) arr.splice(i, 1)
         arr.unshift(q)
-        if (arr.length > 10) arr = arr.slice(0, 10)
+        if (arr.length > 20) arr = arr.slice(0, 20)   // 上限 20 (规格 D4)
         searchHistory = arr
     }
     function clearSearchHistory() { searchHistory = [] }
+    function removeSearchHistory(q) {   // 单条删除 (标题栏历史面板 hover ×)
+        var arr = searchHistory.slice()
+        var i = arr.indexOf(q)
+        if (i >= 0) arr.splice(i, 1)
+        searchHistory = arr
+    }
+    function suggestHistory(q) {   // 建议面板: 历史前缀匹配, 忽略大小写, 最多 8 条
+        var s = String(q || "").toLowerCase()
+        if (s === "") return []
+        var r = []
+        for (var i = 0; i < searchHistory.length && r.length < 8; i++)
+            if (String(searchHistory[i]).toLowerCase().indexOf(s) === 0) r.push(searchHistory[i])
+        return r
+    }
 
     // ── 查询 ──
     function searchAll(query) {

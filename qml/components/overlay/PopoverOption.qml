@@ -7,6 +7,8 @@ import "../display"
 // ──────────────────────────────────────────────────────────────
 Rectangle {
     id: root
+    // 宽必填: Rectangle 默认宽 0, Popover 的 Column 不拉伸子项 → 0×30 隐形条 (2026-09-29 音质菜单"只有气泡没选项"根因)
+    width: parent.width
     height: 30
     radius: 6
     color: mouse.containsMouse ? Theme.hover_bg : "transparent"

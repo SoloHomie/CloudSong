@@ -196,7 +196,9 @@ Item {
                 contentItem: Text {
                     anchors { fill: parent; leftMargin: 10; rightMargin: 10 }
                     verticalAlignment: Text.AlignVCenter
-                    text: model.text
+                    // 勿用 model.text: JS 数组模型下取不到 (BHS 数组模型一律走 modelData 的约定,
+                    // 2026-09-29 设置页下拉空内容根因); _textAt 对 ListModel/数组双通
+                    text: root._textAt(index)
                     color: Theme.text_primary
                     font.pixelSize: root.fontSize
                     font.weight: root.fontBold ? Font.Bold : Font.Normal
@@ -206,7 +208,7 @@ Item {
                 onClicked: {
                     root.currentIndex = index
                     root.currentText = root._textAt(index)
-                    root.itemSelected(index, model.text)
+                    root.itemSelected(index, root._textAt(index))
                     popup.close()
                     _open = false
                 }
