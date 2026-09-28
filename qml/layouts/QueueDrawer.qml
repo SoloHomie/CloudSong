@@ -12,11 +12,11 @@ Item {
     property QtObject playback: null
     property bool open: false
 
-    // ── 遮罩 (点击关闭) ──
+    // ── 遮罩 (点击关闭; 40% 黑: 符合模态遮罩 40-60% 规范, 保证前景可读) ──
     Rectangle {
         visible: root.open
         anchors.fill: parent
-        color: Qt.rgba(0, 0, 0, 0.25)
+        color: Qt.rgba(0, 0, 0, 0.4)
         MouseArea {
             anchors.fill: parent
             onClicked: root.open = false
