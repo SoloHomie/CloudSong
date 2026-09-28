@@ -132,8 +132,9 @@ Item {
     Text {
         id: labelText
         visible: root.label !== ""
-        anchors.left: box.right
-        anchors.leftMargin: 6
+        // 2026-09-28 修复: 原 anchors.left + x 冲突(锚点覆盖 x), hover 位移从未生效;
+        // 去掉 left 锚点, 位置全由 x 绑定决定 (verticalCenter 锚点与 x 不冲突, 保留)
+        x: root.paddingH + box.width + 6 + (hoverMA.containsMouse ? 5 : 0)
         anchors.verticalCenter: parent.verticalCenter
         text: root.label
         color: root.labelColor
@@ -141,7 +142,6 @@ Item {
         font.weight: root.fontWeight
         font.family: "Microsoft YaHei UI"
         opacity: root.enabled ? (hoverMA.containsMouse ? 1 : 0.85) : 0.4
-        x: hoverMA.containsMouse ? 5 : 0
         Behavior on opacity { NumberAnimation { duration: 200 } }
         Behavior on x       { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
     }

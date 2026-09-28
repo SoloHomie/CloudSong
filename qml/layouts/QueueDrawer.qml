@@ -26,7 +26,10 @@ Item {
     // ── 面板 ──
     Rectangle {
         id: panel
-        anchors { top: parent.top; bottom: parent.bottom; right: parent.right }
+        // 2026-09-28 修复: 原 anchors.right 与 x 绑定冲突, 锚点覆盖 x → 面板永远钉在右缘,
+        // open 只切换了遮罩显隐 → 抽屉"关不了"。去掉 right 锚点, 位置全由 x 绑定决定
+        // (x 引用 parent.width, 窗口缩放时自动跟随)
+        anchors { top: parent.top; bottom: parent.bottom }
         width: 320
         x: root.open ? parent.width - width : parent.width
         Behavior on x { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }   // 一次性滑入过场
