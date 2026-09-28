@@ -15,13 +15,13 @@ Item {
     property string label: ""
     property int    labelFontSize: 0
     property int    labelWidth: 0
-    property int    trackWidth: 36
+    property int    trackWidth: 44
 
     signal toggled(bool checked)
 
     implicitWidth:  labelText.visible ? labelText.width + 9 + trackWidth : trackWidth
     implicitHeight: Math.max(labelText.implicitHeight, trackHeight)
-    readonly property real trackHeight: Math.max(16, root.height)
+    readonly property real trackHeight: Math.max(22, root.height)
     readonly property real knobSize:    trackHeight - 6
     readonly property real knobRadius:  knobSize / 2
     readonly property real trackRadius: trackHeight / 2
