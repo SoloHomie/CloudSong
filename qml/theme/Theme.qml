@@ -124,7 +124,11 @@ QtObject {
     property color bg_input:    neutral0
     property color bg_disabled: neutral4
     property color bg_acrylic:  isDark ? "#4d0d1117" : "#4df6f8fa"   // 30% opacity: 材质缺失时截图显示主题色而非白底
-    property color bg_mica:     isDark ? "#1a0d1117" : "#1af6f8fa"   // 10% opacity (仓库原实现 957d9a0: 原生 Mica + 极淡主题色)
+    property color bg_mica:     isDark ? "#4d0d1117" : "#4df6f8fa"   // 30% opacity: 对齐 bg_acrylic 截图防白底 (10% 时截图工具把半透明区合白底→窗口变白, 2026-09-29 实锤)
+    // 窗口背景: 材质选择映射 (main.qml 根背景层消费; 云母/亚克力=原生 DWM 材质上的主题淡色层)
+    readonly property color bg_window: AppCfg.materialIndex === 0 ? bg_canvas
+                                     : AppCfg.materialIndex === 1 ? bg_mica
+                                     : bg_acrylic
 
     // ---- 文字 ----
     property color text_primary:   neutral9

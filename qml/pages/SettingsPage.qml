@@ -126,6 +126,18 @@ Item {
                     }
                 }
                 RowSetting {
+                    title: "背景材质"
+                    subtitle: "云母 / 亚克力 · Windows 系统合成"
+                    ctrlReserve: 290   // 三段分段条占位, 同主题行
+                    SuretyTagSelector {
+                        anchors.verticalCenter: parent.verticalCenter
+                        displayMode: "segment"
+                        selectedIndex: AppCfg.materialIndex
+                        model: [ { label: "不透明" }, { label: "云母" }, { label: "亚克力" } ]
+                        onTagSelected: function(i) { AppCfg.materialIndex = i }
+                    }
+                }
+                RowSetting {
                     title: "界面字体"
                     subtitle: "全局生效 · 需重启后完全刷新"
                     SuretyComboBox {

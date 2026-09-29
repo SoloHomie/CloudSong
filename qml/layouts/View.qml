@@ -14,7 +14,7 @@ import "../pages"
 // ═══════════════════════════════════════════════════════════════
 Rectangle {
     id: view
-    color: Theme.bg_canvas
+    color: "transparent"   // 画布底色归 main.qml 窗口背景层 (云母/亚克力材质需透出)
 
     property var stack: []
     property int cursor: -1

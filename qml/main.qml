@@ -19,10 +19,17 @@ Window {
     minimumWidth: 800
     minimumHeight: 500
     title: "CloudSong"
-    color: Theme.bg_canvas
+    color: "transparent"   // 透明清屏→窗口表面带 alpha, 材质可运行时切换; 实际底色由下方背景层画
 
     // 全局 UI 字体: main.cpp QFontDatabase::addApplicationFont 加载 (MiSans Regular/Bold 两份),
     // QML 侧全部组件经 Theme.fontFamily token 引用
+
+    // 窗口背景层: 不透明=bg_canvas; 云母/亚克力=原生系统材质+主题淡色层 (Theme.bg_window);
+    // DWM 材质由 main.cpp applyBackdrop 挂载, 材质切换时 QML 只换颜色
+    Rectangle {
+        anchors.fill: parent
+        color: Theme.bg_window
+    }
 
     TitleBar {
         id: titleBar

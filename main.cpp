@@ -2,11 +2,13 @@
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QQuickWindow>
+#include <QStyleHints>
 #include <QAbstractNativeEventFilter>
 #include <QFontDatabase>
 #include <QResource>
 #include <windows.h>
 #include <windowsx.h>
+#include <dwmapi.h>
 #include "appconfig.h"
 #include "inputservice.h"
 
@@ -99,6 +101,31 @@ void applyFrameless(QQuickWindow *win)
     SetWindowPos(hwnd, nullptr, 0, 0, 0, 0,
         SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER);
 }
+
+// ── Win11 窗口材质与标题栏明暗 (DWM) ──
+// DWMWA_USE_IMMERSIVE_DARK_MODE=20 / DWMWA_SYSTEMBACKDROP_TYPE=38, 字面量写法兼容旧 SDK;
+// 材质值: 1=DWMSBT_NONE 2=DWMSBT_MAINWINDOW(云母) 3=DWMSBT_TRANSIENTWINDOW(亚克力)
+void applyImmersiveDark(HWND hwnd, bool dark)
+{
+    BOOL v = dark ? TRUE : FALSE;
+    DwmSetWindowAttribute(hwnd, 20, &v, sizeof(v));
+}
+
+void applyBackdrop(HWND hwnd, int material)
+{
+    const DWORD v = material == 1 ? 2 : material == 2 ? 3 : 1;
+    if (FAILED(DwmSetWindowAttribute(hwnd, 38, &v, sizeof(v))))
+        qWarning() << "applyBackdrop: SYSTEMBACKDROP_TYPE 挂载失败 (非 Win11 22H2+?)";
+}
+
+bool isDarkTheme()
+{
+    switch (AppConfig::instance()->themeIndex()) {
+    case 1:  return true;
+    case 0:  return false;
+    default: return QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Dark;
+    }
+}
 }
 
 int main(int argc, char *argv[])
@@ -134,6 +161,18 @@ int main(int argc, char *argv[])
     if (win) {
         applyFrameless(win);
         win->show();
+
+        // 窗口材质 (云母/亚克力) 与标题栏明暗: 启动套用, 主题/材质/系统明暗变化时实时重挂
+        const HWND hwnd = reinterpret_cast<HWND>(win->winId());
+        auto applyAll = [hwnd] {
+            applyImmersiveDark(hwnd, isDarkTheme());
+            applyBackdrop(hwnd, AppConfig::instance()->materialIndex());
+        };
+        applyAll();
+        QObject::connect(AppConfig::instance(), &AppConfig::themeIndexChanged, win, applyAll);
+        QObject::connect(AppConfig::instance(), &AppConfig::materialIndexChanged, win, applyAll);
+        QObject::connect(QGuiApplication::styleHints(), &QStyleHints::colorSchemeChanged,
+                         win, applyAll);
     }
 
     return app.exec();
