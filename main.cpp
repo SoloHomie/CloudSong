@@ -11,6 +11,7 @@
 #include <dwmapi.h>
 #include "appconfig.h"
 #include "inputservice.h"
+#include "pluginservice.h"
 
 namespace {
 // ── 无边框窗口 (BallsHackPro 同款 DWM 方法) ──
@@ -152,6 +153,8 @@ int main(int argc, char *argv[])
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("AppCfg", AppConfig::instance());
     engine.rootContext()->setContextProperty("Input", new InputService(&app));
+    // 插件服务 (定案 §5: M0.5 先接 search/getMediaSource, 其余方法同链就位)
+    engine.rootContext()->setContextProperty("Plugins", new PluginService(&app));
     engine.load(QUrl(QStringLiteral("qrc:/qt/qml/cloudsong/qml/main.qml")));
     if (engine.rootObjects().isEmpty())
         return -1;

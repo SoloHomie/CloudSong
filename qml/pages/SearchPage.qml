@@ -7,8 +7,11 @@ import "../components/buttons"
 import "../components/controls"
 
 // ═══════════════════════════════════════════════════════════════
-//  SearchPage — 搜索页 (原版 SearchPage 同构)
-//   歌曲/专辑/歌手/歌单 四类型 tab; 插件来源 chips 过滤; 热词兜底
+//  SearchPage — 搜索页 (M0.5 真实插件版, 定案 §5)
+//   歌曲/专辑/歌手/歌单 四类型 tab; 插件来源单选 chips (全部=拼接);
+//   Plugins.search(requestId 异步) → 按 (type|platform) 缓存,
+//   分tab不去重 (MusicFree 单源语义, 非 Mineradio 全并), 首屏只取第 1 页;
+//   热词/历史/播放仍走 Mock (M0 假源, 待用户播放内核接入)
 // ═══════════════════════════════════════════════════════════════
 Item {
     id: root
@@ -17,13 +20,144 @@ Item {
 
     property string query: params.query !== undefined ? params.query : ""
     property int activeTab: 0
-    property var activePlatforms: ["网易云", "QQ音乐", "本地"]   // 空=全部
-    property var result: MockData.searchAll(root.query)
+    property string selectedPlatform: ""   // "" = 全部 (各平台结果拼接不去重)
+    property var typeKeys: ["music", "album", "artist", "sheet"]
 
-    function filtered(list) {
-        return list.filter(function(x) {
-            return root.activePlatforms.length === 0 || root.activePlatforms.indexOf(x.platform) >= 0
+    // ── 插件搜索状态 ──
+    property var cache: ({})        // key "type|platform" → items
+    property var errors: ({})       // key → "code: message"
+    property var pendingIds: ({})   // requestId → {type,platform,key,gen}
+    property int gen: 0             // query 换代计数, 过期结果直接丢弃
+
+    // ── 工具 ──
+    function seedOf(s) {
+        if (s === undefined || s === null) return 0
+        var str = String(s), h = 0
+        for (var i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0
+        return ((h % 8) + 8) % 8
+    }
+    function typeKeyOf() { return root.typeKeys[root.activeTab] }
+    function targets() {
+        var list = Plugins.searchablePlatforms(root.typeKeyOf())
+        if (root.selectedPlatform === "") return list
+        return list.indexOf(root.selectedPlatform) >= 0 ? [root.selectedPlatform] : []
+    }
+    // 全部 = 各平台缓存拼接 (分tab不去重); 单选 = 只取该平台
+    function merged() {
+        var out = [], key = root.typeKeyOf()
+        var list = root.targets()
+        for (var i = 0; i < list.length; i++) {
+            var c = root.cache[key + "|" + list[i]]
+            if (c !== undefined) out = out.concat(c)
+        }
+        return out
+    }
+    function pendingCount() {
+        var n = 0, t = root.typeKeyOf()
+        for (var k in root.pendingIds)
+            if (root.pendingIds[k].type === t) n++
+        return n
+    }
+
+    // ── 发起/聚合 ──
+    function startSearch(type, platform) {
+        var key = type + "|" + platform
+        if (root.cache[key] !== undefined) return
+        for (var k in root.pendingIds)
+            if (root.pendingIds[k].key === key) return   // 已在途
+        var id = Plugins.search(root.query.trim(), 1, type, platform)
+        root.pendingIds[id] = { type: type, platform: platform, key: key, gen: root.gen }
+    }
+    function doSearch() {   // 关键词换代: 清缓存重搜
+        root.cache = {}; root.errors = {}; root.gen++
+        var keep = {}
+        for (var k in root.pendingIds)
+            if (root.pendingIds[k].gen === root.gen) keep[k] = root.pendingIds[k]
+        root.pendingIds = keep
+        var list = root.targets()
+        for (var i = 0; i < list.length; i++) root.startSearch(root.typeKeyOf(), list[i])
+    }
+    function ensureSearch() {   // 换 tab/平台: 只补缺
+        var list = root.targets()
+        for (var i = 0; i < list.length; i++) root.startSearch(root.typeKeyOf(), list[i])
+    }
+
+    // ── 结果映射 (MediaGrid/SongTable 字段契约; 插件字段兜底) ──
+    function songItems() { return root.merged() }
+    function albumItems() {
+        return root.merged().map(function(it) {
+            return Object.assign({}, it, {
+                title: it.title !== undefined ? it.title : "",
+                subtitle: it.artist !== undefined ? it.artist : "",
+                seed: it.seed !== undefined ? it.seed : root.seedOf(it.id),
+                count: it.count !== undefined ? it.count : 0
+            })
         })
+    }
+    function artistItems() {
+        return root.merged().map(function(a) {
+            return Object.assign({}, a, {
+                title: a.name !== undefined ? a.name : (a.title !== undefined ? a.title : ""),
+                subtitle: a.desc !== undefined ? a.desc : "",
+                seed: a.seed !== undefined ? a.seed : root.seedOf(a.id)
+            })
+        })
+    }
+    function sheetItems() {
+        return root.merged().map(function(it) {
+            return Object.assign({}, it, {
+                title: it.title !== undefined ? it.title : "",
+                subtitle: it.subtitle !== undefined ? it.subtitle
+                        : (it.desc !== undefined ? it.desc : ""),
+                seed: it.seed !== undefined ? it.seed : root.seedOf(it.id),
+                count: it.count !== undefined ? it.count
+                     : (it.worksNum !== undefined ? it.worksNum : 0)
+            })
+        })
+    }
+    function emptyMessageFor() {
+        if (root.pendingCount() > 0) return "正在搜索…"
+        var list = root.targets()
+        if (list.length === 0)
+            return Plugins.ready ? "当前类型没有可用的插件来源" : "插件加载中…"
+        for (var i = 0; i < list.length; i++) {
+            var e = root.errors[root.typeKeyOf() + "|" + list[i]]
+            if (e !== undefined) return "搜索失败: " + e
+        }
+        return "换个关键词试试, 或调整上方来源筛选"
+    }
+
+    Component.onCompleted: if (root.query.trim() !== "") root.doSearch()
+
+    // ── 插件回调 ──
+    Connections {
+        target: Plugins
+        function onSearchFinished(id, isEnd, data) {
+            var p = root.pendingIds[id]
+            if (p === undefined) return
+            delete root.pendingIds[id]
+            if (p.gen === root.gen) root.cache[p.key] = data
+        }
+        function onSearchFailed(id, code, message) {
+            var p = root.pendingIds[id]
+            if (p === undefined) return
+            delete root.pendingIds[id]
+            if (p.gen === root.gen) {
+                root.errors[p.key] = code + ": " + message
+                root.cache[p.key] = []
+            }
+        }
+        function onPluginsLoaded() {
+            if (root.query.trim() !== "") root.doSearch()
+        }
+    }
+
+    // 输入防抖 (VSYNC 失效环境, Timer 节流惯例)
+    Timer {
+        id: searchTimer
+        interval: 300
+        repeat: false
+        onTriggered: root.doSearch()
     }
 
     // ── 顶部: 搜索框 + 插件来源 chips ──
@@ -40,7 +174,7 @@ Item {
             font.pixelSize: 13
             contentLeftPadding: 12
             contentRightPadding: 12
-            onTextChanged: root.query = text
+            onTextChanged: { root.query = text; searchTimer.restart() }
             onAccepted: if (text.trim() !== "") MockData.addSearchHistory(text.trim())
         }
 
@@ -53,17 +187,18 @@ Item {
                 color: Theme.text_hint
             }
             Repeater {
-                model: [{ name: "网易云", key: "网易云" }, { name: "QQ音乐", key: "QQ音乐" }, { name: "本地", key: "本地" }]
+                model: ["全部"].concat(Plugins.searchablePlatforms(root.typeKeyOf()))
                 delegate: Rectangle {
                     height: 24
                     width: srcText.implicitWidth + 20
                     radius: 12
-                    property bool isOn: root.activePlatforms.indexOf(modelData.key) >= 0
+                    property bool isOn: (index === 0 && root.selectedPlatform === "")
+                                       || root.selectedPlatform === modelData
                     color: isOn ? Theme.accent : Theme.bg_input
                     Text {
                         id: srcText
                         anchors.centerIn: parent
-                        text: modelData.name
+                        text: modelData
                         font { family: Theme.fontFamily; pixelSize: 11 }
                         color: isOn ? "#ffffff" : Theme.text_secondary
                     }
@@ -71,11 +206,8 @@ Item {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
-                            var arr = root.activePlatforms.slice()
-                            var i = arr.indexOf(modelData.key)
-                            if (i >= 0) arr.splice(i, 1)
-                            else arr.push(modelData.key)
-                            root.activePlatforms = arr
+                            root.selectedPlatform = (index === 0) ? "" : modelData
+                            if (root.query.trim() !== "") root.ensureSearch()
                         }
                     }
                 }
@@ -130,7 +262,11 @@ Item {
             id: tabs
             anchors { left: parent.left; leftMargin: 24 }
             items: [{ text: "歌曲" }, { text: "专辑" }, { text: "歌手" }, { text: "歌单" }]
-            onActivated: function(i) { root.activeTab = i }
+            onActivated: function(i) {
+                root.activeTab = i
+                root.selectedPlatform = ""
+                if (root.query.trim() !== "") root.ensureSearch()
+            }
         }
 
         Item {
@@ -142,11 +278,11 @@ Item {
             SongTable {
                 anchors.fill: parent
                 visible: root.activeTab === 0
-                model: root.filtered(root.result.songs)
-                emptyTitle: "没有找到相关歌曲"
-                emptyMessage: "换个关键词试试, 或调整上方来源筛选"
+                model: root.songItems()
+                emptyTitle: root.pendingCount() > 0 ? "正在搜索…" : "没有找到相关歌曲"
+                emptyMessage: root.emptyMessageFor()
                 onPlayRequested: function(s, i) {
-                    var list = root.filtered(root.result.songs)
+                    var list = root.songItems()
                     MockPlayback.loadQueue(list)
                     MockPlayback.playIndex(i)
                 }
@@ -157,8 +293,9 @@ Item {
                 height: 2 * (cellWidth + 44) - 12
                 visible: root.activeTab === 1
                 cellWidth: 160
-                model: root.filtered(root.result.albums)
-                emptyTitle: "没有找到相关专辑"
+                model: root.albumItems()
+                emptyTitle: root.pendingCount() > 0 ? "正在搜索…" : "没有找到相关专辑"
+                emptyMessage: root.emptyMessageFor()
                 onOpenRequested: function(it) {
                     root.navigate("album", { id: it.id, title: it.title, artist: it.artist,
                                              date: it.date, count: it.count, seed: it.seed, platform: it.platform })
@@ -170,10 +307,9 @@ Item {
                 height: 2 * (cellWidth + 44) - 12
                 visible: root.activeTab === 2
                 cellWidth: 160
-                model: root.filtered(root.result.artists).map(function(a) {
-                    return Object.assign({}, a, { title: a.name, subtitle: a.desc })
-                })
-                emptyTitle: "没有找到相关歌手"
+                model: root.artistItems()
+                emptyTitle: root.pendingCount() > 0 ? "正在搜索…" : "没有找到相关歌手"
+                emptyMessage: root.emptyMessageFor()
                 onOpenRequested: function(it) {
                     root.navigate("artist", { id: it.id, name: it.name, desc: it.desc,
                                               seed: it.seed, platform: it.platform })
@@ -185,8 +321,9 @@ Item {
                 height: 2 * (cellWidth + 44) - 12
                 visible: root.activeTab === 3
                 cellWidth: 160
-                model: root.filtered(root.result.sheets)
-                emptyTitle: "没有找到相关歌单"
+                model: root.sheetItems()
+                emptyTitle: root.pendingCount() > 0 ? "正在搜索…" : "没有找到相关歌单"
+                emptyMessage: root.emptyMessageFor()
                 onOpenRequested: function(it) {
                     root.navigate("sheet", { kind: "sheet", id: it.id, title: it.title, seed: it.seed,
                                              count: it.count, desc: it.desc, platform: it.platform })
