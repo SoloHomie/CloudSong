@@ -1,6 +1,6 @@
 import QtQuick
-import QtQuick.Dialogs
 import "../../theme"
+import "../../dialogs"
 import "../display"
 import "../buttons"
 import "../controls"
@@ -9,9 +9,9 @@ import "../controls"
 //  PluginsPanel — 插件管理面板 (设置页"插件"分类折叠卡内容)
 //  2026-09-29 由 PluginManagerPage 迁入: 原 ListView 改为 Column+Repeater
 //  (设置页已有外层 Flickable, 不可嵌套滚动容器)
-//  2026-10-01 实装: 列表/开关/本地安装全接 Plugins service
-//  (plugins 属性 + setPluginEnabled + installPluginFromFile);
-//  停用名单落 QSettings, runtime reload 即生效。
+//  2026-10-01 实装: 列表/开关全接 Plugins service
+//  (plugins 属性 + setPluginEnabled); 停用名单落 QSettings, reload 即生效。
+//  添加插件 = AddPluginDialog (拖入 .js / 选择本地文件, 成功即关)。
 //  同日晚 动画: 数据经 ListModel 按 platform 就地更新 (代理不重建),
 //  停用变暗/开关滑动动画得以完整播放 (直接绑 Plugins.plugins 会
 //  因 reload 重建代理, 动画被截断)。
@@ -73,20 +73,16 @@ Column {
         SuretyBtn {
             anchors { right: parent.right; verticalCenter: parent.verticalCenter }
             height: 30
-            text: "从本地安装"
+            text: "添加插件"
             variant: "primary"
             font.pixelSize: 12
             iconSource: "qrc:/qt/qml/cloudsong/qml/assets/icons/player/plus.svg"
-            onClicked: fileDialog.open()
+            onClicked: addDialog.open()
         }
     }
 
-    FileDialog {
-        id: fileDialog
-        title: "选择插件文件"
-        nameFilters: ["JavaScript 插件 (*.js)"]
-        onAccepted: Plugins.installPluginFromFile(String(selectedFile))
-    }
+    // 添加插件弹窗 (拖入 .js / 选择本地文件, 成功即关)
+    AddPluginDialog { id: addDialog }
 
     // ── 插件卡列表 ──
     Repeater {

@@ -30,6 +30,7 @@
         <file>qml/shell/View.qml</file>
         <file>qml/shell/AccountChip.qml</file>
         <file>qml/dialogs/AuthDialog.qml</file>
+        <file>qml/dialogs/AddPluginDialog.qml</file>
         <file>qml/dialogs/LoginForm.qml</file>
         <file>qml/dialogs/RegisterForm.qml</file>
         <file>qml/dialogs/ResetPasswordForm.qml</file>
