@@ -43,8 +43,8 @@ public:
 
     ~Worker() override;
 
-    // ── 模块加载 (CommonJS 包装; amd=true 预置最小 define 供 tsc amd 产物) ──
-    JSValue loadCommonJs(const char* name, const QByteArray& src, bool amd);
+    // ── 模块加载 (CommonJS 包装求值) ──
+    JSValue loadCommonJs(const char* name, const QByteArray& src);
     QVariantMap extractMeta(const QString& file, JSValueConst obj);
     void runInvoke(int requestId, const QString& platform, const QString& method,
                    const QVariantList& args);

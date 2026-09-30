@@ -37,7 +37,7 @@ Item {
     property int    delay:         0
     property int    duration:      0
     property var    anchorItem:    null
-    property int    placement:     Tooltip.above
+    property int    placement:     root.above
     property bool   arrowVisible:  true
     property real   offsetX:       0
     property real   offsetY:       0
@@ -117,8 +117,8 @@ Item {
                 // 垂直: auto 优先上面, 不够换下面
                 var spaceAbove = p.y - 4
                 var spaceBelow = fh - (p.y + t.height) - 4
-                var preferAbove = (root.placement === Tooltip.above) ||
-                    (root.placement === Tooltip.auto && spaceAbove >= bg.height + 6)
+                var preferAbove = (root.placement === root.above) ||
+                    (root.placement === root.auto && spaceAbove >= bg.height + 6)
 
                 if (preferAbove && spaceAbove >= bg.height + 6) {
                     bg.y = p.y - bg.height - 6 + root.offsetY
@@ -134,9 +134,10 @@ Item {
                 _updatePos()
             }
 
-            // 窗口 resize 时重算
+            // 窗口 resize 时重算 (Window.window 附着属性须在 Item 作用域上解析,
+            // 直接写 target: Window.window 会按 Connections 自身(非 Item)取不到)
             Connections {
-                target: Window.window
+                target: bg.Window.window
                 function onWidthChanged()  { bg._updatePos() }
                 function onHeightChanged() { bg._updatePos() }
             }

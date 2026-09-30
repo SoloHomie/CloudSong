@@ -11,6 +11,7 @@
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QPointer>
+#include <QSet>
 #include <QTimer>
 #include <QDebug>
 #include <vector>
@@ -44,6 +45,16 @@ QString jsExceptionMessage(JSContext* ctx)
 {
     JSValue ex = JS_GetException(ctx);
     QString msg = QString::fromUtf8(jsToUtf8(ctx, ex));
+    // 附错误栈 (QuickJS Error 带 stack 属性) — "TypeError: not a function"
+    // 这类无定位信息全靠它找真源
+    if (JS_IsObject(ex)) {
+        JSValue stack = JS_GetPropertyStr(ctx, ex, "stack");
+        if (!JS_IsUndefined(stack)) {
+            QString s = QString::fromUtf8(jsToUtf8(ctx, stack)).trimmed();
+            if (!s.isEmpty()) msg += QStringLiteral("\n  ") + s.replace(QLatin1Char('\n'), QStringLiteral("\n  "));
+        }
+        JS_FreeValue(ctx, stack);
+    }
     JS_FreeValue(ctx, ex);
     return msg;
 }
@@ -106,16 +117,38 @@ PluginRuntime::Worker::~Worker()
     JS_FreeRuntime(m_rt);
 }
 
-JSValue PluginRuntime::Worker::loadCommonJs(const char* name, const QByteArray& src, bool amd)
+JSValue PluginRuntime::Worker::loadCommonJs(const char* name, const QByteArray& src)
 {
-    QByteArray pre;
-    if (amd)
-        pre = "var define = function(deps, factory) {"
-              "  var args = deps.map(function(d) {"
-              "    return d === 'exports' ? module.exports : undefined; });"
-              "  factory.apply(null, args);"
-              "};\n";
-    const QByteArray wrapped = "(function(module, exports, require, __filename) {\n" + pre + src + "\n})";
+    // AMD define 垫片 v2: 命名模块注册表 + localRequire — node-html-parser 是
+    // tsc AMD bundle (define("nodes/node",["require","exports","back"],…)),
+    // 命名段互相引用须按名查注册表; 依赖段在前、入口段在后保证先填充。
+    // 未知名回退 CJS 白名单 registry (he/css-select 等外部依赖将来加库即自动
+    // 解析), 取不到返回 undefined 不阻断求值; 入口段末位覆写 module.exports
+    // 胜出。UMD 库不受影响 (exports 分支优先); define.amd 供 UMD 探测
+    static const char pre[] = R"(var __amdModules = {};
+var __amdRequire = function(d) {
+    if (Object.prototype.hasOwnProperty.call(__amdModules, d)) return __amdModules[d];
+    return require(d);
+};
+var define = function(name, deps, factory) {
+    if (typeof name !== 'string') { factory = deps; deps = name; name = undefined; }
+    if (factory === undefined) { factory = deps; deps = []; }
+    if (!Array.isArray(deps)) deps = [];
+    var modExports = {};
+    var args = deps.map(function(d) {
+        if (d === 'exports') return modExports;
+        if (d === 'require') return __amdRequire;
+        if (Object.prototype.hasOwnProperty.call(__amdModules, d)) return __amdModules[d];
+        try { return __amdRequire(d); } catch (e) { return undefined; }
+    });
+    var r = factory.apply(null, args);
+    if (r !== undefined) modExports = r;
+    if (name !== undefined) __amdModules[name] = modExports;
+    module.exports = modExports;
+};
+define.amd = true;
+)";
+    const QByteArray wrapped = "(function(module, exports, require, __filename) {\n" + QByteArray(pre) + src + "\n})";
     JSValue fn = JS_Eval(m_ctx, wrapped.constData(), wrapped.size(), name, JS_EVAL_TYPE_GLOBAL);
     if (JS_IsException(fn)) {
         qWarning() << "[PluginRuntime] 模块求值失败" << name << jsExceptionMessage(m_ctx);
@@ -287,6 +320,10 @@ void PluginRuntime::Worker::pumpQueue()
 void PluginRuntime::Worker::init()
 {
     m_rt = JS_NewRuntime();
+    // QuickJS 默认 JS 栈 256KB — qs(70KB browserify)等大 bundle 模块工厂
+    // 嵌套求值时直线链路即 RangeError(插桩实证: 仅 5 层 require 就溢出);
+    // 提到 6MB, 8MB Worker C 栈留 2MB 余量, 失控递归抛 RangeError 而非崩进程
+    JS_SetMaxStackSize(m_rt, 6 * 1024 * 1024);
     m_ctx = JS_NewContext(m_rt);
     JS_SetContextOpaque(m_ctx, this);
     m_nam = new QNetworkAccessManager(this);
@@ -312,20 +349,36 @@ void PluginRuntime::Worker::doReload()
 
     const QDir dir(QCoreApplication::applicationDirPath() + QStringLiteral("/plugins"));
 
-    // 白名单模块 (幂等: 已注册名跳过)
+    // 白名单模块: 多遍扫, 求值成功即注册 (依赖序无关 — cheerio 顶层
+    // require("node-html-parser"), 字母序下依赖后到会直接失败; 每遍无进展
+    // 即停, 残留为真失败)
     const QDir libDir(dir.filePath(QStringLiteral("lib")));
+    QHash<QString, QByteArray> libSrcs;
+    QSet<QString> pending;
     for (const QString& f : libDir.entryList({ QStringLiteral("*.js") },
                                              QDir::Files, QDir::Name)) {
         const QString name = f.chopped(3);
         if (m_modules.contains(name)) continue;
         QFile file(libDir.filePath(f));
-        if (!file.open(QIODevice::ReadOnly)) continue;
-        JSValue mod = loadCommonJs(qPrintable(name), file.readAll(),
-                                   name == QLatin1String("node-html-parser"));
-        if (!JS_IsUndefined(mod))
-            m_modules.insert(name, mod); // registry 持有一份
-        else
-            JS_FreeValue(m_ctx, mod);
+        if (file.open(QIODevice::ReadOnly)) {
+            libSrcs.insert(name, file.readAll());
+            pending.insert(name);
+        }
+    }
+    while (!pending.isEmpty()) {
+        const int before = pending.size();
+        for (auto it = pending.begin(); it != pending.end();) {
+            qDebug() << "[PluginRuntime] 加载模块" << *it;
+            JSValue mod = loadCommonJs(qPrintable(*it), libSrcs.value(*it));
+            if (JS_IsUndefined(mod)) {
+                JS_FreeValue(m_ctx, mod);
+                ++it;
+            } else {
+                m_modules.insert(*it, mod); // registry 持有一份
+                it = pending.erase(it);
+            }
+        }
+        if (pending.size() == before) break;
     }
 
     // 插件 (platform 重名后者覆盖, 兼容热重载)
@@ -334,7 +387,8 @@ void PluginRuntime::Worker::doReload()
                                           QDir::Files, QDir::Name)) {
         QFile file(dir.filePath(f));
         if (!file.open(QIODevice::ReadOnly)) continue;
-        JSValue mod = loadCommonJs(qPrintable(f), file.readAll(), false);
+        qDebug() << "[PluginRuntime] 加载插件" << f;
+        JSValue mod = loadCommonJs(qPrintable(f), file.readAll());
         if (JS_IsUndefined(mod)) {
             JS_FreeValue(m_ctx, mod);
             continue;
@@ -506,6 +560,9 @@ PluginRuntime::PluginRuntime(QObject* parent)
     : QObject(parent)
     , m_worker(new Worker())
 {
+    // QuickJS 的 JS 栈帧经 alloca 落在 C 栈上, 默认 1MB 线程栈在求值
+    // 大模块 (qs 72KB browserify / crypto-js 220KB) 时 0xc00000fd 栈溢出实锤
+    m_thread.setStackSize(8 * 1024 * 1024);
     m_worker->moveToThread(&m_thread);
     connect(&m_thread, &QThread::started, m_worker, &Worker::init);
     connect(&m_thread, &QThread::finished, m_worker, &QObject::deleteLater);
