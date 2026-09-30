@@ -24,11 +24,11 @@
         <file>qml/components/panels/RoamPanel.qml</file>
         <file>qml/components/panels/MigratePanel.qml</file>
         <file>qml/components/panels/PluginsPanel.qml</file>
-        <file>qml/layouts/TitleBar.qml</file>
-        <file>qml/layouts/SideBar.qml</file>
-        <file>qml/layouts/SideBarDelegate.qml</file>
-        <file>qml/layouts/View.qml</file>
-        <file>qml/layouts/AccountChip.qml</file>
+        <file>qml/shell/TitleBar.qml</file>
+        <file>qml/shell/SideBar.qml</file>
+        <file>qml/shell/SideBarDelegate.qml</file>
+        <file>qml/shell/View.qml</file>
+        <file>qml/shell/AccountChip.qml</file>
         <file>qml/dialogs/AuthDialog.qml</file>
         <file>qml/dialogs/LoginForm.qml</file>
         <file>qml/dialogs/RegisterForm.qml</file>
@@ -50,8 +50,8 @@
         <file>qml/components/controls/search/SearchBox.qml</file>
         <file>qml/components/controls/search/SearchPanel.qml</file>
         <file>qml/components/controls/search/SearchRow.qml</file>
-        <file>qml/layouts/PlayerBar.qml</file>
-        <file>qml/layouts/QueueDrawer.qml</file>
+        <file>qml/shell/PlayerBar.qml</file>
+        <file>qml/shell/QueueDrawer.qml</file>
         <file>qml/pages/RecommendPage.qml</file>
         <file>qml/pages/ListenModePage.qml</file>
         <file>qml/pages/FavoritePage.qml</file>
@@ -103,17 +103,17 @@
         <file>qml/assets/form/eye-closed.svg</file>
         <file>qml/assets/icons/arrow-up.svg</file>
         <file>qml/assets/icons/setting.svg</file>
-        <file>qml/assets/icons/登录.svg</file>
-        <file>qml/assets/icons/返回.svg</file>
+        <file>qml/assets/icons/login.svg</file>
+        <file>qml/assets/icons/back.svg</file>
         <file>qml/assets/icons/sidebar/add.svg</file>
         <file>qml/assets/icons/sidebar/fav.svg</file>
         <file>qml/assets/icons/sidebar/playlist.svg</file>
         <file>qml/assets/icons/sidebar/recent.svg</file>
         <file>qml/assets/icons/sidebar/mode.svg</file>
         <file>qml/assets/icons/sidebar/waves.svg</file>
-        <file>qml/assets/window/窗体-最小化.svg</file>
-        <file>qml/assets/window/窗体-最大化.svg</file>
-        <file>qml/assets/window/窗体-向下还原.svg</file>
-        <file>qml/assets/window/窗体-关闭.svg</file>
+        <file>qml/assets/window/win-minimize.svg</file>
+        <file>qml/assets/window/win-maximize.svg</file>
+        <file>qml/assets/window/win-restore.svg</file>
+        <file>qml/assets/window/win-close.svg</file>
     </qresource>
 </RCC>

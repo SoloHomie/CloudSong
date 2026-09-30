@@ -60,7 +60,7 @@ DialogShell {
             Image {
                 anchors.centerIn: parent
                 width: 16; height: 16
-                source: "qrc:/qt/qml/cloudsong/qml/assets/icons/返回.svg"
+                source: "qrc:/qt/qml/cloudsong/qml/assets/icons/back.svg"
                 sourceSize: Qt.size(32, 32)
                 fillMode: Image.PreserveAspectFit
                 smooth: true; antialiasing: true

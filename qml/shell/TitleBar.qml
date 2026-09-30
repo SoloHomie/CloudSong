@@ -106,7 +106,7 @@ Item {
             height: 24
             anchors.verticalCenter: parent.verticalCenter
             font.pixelSize: 11; font.weight: Font.Bold
-            iconSource: "qrc:/qt/qml/cloudsong/qml/assets/icons/登录.svg"
+            iconSource: "qrc:/qt/qml/cloudsong/qml/assets/icons/login.svg"
             text: root.loggedIn ? root.userName : "登录"
             variant: root.loggedIn ? "ghost" : "primary"
             onClicked: root.loginRequested()
@@ -188,14 +188,14 @@ Item {
         Item { width: 6; height: 1 }
 
         WinBtn {
-            icon: "qrc:/qt/qml/cloudsong/qml/assets/window/窗体-最小化.svg"
+            icon: "qrc:/qt/qml/cloudsong/qml/assets/window/win-minimize.svg"
             hoverBg: root.winBtnHover
             onClicked: { if (root.appWindow) root.appWindow.showMinimized() }
         }
         WinBtn {
             icon: root.appWindow && root.appWindow.visibility === Window.Maximized
-                ? "qrc:/qt/qml/cloudsong/qml/assets/window/窗体-向下还原.svg"
-                : "qrc:/qt/qml/cloudsong/qml/assets/window/窗体-最大化.svg"
+                ? "qrc:/qt/qml/cloudsong/qml/assets/window/win-restore.svg"
+                : "qrc:/qt/qml/cloudsong/qml/assets/window/win-maximize.svg"
             hoverBg: root.winBtnHover
             onClicked: {
                 if (!root.appWindow) return
@@ -206,7 +206,7 @@ Item {
             }
         }
         WinBtn {
-            icon: "qrc:/qt/qml/cloudsong/qml/assets/window/窗体-关闭.svg"
+            icon: "qrc:/qt/qml/cloudsong/qml/assets/window/win-close.svg"
             hoverBg: Qt.rgba(0.82, 0.14, 0.14, 0.9)
             onClicked: { if (root.appWindow) root.appWindow.close() }
         }

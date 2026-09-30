@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Window
 import "theme"
-import "layouts"
+import "shell"
 import "dialogs"
 import "mock"
 

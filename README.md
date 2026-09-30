@@ -22,7 +22,7 @@ MSBuild CloudSong.vcxproj -p:Configuration=Release -p:Platform=x64
 
 - `qml/theme/` 主题令牌 (函数注入式配色)
 - `qml/components/` 公共组件 (controls/buttons/display/layout/overlay/cards/business)
-- `qml/layouts/` 骨架: TitleBar / SideBar / View / PlayerBar / QueueDrawer
+- `qml/shell/` 骨架: TitleBar / SideBar / View / PlayerBar / QueueDrawer
 - `qml/pages/` 16 页全量: 推荐 / 听歌模式 / 我喜欢 / 历史 / 我的歌单 / 本地音乐 / 下载 / 搜索 / 歌单详情 / 专辑详情 / 歌手详情 / 设置 / 主题 / 插件管理 / 云漫游 / 迁移
 - `qml/dialogs/` 统一弹窗 (DialogShell 窗体 + AuthDialog 登录/注册/重置 等)
 - `qml/mock/` MockData / MockPlayback 模拟数据 (与未来 C++ Service 同名, 待整体替换)
