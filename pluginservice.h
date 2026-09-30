@@ -11,8 +11,9 @@
 //  PluginService — 插件服务 facade (定案 §4.7, QML context "Plugins")
 //
 //  M0.5: 14 方法 facade 全量定死 (走 PluginRuntime 泛化 invoke),
-//        首批插件实装 search/getMediaSource; 管理面 (pluginModel/
-//        安装/卸载/排序) 与插件偏好设置页留 P0。
+//        首批插件实装 search/getMediaSource;
+//  2026-10-01 管理面实装: plugins 列表属性 + setPluginEnabled(停用名单
+//        落 QSettings, reload 生效) + installPluginFromFile(拷入 plugins/)。
 //  参数 QVariantMap 透传原则 (§2.2), requestId 异步模式 (§2.1),
 //  错误码表见定案 §2.3。
 // ═══════════════════════════════════════════════════════════════
@@ -23,11 +24,15 @@ class PluginService : public QObject
     Q_OBJECT
     Q_PROPERTY(bool ready READ ready NOTIFY pluginsLoaded)
     Q_PROPERTY(QStringList platforms READ platforms NOTIFY pluginsLoaded)
+    // 插件管理面板列表: 含停用项 (enabled=false), 元数据 {platform,name,
+    // version,description,enabled,...} (pluginsReady 全量替换)
+    Q_PROPERTY(QVariantList plugins READ plugins NOTIFY pluginsLoaded)
 public:
     explicit PluginService(QObject* parent = nullptr);
 
     bool ready() const { return !m_plugins.isEmpty(); }
     QStringList platforms() const;
+    QVariantList plugins() const;
 
     // 某搜索类型下可用的插件 platform 列表 (chip/tab 用)
     Q_INVOKABLE QStringList searchablePlatforms(const QString& type) const;
@@ -56,7 +61,14 @@ public:
     Q_INVOKABLE int getMusicComments(const QVariantMap& musicItem, int page,
                                      const QString& platform = {});
 
+    // ── 插件管理面 (2026-10-01) ──
+    // 停用/启用: 写 QSettings plugins/disabled 后整库 reload, 结果随 pluginsLoaded 回
+    Q_INVOKABLE void setPluginEnabled(const QString& platform, bool enabled);
+    // 本地安装: 校验 .js → 拷入 <exe>/plugins/ → reload; 结果走 pluginOpFinished
+    Q_INVOKABLE void installPluginFromFile(const QString& filePath);
+
 signals:
+    void pluginOpFinished(bool ok, const QString& message);
     void pluginsLoaded();
     // 每对 finished/failed 与定案附录A 一一对应
     void searchFinished(int requestId, bool isEnd, QVariantList data);

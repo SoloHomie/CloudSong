@@ -12,6 +12,7 @@
 #include <QNetworkRequest>
 #include <QPointer>
 #include <QSet>
+#include <QSettings>
 #include <QTimer>
 #include <QDebug>
 #include <QLoggingCategory>
@@ -199,6 +200,9 @@ QVariantMap PluginRuntime::Worker::extractMeta(const QString& file, JSValueConst
     QVariantMap m;
     m["platform"] = QString::fromUtf8(propStr(m_ctx, obj, "platform"));
     m["version"]  = QString::fromUtf8(propStr(m_ctx, obj, "version"));
+    m["name"] = QString::fromUtf8(propStr(m_ctx, obj, "name"));
+    if (m["name"].toString().isEmpty()) m["name"] = m["platform"].toString();
+    m["description"] = QString::fromUtf8(propStr(m_ctx, obj, "description"));
     m["srcUrl"]   = QString::fromUtf8(propStr(m_ctx, obj, "srcUrl"));
     m["cacheControl"] = QString::fromUtf8(propStr(m_ctx, obj, "cacheControl"));
     m["hash"] = QStringLiteral("local:") + file;
@@ -404,6 +408,9 @@ void PluginRuntime::Worker::doReload()
                       << "个, 失败" << pending.size() << "个";
 
     // 插件 (platform 重名后者覆盖, 兼容热重载)
+    // 停用名单: service 写 QSettings plugins/disabled, 本线程同默认存储读回
+    const QStringList disabled =
+        QSettings().value(QStringLiteral("plugins/disabled")).toStringList();
     QVariantList metaList;
     for (const QString& f : dir.entryList({ QStringLiteral("*.js") },
                                           QDir::Files, QDir::Name)) {
@@ -419,13 +426,20 @@ void PluginRuntime::Worker::doReload()
             JS_FreeValue(m_ctx, mod);
             continue;
         }
-        auto old = m_pluginObjs.find(platform);
-        if (old != m_pluginObjs.end()) JS_FreeValue(m_ctx, old.value());
-        m_pluginObjs.insert(platform, mod);
-        m_pluginMeta.append(extractMeta(f, mod));
+        QVariantMap meta = extractMeta(f, mod);
+        meta.insert(QStringLiteral("enabled"), !disabled.contains(platform));
+        if (meta.value(QStringLiteral("enabled")).toBool()) {
+            auto old = m_pluginObjs.find(platform);
+            if (old != m_pluginObjs.end()) JS_FreeValue(m_ctx, old.value());
+            m_pluginObjs.insert(platform, mod);
+        } else {
+            JS_FreeValue(m_ctx, mod); // 停用: 只留元数据进列表, 不注册调用表
+        }
+        m_pluginMeta.append(meta);
         metaList.append(m_pluginMeta.last());
     }
-    qInfo() << "[PluginRuntime] 插件加载完成:" << m_pluginObjs.size();
+    qInfo() << "[PluginRuntime] 插件加载完成:" << m_pluginObjs.size()
+            << "停用:" << (metaList.size() - m_pluginObjs.size());
     emit pluginsReady(metaList);
 }
 

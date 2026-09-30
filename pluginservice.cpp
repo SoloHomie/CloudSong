@@ -1,6 +1,11 @@
 #include "pluginservice.h"
 
+#include <QCoreApplication>
 #include <QDebug>
+#include <QDir>
+#include <QFile>
+#include <QFileInfo>
+#include <QUrl>
 #include <QVariantList>
 
 #include "pluginruntime.h"
@@ -161,6 +166,56 @@ QStringList PluginService::platforms() const
     for (const QVariantMap& m : m_plugins)
         out << m.value("platform").toString();
     return out;
+}
+
+QVariantList PluginService::plugins() const
+{
+    QVariantList out;
+    for (const QVariantMap& m : m_plugins)
+        out.append(m);
+    return out;
+}
+
+// ── 插件管理面 (2026-10-01) ──
+
+void PluginService::setPluginEnabled(const QString& platform, bool enabled)
+{
+    QStringList disabled = m_settings.value(QStringLiteral("plugins/disabled")).toStringList();
+    if (enabled)
+        disabled.removeAll(platform);
+    else if (!disabled.contains(platform))
+        disabled.append(platform);
+    m_settings.setValue(QStringLiteral("plugins/disabled"), disabled);
+    PluginRuntime::instance()->reload();
+}
+
+void PluginService::installPluginFromFile(const QString& filePath)
+{
+    // QML FileDialog 传的是 file:/// URL 字符串; 裸路径直用
+    QString local = filePath;
+    const QUrl asUrl(filePath);
+    if (asUrl.isLocalFile()) local = asUrl.toLocalFile();
+    const QFileInfo src(local);
+    if (!src.exists() || src.suffix().compare(QStringLiteral("js"), Qt::CaseInsensitive) != 0) {
+        emit pluginOpFinished(false, QStringLiteral("请选择 .js 插件文件"));
+        return;
+    }
+    QDir dir(QCoreApplication::applicationDirPath() + QStringLiteral("/plugins"));
+    if (!dir.exists() && !dir.mkpath(QStringLiteral("."))) {
+        emit pluginOpFinished(false, QStringLiteral("plugins 目录创建失败"));
+        return;
+    }
+    const QString dest = dir.filePath(src.fileName());
+    if (QFile::exists(dest) && !QFile::remove(dest)) {
+        emit pluginOpFinished(false, QStringLiteral("已存在同名文件且被占用, 覆盖失败"));
+        return;
+    }
+    if (!QFile::copy(filePath, dest)) {
+        emit pluginOpFinished(false, QStringLiteral("复制失败, 请检查磁盘权限"));
+        return;
+    }
+    PluginRuntime::instance()->reload();
+    emit pluginOpFinished(true, QStringLiteral("已安装 %1").arg(src.fileName()));
 }
 
 QStringList PluginService::searchablePlatforms(const QString& type) const
