@@ -138,6 +138,11 @@ int main(int argc, char *argv[])
 
     QGuiApplication app(argc, argv);
 
+    // ── QSettings 落点: org/app 全空时默认构造置 AccessError, 读写静默失败
+    // (插件停用名单 plugins/disabled 依赖它, 2026-10-01 实锤) ──
+    QCoreApplication::setOrganizationName(QStringLiteral("SoloHomie"));
+    QCoreApplication::setApplicationName(QStringLiteral("CloudSong"));
+
     // ── 日志规范: 插件运行时逐模块/插件侧输出归 qCDebug 默认静音, 启动只留
     // 汇总与失败; 排障时 QT_LOGGING_RULES="cloudsong.plugin.debug=true" 打开
     QLoggingCategory::setFilterRules(QStringLiteral("cloudsong.plugin.debug=false"));
