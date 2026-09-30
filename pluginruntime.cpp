@@ -14,7 +14,13 @@
 #include <QSet>
 #include <QTimer>
 #include <QDebug>
+#include <QLoggingCategory>
 #include <vector>
+
+// 插件运行时日志类别 — 逐模块加载/插件侧 console 输出归 qCDebug, 默认静音
+// (main.cpp: "cloudsong.plugin.debug=false"); 排障时
+// QT_LOGGING_RULES="cloudsong.plugin.debug=true" 打开全量细节
+Q_LOGGING_CATEGORY(lcPlugin, "cloudsong.plugin")
 
 // ═══════════════════════════════════════════════════════════════
 //  PluginRuntime 实现 — QuickJS-ng 独立线程运行时 (定案 §4.7)
@@ -117,7 +123,7 @@ PluginRuntime::Worker::~Worker()
     JS_FreeRuntime(m_rt);
 }
 
-JSValue PluginRuntime::Worker::loadCommonJs(const char* name, const QByteArray& src)
+JSValue PluginRuntime::Worker::loadCommonJs(const char* name, const QByteArray& src, QString* errOut)
 {
     // AMD define 垫片 v2: 命名模块注册表 + localRequire — node-html-parser 是
     // tsc AMD bundle (define("nodes/node",["require","exports","back"],…)),
@@ -151,7 +157,10 @@ define.amd = true;
     const QByteArray wrapped = "(function(module, exports, require, __filename) {\n" + QByteArray(pre) + src + "\n})";
     JSValue fn = JS_Eval(m_ctx, wrapped.constData(), wrapped.size(), name, JS_EVAL_TYPE_GLOBAL);
     if (JS_IsException(fn)) {
-        qWarning() << "[PluginRuntime] 模块求值失败" << name << jsExceptionMessage(m_ctx);
+        const QString msg = QStringLiteral("模块求值失败 %1 %2").arg(
+            QString::fromUtf8(name), jsExceptionMessage(m_ctx));
+        if (errOut) *errOut = msg;
+        else qWarning() << "[PluginRuntime]" << msg;
         JS_FreeValue(m_ctx, fn);
         return JS_UNDEFINED;
     }
@@ -171,7 +180,10 @@ define.amd = true;
     JS_FreeValue(m_ctx, fn);
     JS_FreeValue(m_ctx, exportsObj);
     if (JS_IsException(ret)) {
-        qWarning() << "[PluginRuntime] 模块执行失败" << name << jsExceptionMessage(m_ctx);
+        const QString msg = QStringLiteral("模块执行失败 %1 %2").arg(
+            QString::fromUtf8(name), jsExceptionMessage(m_ctx));
+        if (errOut) *errOut = msg;
+        else qWarning() << "[PluginRuntime]" << msg;
         JS_FreeValue(m_ctx, ret);
         JS_FreeValue(m_ctx, moduleObj);
         return JS_UNDEFINED;
@@ -365,21 +377,31 @@ void PluginRuntime::Worker::doReload()
             pending.insert(name);
         }
     }
+    int loaded = 0;
+    QHash<QString, QString> failMsgs;
     while (!pending.isEmpty()) {
         const int before = pending.size();
         for (auto it = pending.begin(); it != pending.end();) {
-            qDebug() << "[PluginRuntime] 加载模块" << *it;
-            JSValue mod = loadCommonJs(qPrintable(*it), libSrcs.value(*it));
+            QString err;
+            JSValue mod = loadCommonJs(qPrintable(*it), libSrcs.value(*it), &err);
             if (JS_IsUndefined(mod)) {
+                if (!err.isEmpty()) failMsgs.insert(*it, err);
                 JS_FreeValue(m_ctx, mod);
                 ++it;
             } else {
                 m_modules.insert(*it, mod); // registry 持有一份
+                ++loaded;
                 it = pending.erase(it);
             }
         }
         if (pending.size() == before) break;
     }
+    // 循环中的失败多为依赖未就绪的暂态 (字母序: cheerio 先于 node-html-parser),
+    // 收敛后仍残留的才报真失败; 插件循环无重试, 照旧即时打印
+    for (auto it = pending.begin(); it != pending.end(); ++it)
+        qWarning() << "[PluginRuntime]" << failMsgs.value(*it);
+    qCDebug(lcPlugin) << "[PluginRuntime] 白名单模块就绪" << loaded
+                      << "个, 失败" << pending.size() << "个";
 
     // 插件 (platform 重名后者覆盖, 兼容热重载)
     QVariantList metaList;
@@ -387,7 +409,6 @@ void PluginRuntime::Worker::doReload()
                                           QDir::Files, QDir::Name)) {
         QFile file(dir.filePath(f));
         if (!file.open(QIODevice::ReadOnly)) continue;
-        qDebug() << "[PluginRuntime] 加载插件" << f;
         JSValue mod = loadCommonJs(qPrintable(f), file.readAll());
         if (JS_IsUndefined(mod)) {
             JS_FreeValue(m_ctx, mod);
@@ -544,7 +565,7 @@ JSValue PluginRuntime::Worker::jsRequire(JSContext* ctx, JSValueConst, int argc,
 JSValue PluginRuntime::Worker::jsConsole(JSContext* ctx, JSValueConst, int argc, JSValueConst* argv)
 {
     const QByteArray s = argc > 0 ? jsToUtf8(ctx, argv[0]) : QByteArray();
-    qDebug().noquote() << "[plugin]" << QString::fromUtf8(s);
+    qCDebug(lcPlugin).noquote() << "[plugin]" << QString::fromUtf8(s);
     return JS_UNDEFINED;
 }
 

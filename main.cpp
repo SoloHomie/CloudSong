@@ -3,6 +3,7 @@
 #include <QQmlContext>
 #include <QQuickWindow>
 #include <QStyleHints>
+#include <QLoggingCategory>
 #include <QAbstractNativeEventFilter>
 #include <QFontDatabase>
 #include <QResource>
@@ -136,6 +137,10 @@ int main(int argc, char *argv[])
 #endif
 
     QGuiApplication app(argc, argv);
+
+    // ── 日志规范: 插件运行时逐模块/插件侧输出归 qCDebug 默认静音, 启动只留
+    // 汇总与失败; 排障时 QT_LOGGING_RULES="cloudsong.plugin.debug=true" 打开
+    QLoggingCategory::setFilterRules(QStringLiteral("cloudsong.plugin.debug=false"));
 
     // ── 全局 UI 字体 (2026-09-28 用户拍板 MiSans; C++ 加载, QML 只按 Theme.fontFamily 引用) ──
     // 可变字体 wght 轴不被 Qt 驱动 → 实例化 Regular/Bold 两份静态同 family, 按 usWeightClass 匹配;

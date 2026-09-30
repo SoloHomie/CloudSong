@@ -43,8 +43,9 @@ public:
 
     ~Worker() override;
 
-    // ── 模块加载 (CommonJS 包装求值) ──
-    JSValue loadCommonJs(const char* name, const QByteArray& src);
+    // ── 模块加载 (CommonJS 包装求值); errOut 非空时失败不打印,
+    //    消息交调用方 (白名单循环静默重试, 收敛后统一报真失败) ──
+    JSValue loadCommonJs(const char* name, const QByteArray& src, QString* errOut = nullptr);
     QVariantMap extractMeta(const QString& file, JSValueConst obj);
     void runInvoke(int requestId, const QString& platform, const QString& method,
                    const QVariantList& args);
