@@ -18,6 +18,7 @@
 //  错误码表见定案 §2.3。
 // ═══════════════════════════════════════════════════════════════
 class PluginRuntime;
+class QNetworkAccessManager;
 
 class PluginService : public QObject
 {
@@ -66,6 +67,9 @@ public:
     Q_INVOKABLE void setPluginEnabled(const QString& platform, bool enabled);
     // 本地安装: 校验 .js → 拷入 <exe>/plugins/ → reload; 结果走 pluginOpFinished
     Q_INVOKABLE void installPluginFromFile(const QString& filePath);
+    // URL 下载安装: http/https 校验 → GET (15s 超时) → 文件名消毒 + .js/module.exports
+    // 特征校验 → 写入 plugins/ → reload; 结果走 pluginOpFinished
+    Q_INVOKABLE void installPluginFromUrl(const QString& url);
 
 signals:
     void pluginOpFinished(bool ok, const QString& message);
@@ -111,6 +115,7 @@ private:
 
     QVector<QVariantMap> m_plugins;   // 与 PluginRuntime 元数据同步 (pluginsReady)
     QSettings m_settings;
+    QNetworkAccessManager* m_nam = nullptr;   // URL 下载安装用 (GUI 线程)
     int m_seq = 1;
     QHash<int, QPair<MethodId, QString>> m_requests;  // requestId → (方法, platform)
 };

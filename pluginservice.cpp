@@ -5,6 +5,10 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QNetworkRequest>
+#include <QRegularExpression>
 #include <QUrl>
 #include <QVariantList>
 
@@ -20,6 +24,7 @@
 
 PluginService::PluginService(QObject* parent)
     : QObject(parent)
+    , m_nam(new QNetworkAccessManager(this))
 {
     auto* runtime = PluginRuntime::instance();
     connect(runtime, &PluginRuntime::pluginsReady, this, [this](const QVariantList& plugins) {
@@ -216,6 +221,57 @@ void PluginService::installPluginFromFile(const QString& filePath)
     }
     PluginRuntime::instance()->reload();
     emit pluginOpFinished(true, QStringLiteral("已安装 %1").arg(src.fileName()));
+}
+
+void PluginService::installPluginFromUrl(const QString& url)
+{
+    const QUrl u(url);
+    if (!u.isValid() || (u.scheme() != QStringLiteral("http")
+                         && u.scheme() != QStringLiteral("https"))) {
+        emit pluginOpFinished(false, QStringLiteral("请输入 http/https 链接"));
+        return;
+    }
+    // 文件名取自链接路径并消毒 (防路径注入), 要求 .js 结尾
+    QString name = QUrl::fromPercentEncoding(u.fileName().toUtf8());
+    name.remove(QRegularExpression(QStringLiteral("[^A-Za-z0-9._-]")));
+    if (!name.endsWith(QStringLiteral(".js"), Qt::CaseInsensitive)) {
+        emit pluginOpFinished(false, QStringLiteral("链接需指向 .js 文件"));
+        return;
+    }
+
+    QNetworkRequest req(u);
+    req.setTransferTimeout(15000);
+    QNetworkReply* reply = m_nam->get(req);
+    connect(reply, &QNetworkReply::finished, this, [this, reply, name] {
+        reply->deleteLater();
+        if (reply->error() != QNetworkReply::NoError) {
+            emit pluginOpFinished(false, QStringLiteral("下载失败: %1").arg(reply->errorString()));
+            return;
+        }
+        const QByteArray body = reply->readAll();
+        if (body.isEmpty() || !body.contains("module.exports")) {
+            emit pluginOpFinished(false, QStringLiteral("内容不是有效的插件文件"));
+            return;
+        }
+        QDir dir(QCoreApplication::applicationDirPath() + QStringLiteral("/plugins"));
+        if (!dir.exists() && !dir.mkpath(QStringLiteral("."))) {
+            emit pluginOpFinished(false, QStringLiteral("plugins 目录创建失败"));
+            return;
+        }
+        const QString dest = dir.filePath(name);
+        if (QFile::exists(dest) && !QFile::remove(dest)) {
+            emit pluginOpFinished(false, QStringLiteral("已存在同名文件且被占用, 覆盖失败"));
+            return;
+        }
+        QFile f(dest);
+        if (!f.open(QIODevice::WriteOnly) || f.write(body) != body.size()) {
+            emit pluginOpFinished(false, QStringLiteral("写入失败, 请检查磁盘权限"));
+            return;
+        }
+        f.close();
+        PluginRuntime::instance()->reload();
+        emit pluginOpFinished(true, QStringLiteral("已安装 %1").arg(name));
+    });
 }
 
 QStringList PluginService::searchablePlatforms(const QString& type) const
