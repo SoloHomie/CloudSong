@@ -85,15 +85,17 @@ DialogShell {
                             fillColor: "transparent"
                             Behavior on strokeColor { ColorAnimation { duration: 150 } }
                             PathSvg {
-                                // 圆角 8 的圆角矩形路径, 内缩 0.5 让 1px 描边完整落在框内
+                                // 圆角 8 的圆角矩形路径, 内缩 0.5 让 1px 描边完整落在框内。
+                                // 拆成 4 边 + 4 角 8 个子路径: dash 相位按子路径重置,
+                                // 四角弧段渲染完全一致 (单条连续路径会因相位漂移致各角参差)
                                 path: "M 8.5 0.5 H " + (dropZone.width - 8.5)
-                                    + " A 8 8 0 0 1 " + (dropZone.width - 0.5) + " 8.5"
-                                    + " V " + (dropZone.height - 8.5)
-                                    + " A 8 8 0 0 1 " + (dropZone.width - 8.5) + " " + (dropZone.height - 0.5)
-                                    + " H 8.5"
-                                    + " A 8 8 0 0 1 0.5 " + (dropZone.height - 8.5)
-                                    + " V 8.5"
-                                    + " A 8 8 0 0 1 8.5 0.5 Z"
+                                    + " M " + (dropZone.width - 8.5) + " 0.5 A 8 8 0 0 1 " + (dropZone.width - 0.5) + " 8.5"
+                                    + " M " + (dropZone.width - 0.5) + " 8.5 V " + (dropZone.height - 8.5)
+                                    + " M " + (dropZone.width - 0.5) + " " + (dropZone.height - 8.5) + " A 8 8 0 0 1 " + (dropZone.width - 8.5) + " " + (dropZone.height - 0.5)
+                                    + " M " + (dropZone.width - 8.5) + " " + (dropZone.height - 0.5) + " H 8.5"
+                                    + " M 8.5 " + (dropZone.height - 0.5) + " A 8 8 0 0 1 0.5 " + (dropZone.height - 8.5)
+                                    + " M 0.5 " + (dropZone.height - 8.5) + " V 8.5"
+                                    + " M 0.5 8.5 A 8 8 0 0 1 8.5 0.5"
                             }
                         }
                     }
@@ -136,6 +138,7 @@ DialogShell {
                         id: urlField
                         width: parent.width - 98
                         placeholder: "https://…/plugin.js"
+                        customBorder: Theme.border_standard   // 默认 neutral4 在弹窗底上太淡, 提一档
                         onAccepted: root.tryUrl()
                     }
                     SuretyBtn {
