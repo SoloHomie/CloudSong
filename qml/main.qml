@@ -49,7 +49,8 @@ Window {
             width: 160
             height: parent.height
             onPageSwitchRequested: function(page) { view.switchRoot(page) }
-            onCreateRequested: view.switchRoot(4)   // 我的歌单页内建弹窗
+            onCreateRequested: createSheetDialog.open()   // 直接弹新建歌单窗, 不跳页
+            onSheetRequested: function(sheet) { view.push("sheet", sheet) }
         }
 
         // 内容显示区 (页面栈挂载点)
@@ -80,5 +81,10 @@ Window {
     // 登录/注册/重置 弹窗 (自 Glowling 移植; 纯 UI, 表单动作全部转发为信号, 待 C++ AuthService 接线)
     AuthDialog {
         id: authDialog
+    }
+
+    // 新建歌单弹窗 (侧栏"创建的歌单"＋触发; 创建后侧栏与我的歌单页经 MockData 联动)
+    CreateSheetDialog {
+        id: createSheetDialog
     }
 }

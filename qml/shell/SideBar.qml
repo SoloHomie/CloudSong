@@ -3,6 +3,7 @@ import QtQuick.Effects
 import QtQuick.Layouts
 import QtQml.Models
 import "../theme"
+import "../mock"
 
 /// ──────────────────────────────────────────────────────────
 ///  侧边导航 (自 BallsHackPro 移植: 福利块与硬编码导航已剥离,
@@ -30,6 +31,42 @@ Rectangle {
     }
     signal pageSwitchRequested(int page)
     signal createRequested()
+    signal sheetRequested(var sheet)   // 点击自建歌单项 → 歌单详情页参数
+
+    // ── 自建歌单动态行 (kind:"sheetItem", 插在"我的歌单"之下; 数据源 MockData.createdSheets) ──
+    function syncCreatedSheets() {
+        // 行号会随插入变化, 先记下当前选中的根页面
+        var selPage = -1
+        if (selectedIndex >= 0 && selectedIndex < model.count && model.get(selectedIndex).kind === "item")
+            selPage = model.get(selectedIndex).page
+        // 清旧行
+        for (var i = model.count - 1; i >= 0; i--)
+            if (model.get(i).kind === "sheetItem") model.remove(i)
+        // 找"我的歌单"行 (page 4), 其后按序插入
+        var base = -1
+        for (var j = 0; j < model.count; j++)
+            if (model.get(j).kind === "item" && model.get(j).page === 4) { base = j; break }
+        for (var k = 0; k < MockData.createdSheets.length; k++) {
+            var s = MockData.createdSheets[k]
+            model.insert(base + 1 + k, {
+                kind: "sheetItem",
+                icon: "qrc:/qt/qml/cloudsong/qml/assets/icons/sidebar/playlist.svg",
+                text: s.title,
+                sheetId: s.id, sheetTitle: s.title, sheetSeed: s.seed,
+                sheetCount: s.count, sheetPlatform: s.platform
+            })
+        }
+        // 恢复选中行
+        if (selPage >= 0)
+            for (var m = 0; m < model.count; m++)
+                if (model.get(m).kind === "item" && model.get(m).page === selPage) { selectedIndex = m; break }
+    }
+
+    Component.onCompleted: syncCreatedSheets()
+    Connections {
+        target: MockData
+        function onCreatedSheetsChanged() { syncCreatedSheets() }
+    }
 
     ColumnLayout {
         anchors.fill: parent
@@ -103,6 +140,21 @@ Rectangle {
                         badgeText: typeof badgeText !== "undefined" && badgeText !== "" ? badgeText : "BETA"
                         animatedBars: typeof animated !== "undefined" && animated
                         onClicked: { sideBar.selectedIndex = index; sideBar.pageSwitchRequested(page) }
+                    }
+                }
+                // 自建歌单项 (动态插入; 点击直接进对应歌单详情页, 不改根页面选中)
+                DelegateChoice {
+                    roleValue: "sheetItem"
+                    SideBarDelegate {
+                        Layout.fillWidth: true
+                        iconImage: icon
+                        sideText: qsTr(text)
+                        isSelected: false
+                        showBeta: false
+                        onClicked: sideBar.sheetRequested({
+                            kind: "sheet", id: sheetId, title: sheetTitle, seed: sheetSeed,
+                            count: sheetCount, platform: sheetPlatform, mine: true
+                        })
                     }
                 }
                 // 底部操作按钮 (如"新建歌单")
