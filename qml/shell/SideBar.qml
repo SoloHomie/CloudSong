@@ -141,6 +141,8 @@ Rectangle {
                     }
                 }
                 // 自建歌单项 (动态插入; 点击直接进对应歌单详情页, 不改根页面选中)
+                // 注意: 动态插入行的新角色名 (sheetId 等) 不进委托上下文, 须经 model.get(index) 读取
+                // (2026-10-01 实机 ReferenceError: sheetId is not defined; 静态角色 icon/text 不受影响)
                 DelegateChoice {
                     roleValue: "sheetItem"
                     SideBarDelegate {
@@ -149,10 +151,13 @@ Rectangle {
                         sideText: qsTr(text)
                         isSelected: false
                         showBeta: false
-                        onClicked: sideBar.sheetRequested({
-                            kind: "sheet", id: sheetId, title: sheetTitle, seed: sheetSeed,
-                            count: sheetCount, platform: sheetPlatform, mine: true
-                        })
+                        onClicked: {
+                            var row = sideBar.model.get(index)
+                            sideBar.sheetRequested({
+                                kind: "sheet", id: row.sheetId, title: row.sheetTitle, seed: row.sheetSeed,
+                                count: row.sheetCount, platform: row.sheetPlatform, mine: true
+                            })
+                        }
                     }
                 }
                 // 底部操作按钮 (如"新建歌单")
