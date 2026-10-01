@@ -137,11 +137,26 @@ Item {
             spacing: 6
             Text {
                 anchors.verticalCenter: parent.verticalCenter
-                width: Math.min(implicitWidth, parent.width - 46)
+                width: Math.min(implicitWidth, parent.width - 46 - (s.vip === true ? 44 : 0))
                 elide: Text.ElideRight
                 text: s.title
                 font { family: Theme.fontFamily; pixelSize: 14 }
                 color: Theme.text_primary
+            }
+            Rectangle {
+                anchors.verticalCenter: parent.verticalCenter
+                visible: s.vip === true
+                height: 16
+                width: vipText.implicitWidth + 12
+                radius: 8
+                color: Theme.warning
+                Text {
+                    id: vipText
+                    anchors.centerIn: parent
+                    text: "VIP"
+                    font { family: Theme.fontFamily; pixelSize: 10 }
+                    color: Theme.warning_fg
+                }
             }
             Rectangle {
                 anchors.verticalCenter: parent.verticalCenter

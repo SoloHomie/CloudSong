@@ -20,6 +20,8 @@ function formatMusicItem(_) {
         "320hash": _["320hash"],
         sqhash: _.sqhash,
         origin_hash: _.origin_hash,
+        // VIP 标记 (2026-10-02 用户拍板 VIP 曲照常显示): privilege 0/8=免费
+        vip: _.privilege !== undefined && _.privilege !== 0 && _.privilege !== 8,
     };
 }
 function formatImportMusicItem(_) {
@@ -66,7 +68,7 @@ async function searchMusic(query, page) {
             showtype: 1,
         },
     })).data;
-    const songs = res.data.info.filter(validMusicFilter).map(formatMusicItem);
+    const songs = res.data.info.map(formatMusicItem);   // 2026-10-02 VIP 曲照常显示, 不再过滤
     return {
         isEnd: page * pageSize >= res.data.total,
         data: songs,
@@ -254,7 +256,7 @@ async function getAlbumInfo(albumItem, page = 1) {
         albumItem: {
             worksNum: res.data.total,
         },
-        musicList: res.data.info.filter(validMusicFilter).map((_) => {
+        musicList: res.data.info.map((_) => {
             var _a;
             const [artist, songname] = _.filename.split("-");
             return {
@@ -268,6 +270,8 @@ async function getAlbumInfo(albumItem, page = 1) {
                 "320hash": _["320hash"],
                 sqhash: _.sqhash,
                 origin_hash: _.origin_hash,
+                // VIP 标记 (2026-10-02 用户拍板 VIP 曲照常显示)
+                vip: _.privilege !== undefined && _.privilege !== 0 && _.privilege !== 8,
             };
         }),
     };
