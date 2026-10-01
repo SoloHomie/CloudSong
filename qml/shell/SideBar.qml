@@ -15,6 +15,10 @@ Rectangle {
     color: "transparent"   // 原: AppCfg.materialIndex===0 ? Theme.neutral0 : transparent (materialIndex 产品专属已剥离)
 
     property int selectedIndex: 0
+    // 自建歌单项的独立选中态 (与根导航互斥: 点歌单项 → 歌单项高亮且根导航全取消;
+    // 点根导航项 → 清空歌单选中)。选中存在这里而非复用 selectedIndex, 因为歌单项
+    // 不占根页面下标, 且根页选中要在下次点击导航时恢复 (2026-10-01 用户: 点歌单页面切了但选中没切)
+    property string selectedSheetId: ""
     // 导航内容归本模块管理 (main.qml 只负责布局, 不注入条目); 角色: kind("header"=分组标签/headerText/headerBtn右侧小＋, "spacer"=弹性占位, "item"=导航项/icon/text/badge/badgeText/page(页面下标), "action"=底部操作按钮/icon/text)
     property var model: ListModel {
         ListElement { kind: "item"; page: 0; animated: true; text: "推荐" }   // 声纹动画(SVG无法自带动画, 只能用QML); page=View 中页面下标
@@ -137,7 +141,7 @@ Rectangle {
                         showBeta: typeof badge !== "undefined" && badge
                         badgeText: typeof badgeText !== "undefined" && badgeText !== "" ? badgeText : "BETA"
                         animatedBars: typeof animated !== "undefined" && animated
-                        onClicked: { sideBar.selectedIndex = index; sideBar.pageSwitchRequested(page) }
+                        onClicked: { sideBar.selectedIndex = index; sideBar.selectedSheetId = ""; sideBar.pageSwitchRequested(page) }
                     }
                 }
                 // 自建歌单项 (动态插入; 点击直接进对应歌单详情页, 不改根页面选中)
@@ -149,10 +153,15 @@ Rectangle {
                         Layout.fillWidth: true
                         iconImage: icon
                         sideText: qsTr(text)
-                        isSelected: false
+                        isSelected: {
+                            var r = sideBar.model.get(index)
+                            return !!r && r.sheetId === sideBar.selectedSheetId
+                        }
                         showBeta: false
                         onClicked: {
                             var row = sideBar.model.get(index)
+                            sideBar.selectedSheetId = row.sheetId
+                            sideBar.selectedIndex = -1   // 根导航项全部取消高亮
                             sideBar.sheetRequested({
                                 kind: "sheet", id: row.sheetId, title: row.sheetTitle, seed: row.sheetSeed,
                                 count: row.sheetCount, platform: row.sheetPlatform, mine: true
