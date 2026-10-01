@@ -70,7 +70,7 @@ QtObject {
     ]
     function addCreatedSheet(title) {
         createdSheets = createdSheets.concat([{ id: "m" + Date.now(), title: title, subtitle: "我",
-                                                count: 0, seed: 2, platform: "本地" }])
+                                                count: 0, seed: Math.floor(Math.random() * palette.length), platform: "本地" }])
         createdSheetsChanged()
     }
     function renameCreatedSheet(id, title) {
@@ -218,10 +218,11 @@ QtObject {
     }
 
     // 歌单/榜单/专辑 的歌曲列表: 从歌曲池切一段 (模拟)
+    // count=0 即空歌单 (新建), 原 count||8 会把 0 当缺省填 8 首 (2026-10-01 修)
     function songsForSheet(seed, count) {
         var r = []
         var start = (seed * 3) % songs.length
-        var n = Math.min(count || 8, songs.length)
+        var n = Math.min(count === undefined ? 8 : count, songs.length)
         for (var i = 0; i < n; i++) r.push(songs[(start + i) % songs.length])
         return r
     }

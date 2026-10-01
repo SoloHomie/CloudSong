@@ -112,6 +112,7 @@ Item {
                     font.pixelSize: 12
                     iconSource: "qrc:/qt/qml/cloudsong/qml/assets/icons/player/play.svg"
                     text: "播放全部"
+                    enabled: root.songs.length > 0   // 空歌单无内容可播
                     onClicked: MockPlayback.loadQueue(root.songs)
                 }
                 SuretyBtn {
@@ -156,12 +157,14 @@ Item {
     SongToolbar {
         anchors { top: headRow.bottom; topMargin: 8; left: parent.left; right: parent.right }
         searchPlaceholder: "搜索歌单内歌曲"
+        disabled: root.songs.length === 0   // 空歌单停用工具栏播放
         onPlayAllRequested: MockPlayback.loadQueue(root.songs)
     }
     SongTable {
         anchors { top: headRow.bottom; topMargin: 48; left: parent.left; right: parent.right; bottom: parent.bottom }
         model: root.songs
         emptyTitle: "歌单是空的"
+        emptyMessage: "从搜索或其它歌单添加歌曲"
         onPlayRequested: function(s, i) {
             MockPlayback.loadQueue(root.songs)
             MockPlayback.playIndex(i)
