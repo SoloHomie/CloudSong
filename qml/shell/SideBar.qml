@@ -24,9 +24,7 @@ Rectangle {
         ListElement { kind: "item"; page: 3; icon: "qrc:/qt/qml/cloudsong/qml/assets/icons/sidebar/recent.svg"; text: "历史播放" }
         ListElement { kind: "header"; headerText: "创建的歌单"; headerBtn: true }   // 小标签, 右侧小＋按钮; 自建歌单动态列在其下
         ListElement { kind: "item"; page: 4; icon: "qrc:/qt/qml/cloudsong/qml/assets/icons/sidebar/playlist.svg"; text: "我的歌单" }   // 默认歌单条目
-        ListElement { kind: "item"; page: 5; icon: "qrc:/qt/qml/cloudsong/qml/assets/icons/player/folder.svg"; text: "本地音乐" }
-        ListElement { kind: "item"; page: 6; icon: "qrc:/qt/qml/cloudsong/qml/assets/icons/player/download.svg"; text: "下载管理" }
-        // 服务项(云漫游/歌单迁移/插件)暂不占侧栏, 之后放到不显眼处(如设置页)
+        // 本地音乐/下载管理 2026-10-01 用户拍板不占侧栏; 服务项(云漫游/歌单迁移/插件)之后放到不显眼处(如设置页)
         ListElement { kind: "spacer" }   // 弹簧沉底: 选项靠上, 下方留白
     }
     signal pageSwitchRequested(int page)
