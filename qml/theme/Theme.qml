@@ -200,7 +200,8 @@ QtObject {
 
     // ---- 动效 (一次性转场动画统一取此处; 全局唯一出处 = 全软件动画观感统一) ----
     // 红线: 禁止连续/循环动画 1000fps 空转 (2026-09-28 实证), 页面转场均为有限时长一次性
-    property int motion_page_duration: 220   // 页面转场时长 (ms)
+    property int motion_page_duration: 180   // 页面转场/退场时长 (ms)
+    property int motion_page_fade_duration: 110   // 进场淡入时长: 短于滑动, 页面快速可见, 消除"点了要等"感 (2026-10-01)
     property int motion_page_distance: 32    // 页面侧滑位移 (px)
     property int motion_curve: Easing.OutCubic
 }

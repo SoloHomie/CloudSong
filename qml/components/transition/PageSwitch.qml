@@ -104,10 +104,11 @@ Item {
     }
 
     // 进/退场两组独立动画: 进场动画结束即收尾 (退场无页时不启动, 不影响)
+    // 进场淡入比滑动短: 新页快速可见, 滑动余量继续走完, 不显拖沓
     ParallelAnimation {
         id: enterAnim
         NumberAnimation { id: inAnim;  property: "x";       duration: Theme.motion_page_duration; easing.type: Theme.motion_curve }
-        NumberAnimation { id: inFade;  property: "opacity"; duration: Theme.motion_page_duration; easing.type: Theme.motion_curve }
+        NumberAnimation { id: inFade;  property: "opacity"; duration: Theme.motion_page_fade_duration; easing.type: Theme.motion_curve }
         onFinished: finishSwap()
     }
     ParallelAnimation {
