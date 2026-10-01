@@ -6,6 +6,7 @@ import "../components/buttons"
 import "../components/controls"
 import "../components/layout"
 import "../components/panels"
+import "../components/skeleton"
 
 // ═══════════════════════════════════════════════════════════
 //  SettingsPage — 设置页 (上侧分类 + 下侧内容)
@@ -33,6 +34,17 @@ Item {
     property bool checkingUpdate: false
 
     onCatIdxChanged: flick.contentY = 0   // 切分类回到顶部
+
+    // ── 骨架屏 (页面按需加载: 进页创建时后台加载数据, 就绪后填入真实内容) ──
+    // loading 置 false 的时机 = 未来 C++ 数据服务完成回调; 当前由 mockLoadDelay 模拟耗时
+    property bool loading: true
+    Timer {
+        id: loadTimer
+        interval: MockData.mockLoadDelay
+        repeat: false
+        onTriggered: root.loading = false
+    }
+    Component.onCompleted: loadTimer.start()
 
     // 检查更新模拟 (待接 C++ UpdaterService 后移除)
     Timer {
@@ -582,6 +594,72 @@ Item {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
                 onClicked: rs.clicked()
+            }
+        }
+    }
+
+    // ── 骨架屏覆盖层 (loading 期间盖住真实内容; 不透明底 + 拦截点击, 就绪即消失) ──
+    Rectangle {
+        id: skeleton
+        visible: root.loading
+        anchors.fill: parent
+        color: Theme.bg_page
+        z: 10
+
+        MouseArea { anchors.fill: parent }   // 骨架期间吞掉点击
+
+        // 页头: 标题 + 副标题
+        SkeletonBlock { x: 24; y: 22; width: 64; height: 20 }
+        SkeletonBlock { x: 24; y: 50; width: 150; height: 12; radius: 6 }
+
+        // 分类栏: 7 段胶囊
+        Row {
+            anchors { top: parent.top; topMargin: 84; horizontalCenter: parent.horizontalCenter }
+            spacing: 8
+            Repeater {
+                model: 7
+                delegate: SkeletonBlock { width: 44; height: 26; radius: 13 }
+            }
+        }
+
+        // 内容区: 设置行 (标题行 + 副标题行 + 右侧控件占位) + 折叠卡块
+        Item {
+            id: skelCol
+            anchors { top: parent.top; topMargin: 132; horizontalCenter: parent.horizontalCenter }
+            width: Math.min(parent.width - 48, 680)
+            height: 500
+            Column {
+                anchors { left: parent.left; right: parent.right }
+                spacing: 18
+                Repeater {
+                    model: 5
+                    delegate: Item {
+                        width: skelCol.width
+                        height: 52
+                        SkeletonBlock { anchors { left: parent.left; leftMargin: 14; verticalCenter: parent.verticalCenter }
+                                        width: 170; height: 14 }
+                        SkeletonBlock { anchors { left: parent.left; leftMargin: 14; bottom: parent.bottom; bottomMargin: 8 }
+                                        width: 220; height: 12; radius: 6 }
+                        SkeletonBlock {
+                            anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
+                            width: [36, 110, 36, 120, 60][index]
+                            height: [20, 26, 20, 24, 24][index]
+                            radius: 6
+                        }
+                    }
+                }
+                SkeletonBlock { width: parent.width; height: 44; radius: 8 }   // 折叠卡头
+                Repeater {
+                    model: 2
+                    delegate: Item {
+                        width: skelCol.width
+                        height: 52
+                        SkeletonBlock { anchors { left: parent.left; leftMargin: 14; verticalCenter: parent.verticalCenter }
+                                        width: 150; height: 14 }
+                        SkeletonBlock { anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
+                                        width: 60; height: 24; radius: 5 }
+                    }
+                }
             }
         }
     }

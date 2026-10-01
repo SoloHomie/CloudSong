@@ -16,6 +16,10 @@ QtObject {
     // 封面占位配色 (seed 索引)
     readonly property var palette: ["#8957e5", "#1f6feb", "#238636", "#b35900", "#d1242f", "#8250df", "#0a7e8c", "#6e40c9"]
 
+    // ── 骨架屏: 模拟后台数据加载耗时 (页面按需加载, 期间显示骨架, 完成后填入) ──
+    // 待 C++ 数据服务落地后移除: 届时真实加载耗时自然替代此模拟值
+    property int mockLoadDelay: 600
+
     function fmtTime(ms) {
         if (!ms || ms < 0) return "--:--"
         var t = Math.floor(ms / 1000)

@@ -193,4 +193,8 @@ QtObject {
     property color tag_preset_fg: isDark ? "#58a6ff" : "#0969da"
     property color tag_custom_bg: isDark ? "#2d1f4e" : "#fbefff"
     property color tag_custom_fg: isDark ? "#a371f7" : "#8250df"
+
+    // ---- 骨架屏 ----
+    property color skeleton_bg:    neutral3
+    property color skeleton_shine: isDark ? "#1affffff" : "#73ffffff"   // 白 10% / 45% (扫光高光)
 }
