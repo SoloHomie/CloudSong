@@ -50,7 +50,7 @@ Column {
         Column {
             spacing: 8
             Repeater {
-                model: ["歌单与收藏自动同步到云端", "播放进度漫游, 换设备接着听", "随时开通与取消"]
+                model: ["歌单与收藏自动同步到云端", "播放进度漫游, 换设备接着听", "自动切换最高音质", "随时开通与取消"]
                 delegate: Row {
                     spacing: 8
                     Text {
