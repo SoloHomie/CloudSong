@@ -60,6 +60,14 @@ Item {
     }
 
     // ── 发起/聚合 ──
+    // var 对象成员变异不触发绑定重算 (2026-10-02 实锤: cache[key]=data 定向失效,
+    // SongTable model/空态文案停在前值) → 每次变异后重建对象强制通知
+    // (同 SongTable.refreshModel 的 slice() 惯例)
+    function bump() {
+        root.pendingIds = Object.assign({}, root.pendingIds)
+        root.cache = Object.assign({}, root.cache)
+        root.errors = Object.assign({}, root.errors)
+    }
     function startSearch(type, platform) {
         var key = type + "|" + platform
         if (root.cache[key] !== undefined) return
@@ -67,6 +75,7 @@ Item {
             if (root.pendingIds[k].key === key) return   // 已在途
         var id = Plugins.search(root.query.trim(), 1, type, platform)
         root.pendingIds[id] = { type: type, platform: platform, key: key, gen: root.gen }
+        root.bump()
     }
     function doSearch() {   // 关键词换代: 清缓存重搜
         root.cache = {}; root.errors = {}; root.gen++
@@ -120,11 +129,16 @@ Item {
         var list = root.targets()
         if (list.length === 0)
             return Plugins.ready ? "当前类型没有可用的插件来源" : "插件加载中…"
+        // 全灭才透出错误; 只要有来源成功返回(哪怕0条)就引导换词
+        // (2026-10-02 实锤: 单来源失败时错误文案盖在"无结果"上, 网易云风控错误恒显)
+        var err = "", anyOk = false
         for (var i = 0; i < list.length; i++) {
-            var e = root.errors[root.typeKeyOf() + "|" + list[i]]
-            if (e !== undefined) return "搜索失败: " + e
+            var key = root.typeKeyOf() + "|" + list[i]
+            if (root.errors[key] !== undefined) err = root.errors[key]
+            else if (root.cache[key] !== undefined) anyOk = true
         }
-        return "换个关键词试试, 或调整上方来源筛选"
+        if (anyOk) return "换个关键词试试, 或调整上方来源筛选"
+        return err !== "" ? "搜索失败: " + err : "换个关键词试试, 或调整上方来源筛选"
     }
 
     Component.onCompleted: if (root.query.trim() !== "") root.doSearch()
@@ -137,6 +151,7 @@ Item {
             if (p === undefined) return
             delete root.pendingIds[id]
             if (p.gen === root.gen) root.cache[p.key] = data
+            root.bump()
         }
         function onSearchFailed(id, code, message) {
             var p = root.pendingIds[id]
@@ -146,6 +161,7 @@ Item {
                 root.errors[p.key] = code + ": " + message
                 root.cache[p.key] = []
             }
+            root.bump()
         }
         function onPluginsLoaded() {
             if (root.query.trim() !== "") root.doSearch()

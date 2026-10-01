@@ -112,6 +112,10 @@ async function searchBase(query, page, type) {
         headers,
         data: paeData,
     })).data;
+    // 2026-10-02: 风控/无cookie 时接口回 {code:50000005}, 转可读错误
+    // (原来直接访问 res.result 崩成 "cannot read property 'songs' of undefined")
+    if (res.code !== 200)
+        throw new Error("网易云接口拒绝(code=" + res.code + "), 可尝试配置登录 Cookie");
     return res;
 }
 async function searchMusic(query, page) {
