@@ -297,8 +297,7 @@ Item {
                 emptyTitle: root.pendingCount() > 0 ? "正在搜索…" : "没有找到相关专辑"
                 emptyMessage: root.emptyMessageFor()
                 onOpenRequested: function(it) {
-                    root.navigate("album", { id: it.id, title: it.title, artist: it.artist,
-                                             date: it.date, count: it.count, seed: it.seed, platform: it.platform })
+                    root.navigate("album", it)   // 整项透传 (含 id/platform), 详情页据此拉真实专辑
                 }
             }
             // 歌手
@@ -311,8 +310,7 @@ Item {
                 emptyTitle: root.pendingCount() > 0 ? "正在搜索…" : "没有找到相关歌手"
                 emptyMessage: root.emptyMessageFor()
                 onOpenRequested: function(it) {
-                    root.navigate("artist", { id: it.id, name: it.name, desc: it.desc,
-                                              seed: it.seed, platform: it.platform })
+                    root.navigate("artist", it)   // 整项透传 (含 id/platform), 详情页据此拉真实作品
                 }
             }
             // 歌单
@@ -325,8 +323,7 @@ Item {
                 emptyTitle: root.pendingCount() > 0 ? "正在搜索…" : "没有找到相关歌单"
                 emptyMessage: root.emptyMessageFor()
                 onOpenRequested: function(it) {
-                    root.navigate("sheet", { kind: "sheet", id: it.id, title: it.title, seed: it.seed,
-                                             count: it.count, desc: it.desc, platform: it.platform })
+                    root.navigate("sheet", Object.assign({}, it, { kind: "sheet", remote: true }))   // remote=真实歌单详情
                 }
             }
         }

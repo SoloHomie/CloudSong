@@ -28,6 +28,25 @@ QtObject {
         return m + ":" + (s < 10 ? "0" : "") + s
     }
 
+    // ── 插件数据规整 (搜索/详情结果共用; 待 C++ 服务层吸收) ──
+    // seedOf: id 字符串散列 → 封面色 (插件条目无 seed, 展示层需要)
+    function seedOf(str) {
+        if (str === undefined || str === null) return 0
+        var s = String(str), h = 0
+        for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0
+        return ((h % 8) + 8) % 8
+    }
+    // normSongs: 插件歌曲条目补 platform/seed (插件协议条目无 platform,
+    // facade 只对搜索结果注入; duration 缺失时 fmtTime 兜底 "--:--")
+    function normSongs(list, platform) {
+        return (list || []).map(function(it) {
+            return Object.assign({}, it, {
+                platform: (it.platform !== undefined && it.platform !== "") ? it.platform : platform,
+                seed: it.seed !== undefined ? it.seed : seedOf(it.id)
+            })
+        })
+    }
+
     // ── 歌曲 ──
     // tags = 口味标签 (推荐页个性化画像用: 与 liked 一起生成口味; 2026-10-01 加)
     property var songs: [

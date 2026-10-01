@@ -8,6 +8,8 @@ import "../components/buttons"
 // ═══════════════════════════════════════════════════════════════
 //  AlbumDetailPage — 专辑详情
 //   头部: 封面 + 专辑信息 + 播放全部/收藏; 主体: 歌曲表
+//   搜索进入 (params 含 id/platform) = 真实数据: getAlbumInfo 拉取,
+//   加载中/失败有占位; 无 id = Mock 兜底 (M0 假源入口)
 // ═══════════════════════════════════════════════════════════════
 Item {
     id: root
@@ -21,7 +23,45 @@ Item {
     property int seed: params.seed !== undefined ? params.seed : 0
     property string platform: params.platform !== undefined ? params.platform : ""
     property bool starred: false
-    property var songs: MockData.songsForSheet(root.seed, root.count)
+
+    // ── 真实数据拉取 (有插件 id 即远程) ──
+    // 注意: 拉取挂在 onParamsChanged 而非 onCompleted — 页面创建时 params 还是 {},
+    // View 在页面就绪后才注 params (PageSwitch 见 onPageLoaded), onCompleted 时 remote 恒 false
+    property string albumId: params.id !== undefined ? params.id : ""
+    property bool remote: root.albumId !== "" && root.platform !== ""
+    property int pendingId: -1
+    property bool loading: false
+    property string loadError: ""
+    property var fetchedSongs: []
+    property var songs: root.remote ? root.fetchedSongs : MockData.songsForSheet(root.seed, root.count)
+
+    onParamsChanged: fetchRemote()
+    function fetchRemote() {
+        if (!root.remote || root.pendingId !== -1) return
+        root.loading = true
+        root.pendingId = Plugins.getAlbumInfo(root.params, 1, root.platform)
+    }
+    Connections {
+        target: Plugins
+        function onAlbumInfoFinished(id, isEnd, albumItem, musicList) {
+            if (id !== root.pendingId) return
+            root.pendingId = -1
+            root.loading = false
+            if (albumItem !== undefined && albumItem !== null) {
+                // 真实详情覆盖搜索页透传字段 (透传只是兜底)
+                if (albumItem.title !== undefined && albumItem.title !== "") root.title = albumItem.title
+                if (albumItem.artist !== undefined && albumItem.artist !== "") root.artist = albumItem.artist
+                if (albumItem.date !== undefined && albumItem.date !== "") root.date = albumItem.date
+            }
+            root.fetchedSongs = MockData.normSongs(musicList, root.platform)
+        }
+        function onAlbumInfoFailed(id, code, message) {
+            if (id !== root.pendingId) return
+            root.pendingId = -1
+            root.loading = false
+            root.loadError = code + ": " + message
+        }
+    }
 
     // ── 头部 ──
     Row {
@@ -128,7 +168,8 @@ Item {
     SongTable {
         anchors { top: headRow.bottom; topMargin: 48; left: parent.left; right: parent.right; bottom: parent.bottom }
         model: root.songs
-        emptyTitle: "专辑暂无歌曲"
+        emptyTitle: root.loading ? "正在加载…" : (root.loadError !== "" ? "加载失败" : "专辑暂无歌曲")
+        emptyMessage: root.loadError
         onPlayRequested: function(s, i) {
             MockPlayback.loadQueue(root.songs)
             MockPlayback.playIndex(i)

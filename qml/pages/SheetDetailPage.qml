@@ -9,6 +9,8 @@ import "../components/overlay"
 
 // ═══════════════════════════════════════════════════════════════
 //  SheetDetailPage — 歌单/榜单详情 (params.kind = sheet | toplist | daily)
+//   搜索歌单 (params.remote = true, 含 id/platform) = 真实数据:
+//   getMusicSheetInfo 拉取, 加载中/失败有占位; 其余 = Mock 兜底 (M0 假源)
 //   头部: 封面 + 信息 + 播放全部/收藏/更多; 主体: 歌曲表
 // ═══════════════════════════════════════════════════════════════
 Item {
@@ -18,10 +20,13 @@ Item {
 
     property string kind: params.kind !== undefined ? params.kind : "sheet"
     property string sheetId: params.id !== undefined ? params.id : ""
-    // 自建歌单标题从 MockData 实时取 (重命名后页头即时刷新); 其余用 params
+    // 标题: 自建歌单从 MockData 实时取 (重命名即时刷新); 远程歌单用回填值
+    // (remoteTitle 而非直接赋值, 保住 title 绑定不被写断)
+    property string remoteTitle: ""
     property string title: {
         for (var i = 0; i < MockData.createdSheets.length; i++)
             if (MockData.createdSheets[i].id === root.sheetId) return MockData.createdSheets[i].title
+        if (root.remoteTitle !== "") return root.remoteTitle
         return params.title !== undefined ? params.title : "歌单"
     }
     property int seed: params.seed !== undefined ? params.seed : 0
@@ -35,8 +40,45 @@ Item {
         return false
     }
     property bool starred: false
+
+    // ── 真实数据拉取 (搜索进入: remote=true 且有插件 id) ──
+    // 挂在 onParamsChanged: 页面创建时 params 还是 {}, View 就绪后才注 params
+    property bool remote: params.remote === true
+    property int pendingId: -1
+    property bool loading: false
+    property string loadError: ""
+    property var fetchedSongs: []
     // kind "daily" = 每日推荐 (推荐页个性化): 歌单直接由口味生成, 不走 seed 切段
-    property var songs: root.kind === "daily" ? MockData.dailyMix() : MockData.songsForSheet(root.seed, root.count)
+    property var songs: root.kind === "daily" ? MockData.dailyMix()
+                      : (root.remote ? root.fetchedSongs : MockData.songsForSheet(root.seed, root.count))
+
+    onParamsChanged: fetchRemote()
+    function fetchRemote() {
+        if (!root.remote || root.sheetId === "" || root.pendingId !== -1) return
+        root.loading = true
+        root.pendingId = Plugins.getMusicSheetInfo(root.params, 1, root.platform)
+    }
+    Connections {
+        target: Plugins
+        function onSheetInfoFinished(id, isEnd, sheetItem, musicList) {
+            if (id !== root.pendingId) return
+            root.pendingId = -1
+            root.loading = false
+            if (sheetItem !== undefined && sheetItem !== null) {
+                // 真实详情覆盖搜索页透传字段 (透传只是兜底)
+                if (sheetItem.title !== undefined && sheetItem.title !== "") root.remoteTitle = sheetItem.title
+                if (sheetItem.description !== undefined && sheetItem.description !== "") root.desc = sheetItem.description
+                else if (sheetItem.desc !== undefined && sheetItem.desc !== "") root.desc = sheetItem.desc
+            }
+            root.fetchedSongs = MockData.normSongs(musicList, root.platform)
+        }
+        function onSheetInfoFailed(id, code, message) {
+            if (id !== root.pendingId) return
+            root.pendingId = -1
+            root.loading = false
+            root.loadError = code + ": " + message
+        }
+    }
 
     // ── 头部 ──
     Row {
@@ -165,8 +207,8 @@ Item {
     SongTable {
         anchors { top: headRow.bottom; topMargin: 48; left: parent.left; right: parent.right; bottom: parent.bottom }
         model: root.songs
-        emptyTitle: "歌单是空的"
-        emptyMessage: "从搜索或其它歌单添加歌曲"
+        emptyTitle: root.loading ? "正在加载…" : (root.loadError !== "" ? "加载失败" : "歌单是空的")
+        emptyMessage: root.loadError !== "" ? root.loadError : "从搜索或其它歌单添加歌曲"
         emptyActionText: root.ownSheet ? "去搜索找歌" : ""
         onEmptyActionRequested: root.navigate("search")
         onPlayRequested: function(s, i) {
