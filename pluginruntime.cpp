@@ -5,6 +5,7 @@
 #include <QDir>
 #include <QEventLoop>
 #include <QFile>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonValue>
 #include <QNetworkAccessManager>
@@ -81,8 +82,17 @@ QVariant jsToVariant(JSContext* ctx, JSValueConst v)
 
 JSValue variantToJs(JSContext* ctx, const QVariant& v)
 {
-    const QByteArray json = QJsonDocument::fromVariant(v).toJson(QJsonDocument::Compact);
-    return JS_ParseJSON(ctx, json.constData(), json.size(), "<variant>");
+    // 标量必须包进数组再取回: QJsonDocument 只能表示对象/数组,
+    // fromVariant(QString/int) 直接得空文档 → 空串 parse → 实参全变 undefined
+    // (2026-10-01 实锤: 插件 search 收到 undefined 的 type, 分派落空返回
+    // undefined → 搜索结果恒空; 地图类参数不受影响故 M0.5 冒烟未暴露)
+    const QJsonArray arr{ QJsonValue::fromVariant(v) };
+    const QByteArray json = QJsonDocument(arr).toJson(QJsonDocument::Compact);
+    JSValue parsed = JS_ParseJSON(ctx, json.constData(), json.size(), "<variant>");
+    if (JS_IsException(parsed)) return JS_UNDEFINED;
+    JSValue e = JS_GetPropertyUint32(ctx, parsed, 0);
+    JS_FreeValue(ctx, parsed);
+    return e;
 }
 
 QByteArray propStr(JSContext* ctx, JSValueConst obj, const char* key)
@@ -506,7 +516,12 @@ JSValue PluginRuntime::Worker::jsFetch(JSContext* ctx, JSValueConst, int argc, J
         return JS_EXCEPTION;
     }
 
-    QNetworkRequest req(QUrl(QString::fromUtf8(url)));
+    const QString urlStr = QString::fromUtf8(url);
+    // 花括号初始化: 圆括号会被解析成函数声明 (Most Vexing Parse), 2026-10-01 实锤
+    QNetworkRequest req{ QUrl(urlStr) };
+    // 插件带 Accept-Encoding: gzip 但桥无解压 → 一律剥掉让服务端回明文
+    // (2026-10-02 实锤: 酷狗回 1F 8B 压缩体 → axios parse 失败 → res.data undefined)
+    headers.remove("accept-encoding");
     for (auto it = headers.begin(); it != headers.end(); ++it)
         req.setRawHeader(it.key(), it.value());
 
@@ -515,6 +530,7 @@ JSValue PluginRuntime::Worker::jsFetch(JSContext* ctx, JSValueConst, int argc, J
         ? w->m_nam->post(req, body)
         : w->m_nam->get(req);
     w->m_replies.insert(seq, reply);
+    qWarning().noquote() << "[Fetch] >>" << method << urlStr;
 
     QTimer* timer = new QTimer(w);
     timer->setSingleShot(true);
@@ -524,13 +540,15 @@ JSValue PluginRuntime::Worker::jsFetch(JSContext* ctx, JSValueConst, int argc, J
     });
 
     QObject::connect(reply, &QNetworkReply::finished, w,
-        [w, ctx, seq, reply, timer, resolving] {
+        [w, ctx, seq, reply, timer, resolving, urlStr] {
             timer->stop();
             timer->deleteLater();
             w->m_replies.remove(seq);
 
             JSValue e = JS_UNDEFINED;
             if (reply->error() != QNetworkReply::NoError) {
+                qWarning().noquote() << "[Fetch] << ERR" << urlStr
+                                     << reply->errorString();
                 e = JS_NewError(ctx);
                 QByteArray msg = reply->error() == QNetworkReply::OperationCanceledError
                     ? QByteArray("timeout")
@@ -541,7 +559,12 @@ JSValue PluginRuntime::Worker::jsFetch(JSContext* ctx, JSValueConst, int argc, J
                 JS_Call(ctx, resolving[1], JS_UNDEFINED, 1, &e);
                 JS_FreeValue(ctx, e);
             } else {
-                const QByteArray respBody = reply->readAll();
+                QByteArray respBody = reply->readAll();
+                if (respBody.size() >= 2
+                    && uchar(respBody.at(0)) == 0x1f && uchar(respBody.at(1)) == 0x8b)
+                    qWarning().noquote() << "[Fetch] << gzip 未解压:" << urlStr;
+                qWarning().noquote() << "[Fetch] <<" << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()
+                                     << "len=" << respBody.size() << urlStr;
                 JSValue resp = JS_NewObject(ctx);
                 JS_SetPropertyStr(ctx, resp, "status", JS_NewInt32(ctx,
                     reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()));
