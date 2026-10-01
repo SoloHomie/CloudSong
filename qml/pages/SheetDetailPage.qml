@@ -1,6 +1,7 @@
 import QtQuick
 import "../theme"
 import "../mock"
+import "../dialogs"
 import "../components/display"
 import "../components/business"
 import "../components/buttons"
@@ -16,12 +17,23 @@ Item {
     signal navigate(string name, var params)
 
     property string kind: params.kind !== undefined ? params.kind : "sheet"
-    property string title: params.title !== undefined ? params.title : "歌单"
+    property string sheetId: params.id !== undefined ? params.id : ""
+    // 自建歌单标题从 MockData 实时取 (重命名后页头即时刷新); 其余用 params
+    property string title: {
+        for (var i = 0; i < MockData.createdSheets.length; i++)
+            if (MockData.createdSheets[i].id === root.sheetId) return MockData.createdSheets[i].title
+        return params.title !== undefined ? params.title : "歌单"
+    }
     property int seed: params.seed !== undefined ? params.seed : 0
     property int count: params.count !== undefined ? params.count : 8
     property string desc: params.desc !== undefined ? params.desc : ""
     property string platform: params.platform !== undefined ? params.platform : ""
     property bool mine: params.mine === true
+    property bool ownSheet: {
+        for (var i = 0; i < MockData.createdSheets.length; i++)
+            if (MockData.createdSheets[i].id === root.sheetId) return true
+        return false
+    }
     property bool starred: false
     property var songs: MockData.songsForSheet(root.seed, root.count)
 
@@ -111,7 +123,7 @@ Item {
                     text: root.starred ? "已收藏" : "收藏"
                     onClicked: root.starred = !root.starred
                 }
-                // 更多 (下载全部/分享; 编辑仅自建歌单显示)
+                // 更多 (下载全部/分享; 重命名/删除仅自建歌单显示)
                 Item {
                     id: moreWrap
                     width: moreBtn.width
@@ -121,6 +133,7 @@ Item {
                         height: 32
                         variant: "outline"
                         font.pixelSize: 12
+                        iconSource: "qrc:/qt/qml/cloudsong/qml/assets/icons/player/more.svg"
                         text: "更多"
                         onClicked: morePop.open = !morePop.open
                     }
@@ -130,8 +143,8 @@ Item {
                         placement: "below"
                         anchors { top: parent.bottom; topMargin: 8; horizontalCenter: parent.horizontalCenter }
                         PopoverOption { text: "下载全部"; onSelected: morePop.open = false }
-                        PopoverOption { text: "编辑歌单信息"; visible: root.mine; onSelected: morePop.open = false }
-                        PopoverOption { text: "删除歌单"; visible: root.mine; onSelected: morePop.open = false }
+                        PopoverOption { text: "重命名"; visible: root.ownSheet; onSelected: { morePop.open = false; renameSheetDialog.open() } }
+                        PopoverOption { text: "删除歌单"; visible: root.ownSheet; onSelected: { morePop.open = false; deleteSheetDialog.open() } }
                         PopoverOption { text: "分享"; onSelected: morePop.open = false }
                     }
                 }
@@ -153,5 +166,17 @@ Item {
             MockPlayback.loadQueue(root.songs)
             MockPlayback.playIndex(i)
         }
+    }
+
+    // ── 自建歌单 重命名/删除 弹窗 (更多菜单) ──
+    CreateSheetDialog {
+        id: renameSheetDialog
+        sheetId: root.sheetId
+        initialName: root.title
+    }
+    DeleteSheetDialog {
+        id: deleteSheetDialog
+        sheetId: root.sheetId
+        sheetTitle: root.title
     }
 }

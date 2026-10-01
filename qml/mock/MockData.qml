@@ -70,6 +70,20 @@ QtObject {
                                                 count: 0, seed: 2, platform: "本地" }])
         createdSheetsChanged()
     }
+    function renameCreatedSheet(id, title) {
+        var arr = createdSheets.slice()
+        for (var i = 0; i < arr.length; i++)
+            if (arr[i].id === id)
+                arr[i] = { id: arr[i].id, title: title, subtitle: "我",
+                           count: arr[i].count, seed: arr[i].seed, platform: arr[i].platform }
+        createdSheets = arr
+    }
+    function removeCreatedSheet(id) {
+        var arr = createdSheets.slice()
+        for (var i = 0; i < arr.length; i++)
+            if (arr[i].id === id) { arr.splice(i, 1); break }
+        createdSheets = arr
+    }
 
     // ── 榜单 ──
     property var toplists: [
