@@ -98,12 +98,18 @@ Item {
         clip: true
         visible: root.model.length > 0
         boundsBehavior: Flickable.StopAtBounds
-        delegate: SongRow
+        // 2026-10-02 实锤: Qt 6.11 命名内联组件裸名当 delegate 静默产出空列表
+        // (count=0 零报错), 必须包匿名 Component (GridCell/QueueRow 同款修复)
+        delegate: Component { SongRow {} }
     }
 
     component SongRow: Item {
         width: songList.width
         height: 44
+        // Qt 6.8+ 内联组件 delegate 的 modelData/index 须显式 required 注入
+        // (空列表坑另见 ListView delegate 处的 Component 包裹, 2026-10-02)
+        required property int index
+        required property var modelData
         property var s: modelData
         property bool hover: rowMouse.containsMouse
 

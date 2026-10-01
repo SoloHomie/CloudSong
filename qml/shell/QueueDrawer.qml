@@ -116,12 +116,15 @@ Item {
             clip: true
             visible: playback.queue.count > 0
             boundsBehavior: Flickable.StopAtBounds
-            delegate: QueueRow
+            // 2026-10-02: 命名内联组件裸名 delegate 在 Qt 6.11 静默空列表, 须包匿名 Component
+            delegate: Component { QueueRow {} }
         }
 
         component QueueRow: Item {
             width: queueList.width
             height: 48
+            required property int index
+            required property var modelData
             property bool hover: rowMouse.containsMouse
             property bool current: index === playback.currentIndex
 

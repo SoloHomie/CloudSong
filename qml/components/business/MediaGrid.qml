@@ -37,12 +37,15 @@ Item {
         cellWidth: root.cellWidth
         cellHeight: cellH
         boundsBehavior: Flickable.StopAtBounds
-        delegate: GridCell
+        // 2026-10-02: 命名内联组件裸名 delegate 在 Qt 6.11 静默空列表, 须包匿名 Component
+        delegate: Component { GridCell {} }
     }
 
     component GridCell: Item {
         width: root.cellWidth - 14
         height: cellH - 12
+        required property int index
+        required property var modelData
         property var it: modelData
         property bool hover: cellMouse.containsMouse
 
