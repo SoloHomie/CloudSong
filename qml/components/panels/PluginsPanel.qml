@@ -57,21 +57,24 @@ Column {
 
     Timer { id: opMsgTimer; interval: 4000; onTriggered: root.opMsg = "" }
 
-    // 安装入口行 (左侧为操作反馈文案)
+    // 安装入口行 (左侧为操作反馈文案; Row 只控横轴, 子项横轴锚点会令 Row 失灵
+    // → 按钮右对齐改用弹性占位项, 2026-10-01 实机警告修复)
     Row {
         width: parent.width
         height: 30
         Text {
-            anchors { left: parent.left; verticalCenter: parent.verticalCenter }
             width: parent.width - 120
+            anchors.verticalCenter: parent.verticalCenter
             visible: root.opMsg !== ""
             text: root.opMsg
             elide: Text.ElideRight
             font { family: Theme.fontFamily; pixelSize: 11 }
             color: Theme.text_secondary
         }
+        Item { width: Math.max(0, 120 - addBtn.implicitWidth) }   // 把按钮推到行右端
         SuretyBtn {
-            anchors { right: parent.right; verticalCenter: parent.verticalCenter }
+            id: addBtn
+            anchors.verticalCenter: parent.verticalCenter
             height: 30
             text: "添加插件"
             variant: "primary"

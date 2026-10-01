@@ -56,7 +56,7 @@ Item {
     onSourceComponentChanged: swap()
     function swap() {
         // 快速连点: 打断进行中的转场, 收尾后直接开新场
-        if (swapAnim.running) { swapAnim.stop(); finishSwap() }
+        if (enterAnim.running || exitAnim.running) { enterAnim.stop(); exitAnim.stop(); finishSwap() }
 
         var outgoing = frontActive ? frontLayer : backLayer
         var incoming = frontActive ? backLayer : frontLayer
@@ -76,7 +76,9 @@ Item {
         inFade.from = 0
         inFade.to = 1
 
-        // 退场层: 淡出 + 反向轻移 (首屏无退场层, 跳过)
+        // 退场层: 淡出 + 反向轻移 (首屏无退场层, 不启动退场动画)
+        // 注意: NumberAnimation 无 enabled 属性 (Qt6.11 实机报错), 用两个独立
+        // ParallelAnimation 按需启动, 不碰 enabled
         var hasOut = outgoing.item !== null
         if (hasOut) {
             outgoing.x = 0
@@ -87,13 +89,9 @@ Item {
             outFade.target = outgoing
             outFade.from = 1
             outFade.to = 0
-            outAnim.enabled = true
-            outFade.enabled = true
-        } else {
-            outAnim.enabled = false
-            outFade.enabled = false
         }
-        swapAnim.restart()
+        enterAnim.restart()
+        if (hasOut) exitAnim.restart()
     }
 
     function finishSwap() {
@@ -105,12 +103,16 @@ Item {
         cur.opacity = 1
     }
 
+    // 进/退场两组独立动画: 进场动画结束即收尾 (退场无页时不启动, 不影响)
     ParallelAnimation {
-        id: swapAnim
+        id: enterAnim
         NumberAnimation { id: inAnim;  property: "x";       duration: Theme.motion_page_duration; easing.type: Theme.motion_curve }
-        NumberAnimation { id: outAnim; property: "x";       duration: Theme.motion_page_duration; easing.type: Theme.motion_curve }
         NumberAnimation { id: inFade;  property: "opacity"; duration: Theme.motion_page_duration; easing.type: Theme.motion_curve }
-        NumberAnimation { id: outFade; property: "opacity"; duration: Theme.motion_page_duration; easing.type: Theme.motion_curve }
         onFinished: finishSwap()
+    }
+    ParallelAnimation {
+        id: exitAnim
+        NumberAnimation { id: outAnim; property: "x";       duration: Theme.motion_page_duration; easing.type: Theme.motion_curve }
+        NumberAnimation { id: outFade; property: "opacity"; duration: Theme.motion_page_duration; easing.type: Theme.motion_curve }
     }
 }
