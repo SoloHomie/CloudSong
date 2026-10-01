@@ -34,6 +34,8 @@
         <file>qml/dialogs/LoginForm.qml</file>
         <file>qml/dialogs/RegisterForm.qml</file>
         <file>qml/dialogs/ResetPasswordForm.qml</file>
+        <file>qml/dialogs/CreateSheetDialog.qml</file>
+        <file>qml/dialogs/DeleteSheetDialog.qml</file>
         <file>qml/pages/PlaceholderPage.qml</file>
         <file>qml/mock/qmldir</file>
         <file>qml/mock/MockData.qml</file>
@@ -87,6 +89,7 @@
         <file>qml/assets/icons/player/quality.svg</file>
         <file>qml/assets/icons/player/lyrics.svg</file>
         <file>qml/assets/icons/player/music.svg</file>
+        <file>qml/assets/icons/player/more.svg</file>
         <file>qml/assets/icons/player/clock.svg</file>
         <file>qml/assets/icons/player/folder.svg</file>
         <file>qml/assets/icons/player/user.svg</file>
