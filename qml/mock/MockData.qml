@@ -29,35 +29,37 @@ QtObject {
     }
 
     // ── 歌曲 ──
+    // tags = 口味标签 (推荐页个性化画像用: 与 liked 一起生成口味; 2026-10-01 加)
     property var songs: [
-        {id: "s01", title: "晴天",        artist: "周杰伦",   album: "叶惠美",       duration: 269000, platform: "网易云", liked: true,  seed: 1},
-        {id: "s02", title: "平凡之路",    artist: "朴树",     album: "猎户星座",     duration: 302000, platform: "网易云", liked: false, seed: 2},
-        {id: "s03", title: "山丘",        artist: "李宗盛",   album: "山丘",         duration: 412000, platform: "QQ音乐", liked: true,  seed: 3},
-        {id: "s04", title: "夜空中最亮的星", artist: "逃跑计划", album: "世界",       duration: 252000, platform: "网易云", liked: false, seed: 4},
-        {id: "s05", title: "成都",        artist: "赵雷",     album: "无法长大",     duration: 323000, platform: "网易云", liked: true,  seed: 5},
-        {id: "s06", title: "理想",        artist: "赵雷",     album: "无法长大",     duration: 289000, platform: "网易云", liked: false, seed: 5},
-        {id: "s07", title: "南方姑娘",    artist: "赵雷",     album: "赵小雷",       duration: 296000, platform: "网易云", liked: false, seed: 5},
-        {id: "s08", title: "浮夸",        artist: "陈奕迅",   album: "U87",          duration: 279000, platform: "QQ音乐", liked: true,  seed: 6},
-        {id: "s09", title: "十年",        artist: "陈奕迅",   album: "黑白灰",       duration: 226000, platform: "QQ音乐", liked: false, seed: 6},
-        {id: "s10", title: "好久不见",    artist: "陈奕迅",   album: "认了吧",       duration: 246000, platform: "QQ音乐", liked: false, seed: 6},
-        {id: "s11", title: "稻香",        artist: "周杰伦",   album: "魔杰座",       duration: 223000, platform: "网易云", liked: true,  seed: 1},
-        {id: "s12", title: "七里香",      artist: "周杰伦",   album: "七里香",       duration: 298000, platform: "网易云", liked: false, seed: 1},
-        {id: "s13", title: "海阔天空",    artist: "Beyond",   album: "乐与怒",       duration: 325000, platform: "QQ音乐", liked: true,  seed: 7},
-        {id: "s14", title: "光辉岁月",    artist: "Beyond",   album: "命运派对",     duration: 301000, platform: "QQ音乐", liked: false, seed: 7},
-        {id: "s15", title: "斑马斑马",    artist: "宋冬野",   album: "安和桥北",     duration: 274000, platform: "网易云", liked: false, seed: 0},
-        {id: "s16", title: "董小姐",      artist: "宋冬野",   album: "安和桥北",     duration: 264000, platform: "网易云", liked: false, seed: 0},
-        {id: "s17", title: "起风了",      artist: "买辣椒也用券", album: "起风了",    duration: 287000, platform: "网易云", liked: true,  seed: 8},
-        {id: "s18", title: "海底",        artist: "一支榴莲", album: "海底",         duration: 268000, platform: "网易云", liked: false, seed: 2}
+        {id: "s01", title: "晴天",        artist: "周杰伦",   album: "叶惠美",       duration: 269000, platform: "网易云", liked: true,  seed: 1, tags: ["流行","华语"]},
+        {id: "s02", title: "平凡之路",    artist: "朴树",     album: "猎户星座",     duration: 302000, platform: "网易云", liked: false, seed: 2, tags: ["摇滚","华语"]},
+        {id: "s03", title: "山丘",        artist: "李宗盛",   album: "山丘",         duration: 412000, platform: "QQ音乐", liked: true,  seed: 3, tags: ["民谣","华语"]},
+        {id: "s04", title: "夜空中最亮的星", artist: "逃跑计划", album: "世界",       duration: 252000, platform: "网易云", liked: false, seed: 4, tags: ["摇滚","华语"]},
+        {id: "s05", title: "成都",        artist: "赵雷",     album: "无法长大",     duration: 323000, platform: "网易云", liked: true,  seed: 5, tags: ["民谣","华语"]},
+        {id: "s06", title: "理想",        artist: "赵雷",     album: "无法长大",     duration: 289000, platform: "网易云", liked: false, seed: 5, tags: ["民谣","华语"]},
+        {id: "s07", title: "南方姑娘",    artist: "赵雷",     album: "赵小雷",       duration: 296000, platform: "网易云", liked: false, seed: 5, tags: ["民谣","华语"]},
+        {id: "s08", title: "浮夸",        artist: "陈奕迅",   album: "U87",          duration: 279000, platform: "QQ音乐", liked: true,  seed: 6, tags: ["港乐","流行"]},
+        {id: "s09", title: "十年",        artist: "陈奕迅",   album: "黑白灰",       duration: 226000, platform: "QQ音乐", liked: false, seed: 6, tags: ["港乐","流行"]},
+        {id: "s10", title: "好久不见",    artist: "陈奕迅",   album: "认了吧",       duration: 246000, platform: "QQ音乐", liked: false, seed: 6, tags: ["港乐","流行"]},
+        {id: "s11", title: "稻香",        artist: "周杰伦",   album: "魔杰座",       duration: 223000, platform: "网易云", liked: true,  seed: 1, tags: ["流行","华语"]},
+        {id: "s12", title: "七里香",      artist: "周杰伦",   album: "七里香",       duration: 298000, platform: "网易云", liked: false, seed: 1, tags: ["流行","华语"]},
+        {id: "s13", title: "海阔天空",    artist: "Beyond",   album: "乐与怒",       duration: 325000, platform: "QQ音乐", liked: true,  seed: 7, tags: ["摇滚","港乐"]},
+        {id: "s14", title: "光辉岁月",    artist: "Beyond",   album: "命运派对",     duration: 301000, platform: "QQ音乐", liked: false, seed: 7, tags: ["摇滚","港乐"]},
+        {id: "s15", title: "斑马斑马",    artist: "宋冬野",   album: "安和桥北",     duration: 274000, platform: "网易云", liked: false, seed: 0, tags: ["民谣","华语"]},
+        {id: "s16", title: "董小姐",      artist: "宋冬野",   album: "安和桥北",     duration: 264000, platform: "网易云", liked: false, seed: 0, tags: ["民谣","华语"]},
+        {id: "s17", title: "起风了",      artist: "买辣椒也用券", album: "起风了",    duration: 287000, platform: "网易云", liked: true,  seed: 8, tags: ["流行","华语"]},
+        {id: "s18", title: "海底",        artist: "一支榴莲", album: "海底",         duration: 268000, platform: "网易云", liked: false, seed: 2, tags: ["流行","华语"]}
     ]
 
     // ── 歌单 ──
+    // tags = 口味标签 (猜你喜欢评分用; 2026-10-01 加)
     property var sheets: [
-        {id: "p01", title: "华语经典 2000s",  subtitle: "云谣编辑部",   count: 120, seed: 1, platform: "网易云", desc: "千禧年华语乐坛的黄金年代, 每一首都是青春。"},
-        {id: "p02", title: "深夜民谣电台",    subtitle: "云谣编辑部",   count: 86,  seed: 2, platform: "网易云", desc: "适合一个人听的民谣, 城市与远方的歌。"},
-        {id: "p03", title: "粤语老歌珍藏",    subtitle: "老歌迷",       count: 64,  seed: 6, platform: "QQ音乐", desc: "Beyond、陈奕迅与那个时代的港乐。"},
-        {id: "p04", title: "雨天咖啡馆",      subtitle: "云谣编辑部",   count: 45,  seed: 0, platform: "网易云", desc: "轻爵士与温暖人声, 雨天的标配。"},
-        {id: "p05", title: "通勤路上听的歌",  subtitle: "通勤族",       count: 98,  seed: 3, platform: "QQ音乐", desc: "把拥挤的地铁变成自己的演唱会。"},
-        {id: "p06", title: "我的歌单",        subtitle: "我",           count: 23,  seed: 5, platform: "本地",   desc: "自己收藏的零零碎碎, 都是心情。"}
+        {id: "p01", title: "华语经典 2000s",  subtitle: "云谣编辑部",   count: 120, seed: 1, platform: "网易云", desc: "千禧年华语乐坛的黄金年代, 每一首都是青春。", tags: ["流行","华语"]},
+        {id: "p02", title: "深夜民谣电台",    subtitle: "云谣编辑部",   count: 86,  seed: 2, platform: "网易云", desc: "适合一个人听的民谣, 城市与远方的歌。", tags: ["民谣","华语"]},
+        {id: "p03", title: "粤语老歌珍藏",    subtitle: "老歌迷",       count: 64,  seed: 6, platform: "QQ音乐", desc: "Beyond、陈奕迅与那个时代的港乐。", tags: ["港乐","华语"]},
+        {id: "p04", title: "雨天咖啡馆",      subtitle: "云谣编辑部",   count: 45,  seed: 0, platform: "网易云", desc: "轻爵士与温暖人声, 雨天的标配。", tags: ["爵士","轻音乐"]},
+        {id: "p05", title: "通勤路上听的歌",  subtitle: "通勤族",       count: 98,  seed: 3, platform: "QQ音乐", desc: "把拥挤的地铁变成自己的演唱会。", tags: ["流行","华语"]},
+        {id: "p06", title: "我的歌单",        subtitle: "我",           count: 23,  seed: 5, platform: "本地",   desc: "自己收藏的零零碎碎, 都是心情。", tags: ["华语"]}
     ]
 
     // ── 收藏的歌单 ──
@@ -229,5 +231,88 @@ QtObject {
         var n = Math.min(count === undefined ? 8 : count, songs.length)
         for (var i = 0; i < n; i++) r.push(songs[(start + i) % songs.length])
         return r
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // ── 推荐页个性化 (待 C++ RecommendService 替换) ──
+    // 口味画像 = 我喜欢的音乐 (liked) 的歌手/标签计数;
+    // 真实版应加入 历史播放/搜索记录 加权, 由本地或服务端计算
+    // ═══════════════════════════════════════════════════════════
+    function tasteProfile() {
+        var arts = {}, tags = {}
+        for (var i = 0; i < songs.length; i++) {
+            var s = songs[i]
+            if (!s.liked) continue
+            arts[s.artist] = (arts[s.artist] || 0) + 1
+            for (var j = 0; j < s.tags.length; j++) tags[s.tags[j]] = (tags[s.tags[j]] || 0) + 1
+        }
+        return { artists: arts, tags: tags }
+    }
+    function topArtists(n) {   // 常听歌手, 按喜欢次数降序
+        var p = tasteProfile(), arr = []
+        for (var k in p.artists) arr.push({ name: k, c: p.artists[k] })
+        arr.sort(function(a, b) { return b.c - a.c })
+        return arr.slice(0, n || 3).map(function(x) { return x.name })
+    }
+    function topTags(n) {   // 偏好标签, 按出现次数降序
+        var p = tasteProfile(), arr = []
+        for (var k in p.tags) arr.push({ name: k, c: p.tags[k] })
+        arr.sort(function(a, b) { return b.c - a.c })
+        return arr.slice(0, n || 5).map(function(x) { return x.name })
+    }
+    // 每日推荐: liked 优先, 再按标签/歌手口味加权; 日期盐让同一天结果稳定、
+    // 跨天轮换 (id 尾字符码 × 日号 取模)
+    function dailyMix() {
+        var p = tasteProfile()
+        var day = new Date().getDate()
+        var pool = songs.map(function(s) {
+            var sc = s.liked ? 3 : 0
+            for (var i = 0; i < s.tags.length; i++) sc += p.tags[s.tags[i]] || 0
+            sc += p.artists[s.artist] || 0
+            sc += (s.id.charCodeAt(s.id.length - 1) * day) % 5
+            return { s: s, k: sc }
+        })
+        pool.sort(function(a, b) { return b.k - a.k })
+        return pool.map(function(x) { return x.s }).slice(0, 15)
+    }
+    // 猜你喜欢: 歌单标签与偏好标签的加权重合度排序
+    function sheetsForYou() {
+        var p = tasteProfile()
+        var arr = sheets.map(function(sh) {
+            var sc = 0
+            for (var i = 0; i < sh.tags.length; i++) sc += p.tags[sh.tags[i]] || 0
+            return { s: sh, k: sc }
+        })
+        arr.sort(function(a, b) { return b.k - a.k })
+        return arr.map(function(x) { return x.s })
+    }
+
+    // ── 推荐页模块偏好 (开/关 + 排序; 渲染按数组顺序 = 用户排序;
+    //    待 C++ ConfigService 持久化替换, 页面消费方式不变) ──
+    property var recommendModules: [
+        { key: "daily",    title: "每日推荐", sub: "按口味生成 · 每日更新", enabled: true },
+        { key: "forYou",   title: "猜你喜欢", sub: "按你的偏好排序",       enabled: true },
+        { key: "featured", title: "精选歌单", sub: "编辑精选",             enabled: true },
+        { key: "hot",      title: "今日热歌", sub: "此刻大家都在听",       enabled: true }
+    ]
+    function toggleRecommendModule(key) {
+        var arr = recommendModules.slice()
+        for (var i = 0; i < arr.length; i++)
+            if (arr[i].key === key) {
+                arr[i] = { key: arr[i].key, title: arr[i].title, enabled: !arr[i].enabled }
+                break
+            }
+        recommendModules = arr
+    }
+    function moveRecommendModule(key, dir) {   // dir = -1 上移 / +1 下移
+        var arr = recommendModules.slice()
+        for (var i = 0; i < arr.length; i++)
+            if (arr[i].key === key) {
+                var j = i + (dir > 0 ? 1 : -1)
+                if (j < 0 || j >= arr.length) break
+                var t = arr[i]; arr[i] = arr[j]; arr[j] = t
+                break
+            }
+        recommendModules = arr
     }
 }

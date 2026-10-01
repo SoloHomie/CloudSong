@@ -8,7 +8,7 @@ import "../components/buttons"
 import "../components/overlay"
 
 // ═══════════════════════════════════════════════════════════════
-//  SheetDetailPage — 歌单/榜单详情 (params.kind = sheet | toplist)
+//  SheetDetailPage — 歌单/榜单详情 (params.kind = sheet | toplist | daily)
 //   头部: 封面 + 信息 + 播放全部/收藏/更多; 主体: 歌曲表
 // ═══════════════════════════════════════════════════════════════
 Item {
@@ -35,7 +35,8 @@ Item {
         return false
     }
     property bool starred: false
-    property var songs: MockData.songsForSheet(root.seed, root.count)
+    // kind "daily" = 每日推荐 (推荐页个性化): 歌单直接由口味生成, 不走 seed 切段
+    property var songs: root.kind === "daily" ? MockData.dailyMix() : MockData.songsForSheet(root.seed, root.count)
 
     // ── 头部 ──
     Row {
@@ -67,7 +68,7 @@ Item {
                     Text {
                         id: typeText
                         anchors.centerIn: parent
-                        text: root.kind === "toplist" ? "榜单" : (root.ownSheet ? "自建歌单" : "歌单")
+                        text: root.kind === "toplist" ? "榜单" : (root.kind === "daily" ? "每日推荐" : (root.ownSheet ? "自建歌单" : "歌单"))
                         font { family: Theme.fontFamily; pixelSize: 10 }
                         color: Theme.tag_preset_fg
                     }
