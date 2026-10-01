@@ -67,7 +67,7 @@ Item {
                     Text {
                         id: typeText
                         anchors.centerIn: parent
-                        text: root.kind === "toplist" ? "榜单" : (root.mine ? "自建歌单" : "歌单")
+                        text: root.kind === "toplist" ? "榜单" : (root.ownSheet ? "自建歌单" : "歌单")
                         font { family: Theme.fontFamily; pixelSize: 10 }
                         color: Theme.tag_preset_fg
                     }
@@ -116,6 +116,7 @@ Item {
                     onClicked: MockPlayback.loadQueue(root.songs)
                 }
                 SuretyBtn {
+                    visible: !root.ownSheet   // 自建歌单不显示收藏自己
                     height: 32
                     variant: root.starred ? "default" : "outline"
                     font.pixelSize: 12
@@ -124,7 +125,7 @@ Item {
                     text: root.starred ? "已收藏" : "收藏"
                     onClicked: root.starred = !root.starred
                 }
-                // 更多 (下载全部/分享; 重命名/删除仅自建歌单显示)
+                // 更多 (自建歌单=重命名/删除; 其它=下载全部/分享占位)
                 Item {
                     id: moreWrap
                     width: moreBtn.width
@@ -143,10 +144,10 @@ Item {
                         panelWidth: 140
                         placement: "below"
                         anchors { top: parent.bottom; topMargin: 8; horizontalCenter: parent.horizontalCenter }
-                        PopoverOption { text: "下载全部"; onSelected: morePop.open = false }
+                        PopoverOption { text: "下载全部"; visible: !root.ownSheet; onSelected: morePop.open = false }
                         PopoverOption { text: "重命名"; visible: root.ownSheet; onSelected: { morePop.open = false; renameSheetDialog.open() } }
                         PopoverOption { text: "删除歌单"; visible: root.ownSheet; onSelected: { morePop.open = false; deleteSheetDialog.open() } }
-                        PopoverOption { text: "分享"; onSelected: morePop.open = false }
+                        PopoverOption { text: "分享"; visible: !root.ownSheet; onSelected: morePop.open = false }
                     }
                 }
             }
@@ -165,6 +166,8 @@ Item {
         model: root.songs
         emptyTitle: "歌单是空的"
         emptyMessage: "从搜索或其它歌单添加歌曲"
+        emptyActionText: root.ownSheet ? "去搜索找歌" : ""
+        onEmptyActionRequested: root.navigate("search")
         onPlayRequested: function(s, i) {
             MockPlayback.loadQueue(root.songs)
             MockPlayback.playIndex(i)
