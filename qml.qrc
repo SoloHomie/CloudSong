@@ -49,6 +49,7 @@
         <file>qml/components/business/SongTable.qml</file>
         <file>qml/components/business/MediaGrid.qml</file>
         <file>qml/components/business/DailyMixCard.qml</file>
+        <file>qml/components/transition/PageSwitch.qml</file>
         <file>qml/components/skeleton/SkeletonBlock.qml</file>
         <file>qml/components/overlay/Popover.qml</file>
         <file>qml/components/overlay/PopoverOption.qml</file>
