@@ -16,8 +16,7 @@ Item {
     property var params: ({})
     signal navigate(string name, var params)
 
-    property var mySheets: [{ id: "p06", title: "我的歌单", subtitle: "我", count: 23, seed: 5, platform: "本地" }]
-                           .concat(MockData.createdSheets)
+    property var mySheets: MockData.createdSheets   // 默认"我的歌单"也在此列, 与新建歌单同一套模板
 
     Flickable {
         anchors.fill: parent

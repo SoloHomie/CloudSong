@@ -22,8 +22,7 @@ Rectangle {
         ListElement { kind: "header"; headerText: "我的音乐" }
         ListElement { kind: "item"; page: 2; icon: "qrc:/qt/qml/cloudsong/qml/assets/icons/sidebar/fav.svg"; text: "我喜欢的音乐" }
         ListElement { kind: "item"; page: 3; icon: "qrc:/qt/qml/cloudsong/qml/assets/icons/sidebar/recent.svg"; text: "历史播放" }
-        ListElement { kind: "header"; headerText: "创建的歌单"; headerBtn: true }   // 小标签, 右侧小＋按钮; 自建歌单动态列在其下
-        ListElement { kind: "item"; page: 4; icon: "qrc:/qt/qml/cloudsong/qml/assets/icons/sidebar/playlist.svg"; text: "我的歌单" }   // 默认歌单条目
+        ListElement { kind: "header"; headerText: "创建的歌单"; headerBtn: true }   // 小标签, 右侧小＋按钮; 歌单(默认"我的歌单"+新建)动态列在其下
         // 本地音乐/下载管理 2026-10-01 用户拍板不占侧栏; 服务项(云漫游/歌单迁移/插件)之后放到不显眼处(如设置页)
         ListElement { kind: "spacer" }   // 弹簧沉底: 选项靠上, 下方留白
     }
@@ -40,10 +39,10 @@ Rectangle {
         // 清旧行
         for (var i = model.count - 1; i >= 0; i--)
             if (model.get(i).kind === "sheetItem") model.remove(i)
-        // 找"我的歌单"行 (page 4), 其后按序插入
+        // 找"创建的歌单"分组标签, 其后按序插入 (默认"我的歌单"+新建歌单同一套模板)
         var base = -1
         for (var j = 0; j < model.count; j++)
-            if (model.get(j).kind === "item" && model.get(j).page === 4) { base = j; break }
+            if (model.get(j).kind === "header" && model.get(j).headerText === "创建的歌单") { base = j; break }
         for (var k = 0; k < MockData.createdSheets.length; k++) {
             var s = MockData.createdSheets[k]
             model.insert(base + 1 + k, {

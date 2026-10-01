@@ -62,9 +62,12 @@ QtObject {
         {id: "sp02", title: "周杰伦全部专辑",  subtitle: "JayFan",   count: 187, seed: 1, platform: "网易云", desc: "从 Jay 到最伟大的作品。"}
     ]
 
-    // ── 自建歌单 (新建歌单弹窗写入; 侧栏"创建的歌单"分组与我的歌单页消费; 待 C++ SheetService 替换) ──
+    // ── 自建歌单 (首位固定=默认歌单"我的歌单"; 新建歌单弹窗追加;
+    //    侧栏"创建的歌单"分组与我的歌单页消费; 待 C++ SheetService 替换) ──
     // 注意: createdSheetsChanged 为属性自动变更信号, 勿重复声明 (2026-10-01 qmllint 实锤)
-    property var createdSheets: []
+    property var createdSheets: [
+        { id: "p06", title: "我的歌单", subtitle: "我", count: 23, seed: 5, platform: "本地" }
+    ]
     function addCreatedSheet(title) {
         createdSheets = createdSheets.concat([{ id: "m" + Date.now(), title: title, subtitle: "我",
                                                 count: 0, seed: 2, platform: "本地" }])
