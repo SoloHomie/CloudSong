@@ -128,6 +128,7 @@ Rectangle {
                 }
                 // 导航项
                 DelegateChoice {
+                    roleValue: "item"   // 无 roleValue 的 choice 是无序 catch-all (Qt6.11 实测), 会吞掉后面的 sheetItem/action 行 (2026-10-01)
                     SideBarDelegate {
                         Layout.fillWidth: true
                         iconImage: icon
