@@ -149,6 +149,7 @@ DialogShell {
                         id: urlField
                         width: parent.width - 98
                         placeholder: "https://…/plugin.js"
+                        customBg: Theme.bg_input           // 与全应用输入框一致: 深色输入底
                         customBorder: Theme.border_standard   // 默认 neutral4 在弹窗底上太淡, 提一档
                         onAccepted: root.tryUrl()
                     }
