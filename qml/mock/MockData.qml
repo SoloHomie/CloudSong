@@ -253,9 +253,8 @@ QtObject {
     }
 
     // ═══════════════════════════════════════════════════════════
-    // ── 推荐页个性化 (待 C++ RecommendService 替换) ──
-    // 口味画像 = 我喜欢的音乐 (liked) 的歌手/标签计数;
-    // 真实版应加入 历史播放/搜索记录 加权, 由本地或服务端计算
+    // ── 每日推荐歌单 (SheetDetailPage kind="daily" 走这里) ──
+    // 推荐页本体 2026-10-02 已 C++ 化 (RecommendPage 走 RecommendService)
     // ═══════════════════════════════════════════════════════════
     function tasteProfile() {
         var arts = {}, tags = {}
@@ -266,18 +265,6 @@ QtObject {
             for (var j = 0; j < s.tags.length; j++) tags[s.tags[j]] = (tags[s.tags[j]] || 0) + 1
         }
         return { artists: arts, tags: tags }
-    }
-    function topArtists(n) {   // 常听歌手, 按喜欢次数降序
-        var p = tasteProfile(), arr = []
-        for (var k in p.artists) arr.push({ name: k, c: p.artists[k] })
-        arr.sort(function(a, b) { return b.c - a.c })
-        return arr.slice(0, n || 3).map(function(x) { return x.name })
-    }
-    function topTags(n) {   // 偏好标签, 按出现次数降序
-        var p = tasteProfile(), arr = []
-        for (var k in p.tags) arr.push({ name: k, c: p.tags[k] })
-        arr.sort(function(a, b) { return b.c - a.c })
-        return arr.slice(0, n || 5).map(function(x) { return x.name })
     }
     // 每日推荐: liked 优先, 再按标签/歌手口味加权; 日期盐让同一天结果稳定、
     // 跨天轮换 (id 尾字符码 × 日号 取模)
@@ -293,45 +280,5 @@ QtObject {
         })
         pool.sort(function(a, b) { return b.k - a.k })
         return pool.map(function(x) { return x.s }).slice(0, 15)
-    }
-    // 猜你喜欢: 歌单标签与偏好标签的加权重合度排序
-    function sheetsForYou() {
-        var p = tasteProfile()
-        var arr = sheets.map(function(sh) {
-            var sc = 0
-            for (var i = 0; i < sh.tags.length; i++) sc += p.tags[sh.tags[i]] || 0
-            return { s: sh, k: sc }
-        })
-        arr.sort(function(a, b) { return b.k - a.k })
-        return arr.map(function(x) { return x.s })
-    }
-
-    // ── 推荐页模块偏好 (开/关 + 排序; 渲染按数组顺序 = 用户排序;
-    //    待 C++ ConfigService 持久化替换, 页面消费方式不变) ──
-    property var recommendModules: [
-        { key: "daily",    title: "每日推荐", sub: "按口味生成 · 每日更新", enabled: true },
-        { key: "forYou",   title: "猜你喜欢", sub: "按你的偏好排序",       enabled: true },
-        { key: "featured", title: "精选歌单", sub: "编辑精选",             enabled: true },
-        { key: "hot",      title: "今日热歌", sub: "此刻大家都在听",       enabled: true }
-    ]
-    function toggleRecommendModule(key) {
-        var arr = recommendModules.slice()
-        for (var i = 0; i < arr.length; i++)
-            if (arr[i].key === key) {
-                arr[i] = { key: arr[i].key, title: arr[i].title, enabled: !arr[i].enabled }
-                break
-            }
-        recommendModules = arr
-    }
-    function moveRecommendModule(key, dir) {   // dir = -1 上移 / +1 下移
-        var arr = recommendModules.slice()
-        for (var i = 0; i < arr.length; i++)
-            if (arr[i].key === key) {
-                var j = i + (dir > 0 ? 1 : -1)
-                if (j < 0 || j >= arr.length) break
-                var t = arr[i]; arr[i] = arr[j]; arr[j] = t
-                break
-            }
-        recommendModules = arr
     }
 }

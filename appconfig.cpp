@@ -11,6 +11,7 @@ AppConfig::AppConfig(QObject* parent)
     , m_settings(QStringLiteral("CloudSong"), QStringLiteral("CloudSong"))
     , m_themeIndex(m_settings.value(QStringLiteral("themeIndex"), 2).toInt())
     , m_materialIndex(m_settings.value(QStringLiteral("materialIndex"), 0).toInt())
+    , m_recommendBackdropIndex(m_settings.value(QStringLiteral("recommendBackdropIndex"), 0).toInt())
 {
 }
 
@@ -40,4 +41,18 @@ void AppConfig::setMaterialIndex(int index)
     m_materialIndex = index;
     m_settings.setValue(QStringLiteral("materialIndex"), index);
     emit materialIndexChanged();
+}
+
+int AppConfig::recommendBackdropIndex() const
+{
+    return m_recommendBackdropIndex;
+}
+
+void AppConfig::setRecommendBackdropIndex(int index)
+{
+    if (m_recommendBackdropIndex == index)
+        return;
+    m_recommendBackdropIndex = index;
+    m_settings.setValue(QStringLiteral("recommendBackdropIndex"), index);
+    emit recommendBackdropIndexChanged();
 }

@@ -29,6 +29,7 @@ Rectangle {
 
     readonly property bool canGoBack: cursor > 0
     readonly property bool canGoForward: cursor < stack.length - 1
+    readonly property string currentName: cursor >= 0 && cursor < stack.length ? stack[cursor].name : ""
     signal authRequested()
 
     // ── 导航 ──

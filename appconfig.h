@@ -11,6 +11,7 @@ class AppConfig : public QObject
     Q_OBJECT
     Q_PROPERTY(int themeIndex READ themeIndex WRITE setThemeIndex NOTIFY themeIndexChanged)
     Q_PROPERTY(int materialIndex READ materialIndex WRITE setMaterialIndex NOTIFY materialIndexChanged)
+    Q_PROPERTY(int recommendBackdropIndex READ recommendBackdropIndex WRITE setRecommendBackdropIndex NOTIFY recommendBackdropIndexChanged)
 public:
     static AppConfig* instance();
     explicit AppConfig(QObject* parent = nullptr);
@@ -23,12 +24,18 @@ public:
     int materialIndex() const;
     void setMaterialIndex(int index);
 
+    // 推荐页背景样式: 0=常规 1=3D粒子 2=汽水渐变(专辑封面同源色)（默认常规; 标题栏切换）
+    int recommendBackdropIndex() const;
+    void setRecommendBackdropIndex(int index);
+
 signals:
     void themeIndexChanged();
     void materialIndexChanged();
+    void recommendBackdropIndexChanged();
 
 private:
     QSettings m_settings;
     int m_themeIndex = 2;
     int m_materialIndex = 0;
+    int m_recommendBackdropIndex = 0;
 };

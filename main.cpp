@@ -13,6 +13,7 @@
 #include "appconfig.h"
 #include "inputservice.h"
 #include "pluginservice.h"
+#include "recommendservice.h"
 
 namespace {
 // ── 无边框窗口 (BallsHackPro 同款 DWM 方法) ──
@@ -165,6 +166,8 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("Input", new InputService(&app));
     // 插件服务 (定案 §5: M0.5 先接 search/getMediaSource, 其余方法同链就位)
     engine.rootContext()->setContextProperty("Plugins", new PluginService(&app));
+    // 推荐服务 (2026-10-02 推荐算法 C++ 化: 每日推荐+口味画像, 纯内存同步计算)
+    engine.rootContext()->setContextProperty("Recommend", new RecommendService(&app));
     engine.load(QUrl(QStringLiteral("qrc:/qt/qml/cloudsong/qml/main.qml")));
     if (engine.rootObjects().isEmpty())
         return -1;

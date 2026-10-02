@@ -2,6 +2,7 @@ import QtQuick
 import "../../theme"
 import "../../mock"
 import "../../components/display"
+import "../../components/controls"
 
 // ═══════════════════════════════════════════════════════════════
 //  ListenModePage — 听歌模式 (原版 FullscreenPlayer 页面化)
@@ -182,5 +183,5 @@ Item {
             lyricList.positionViewAtIndex(root.curLyric, ListView.Center)
     }
 
-    // (工具小圆片 ToolChip 已提取至同目录 ToolChip.qml, 2026-10-02)
+    // (工具小圆片 ToolChip 2026-10-02 移入 components/controls, 推荐页同款听歌页共用)
 }

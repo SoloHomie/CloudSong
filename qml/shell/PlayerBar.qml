@@ -93,7 +93,10 @@ Item {
             }
 
             // 行2: 歌手 · 平台徽标 · 时间
+            // width 显式=列宽: 子项 artist 宽度依赖 parent.width, 若本行靠隐式宽
+            // 播放时时间文本每 250ms 变化 → 隐式宽重算 → polish 循环 (2026-10-02 实测)
             Row {
+                width: parent.width
                 height: 16
                 spacing: 8
                 Text {

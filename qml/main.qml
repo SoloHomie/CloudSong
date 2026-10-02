@@ -4,6 +4,7 @@ import "theme"
 import "shell"
 import "dialogs"
 import "mock"
+import "components/controls"
 
 // 应用骨架: main.qml 只负责模块布局与跨模块接线 (各模块内容归各模块自己管理):
 //   标题栏 / 侧栏(条目自管) / 内容区(View 页面栈) / 播放条 / 队列抽屉 + 顶层弹窗
@@ -39,6 +40,19 @@ Window {
         onSettingsClicked: view.push("settings")
         onSearchRequested: function(q) { view.push("search", { query: q }) }
         onLoginRequested: authDialog.open("login")
+
+        // 推荐页背景选择 (仅推荐页显示; 常规/3D粒子/汽水渐变, 2026-10-02)
+        SuretyTagSelector {
+            visible: view.currentName === "recommend"
+            anchors.verticalCenter: parent.verticalCenter
+            displayMode: "segment"
+            selectedIndex: AppCfg.recommendBackdropIndex
+            segmentHeight: 26
+            fontSize: 11
+            minimumWidth: 0
+            model: [ { label: "常规" }, { label: "3D粒子" }, { label: "汽水" } ]
+            onTagSelected: function(i) { AppCfg.recommendBackdropIndex = i }
+        }
     }
 
     Row {

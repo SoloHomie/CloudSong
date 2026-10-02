@@ -8,7 +8,8 @@ import "../components/display"
 // ═══════════════════════════════════════════════════════════════
 Item {
     id: root
-    width: parent.width
+    // width 不写: ListView 自动按视图宽度设 delegate 宽 (写 parent.width 在
+    // 抽屉隐藏/窗口恢复等孵化期 parent 为 null → TypeError, 2026-10-02 实测)
     height: 48
     required property int index
     required property var modelData

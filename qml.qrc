@@ -13,6 +13,7 @@
         <file>qml/components/controls/CategoryBar.qml</file>
         <file>qml/components/controls/PasswordField.qml</file>
         <file>qml/components/controls/KeyBindChip.qml</file>
+        <file>qml/components/controls/ToolChip.qml</file>
         <file>qml/components/buttons/SuretyBtn.qml</file>
         <file>qml/components/buttons/SendCodeButton.qml</file>
         <file>qml/components/display/Avatar.qml</file>
@@ -53,7 +54,6 @@
         <file>qml/components/business/SongRow.qml</file>
         <file>qml/components/business/MediaGrid.qml</file>
         <file>qml/components/business/GridCell.qml</file>
-        <file>qml/components/business/DailyMixCard.qml</file>
         <file>qml/components/transition/PageSwitch.qml</file>
         <file>qml/components/skeleton/SkeletonBlock.qml</file>
         <file>qml/components/overlay/Popover.qml</file>
@@ -64,13 +64,10 @@
         <file>qml/shell/PlayerBar.qml</file>
         <file>qml/shell/QueueDrawer.qml</file>
         <file>qml/pages/recommend/RecommendPage.qml</file>
-        <file>qml/pages/recommend/ForYouView.qml</file>
-        <file>qml/pages/recommend/RankingView.qml</file>
-        <file>qml/pages/recommend/MoveBtn.qml</file>
-        <file>qml/pages/recommend/SheetGridModule.qml</file>
-        <file>qml/pages/recommend/HotModule.qml</file>
+        <file>qml/pages/recommend/SodaBackdrop.qml</file>
+        <file>qml/pages/recommend/ParticleBackdrop.qml</file>
+        <file>qml/pages/recommend/particles.frag.qsb</file>
         <file>qml/pages/listenmode/ListenModePage.qml</file>
-        <file>qml/pages/listenmode/ToolChip.qml</file>
         <file>qml/pages/FavoritePage.qml</file>
         <file>qml/pages/HistoryPage.qml</file>
         <file>qml/pages/MySheetsPage.qml</file>
