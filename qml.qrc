@@ -15,6 +15,9 @@
         <file>qml/components/controls/KeyBindChip.qml</file>
         <file>qml/components/buttons/SuretyBtn.qml</file>
         <file>qml/components/buttons/SendCodeButton.qml</file>
+        <file>qml/components/buttons/MoveBtn.qml</file>
+        <file>qml/components/recommend/SheetGridModule.qml</file>
+        <file>qml/components/recommend/HotModule.qml</file>
         <file>qml/components/display/Avatar.qml</file>
         <file>qml/components/display/LoadingDots.qml</file>
         <file>qml/components/display/SectionHeader.qml</file>
@@ -60,6 +63,8 @@
         <file>qml/shell/PlayerBar.qml</file>
         <file>qml/shell/QueueDrawer.qml</file>
         <file>qml/pages/RecommendPage.qml</file>
+        <file>qml/pages/recommend/ForYouView.qml</file>
+        <file>qml/pages/recommend/RankingView.qml</file>
         <file>qml/pages/ListenModePage.qml</file>
         <file>qml/pages/FavoritePage.qml</file>
         <file>qml/pages/HistoryPage.qml</file>
