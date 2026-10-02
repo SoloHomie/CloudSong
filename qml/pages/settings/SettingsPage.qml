@@ -1,7 +1,6 @@
 import QtQuick
-import "settings"
-import "../components/display"
-import "../components/controls"
+import "../../components/display"
+import "../../components/controls"
 
 // ═══════════════════════════════════════════════════════════════
 //  SettingsPage — 设置页外壳 (上侧分类栏 + 分类子页面容器)
@@ -10,7 +9,7 @@ import "../components/controls"
 //  下载/数据/插件/关于), 内容区最大宽度 680 居中, 独立滚动;
 //  分组标题由分类栏承担, 内容不再重复显示组标题
 //  2026-10-02 拆分: 原单文件 589 行按分类拆为 qml/pages/settings/
-//  七子页面, 行组件提取为 controls/SettingRow; 本页只剩页头+分类栏+
+//  七子页面, 行组件提取为同目录 SettingRow; 本页只剩页头+分类栏+
 //  子页容器。各子页独立 Flickable, 切换分类保留各自滚动位置与折叠状态
 //  持久化待接 C++ ConfigService; 当前仅内存态
 // ═══════════════════════════════════════════════════════════════

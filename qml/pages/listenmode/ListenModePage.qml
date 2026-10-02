@@ -1,7 +1,7 @@
 import QtQuick
-import "../theme"
-import "../mock"
-import "../components/display"
+import "../../theme"
+import "../../mock"
+import "../../components/display"
 
 // ═══════════════════════════════════════════════════════════════
 //  ListenModePage — 听歌模式 (原版 FullscreenPlayer 页面化)
@@ -182,28 +182,5 @@ Item {
             lyricList.positionViewAtIndex(root.curLyric, ListView.Center)
     }
 
-    // ── 工具小圆片按钮 ──
-    component ToolChip: Rectangle {
-        height: 28
-        width: chipText.implicitWidth + 24
-        radius: 14
-        property string text: ""
-        property bool active: false
-        signal clicked()
-        color: active ? Theme.accent : (chipMouse.containsMouse ? Theme.hover_bg : Theme.bg_input)
-        Text {
-            id: chipText
-            anchors.centerIn: parent
-            text: parent.text
-            font { family: Theme.fontFamily; pixelSize: 12 }
-            color: parent.active ? "#ffffff" : Theme.text_primary
-        }
-        MouseArea {
-            id: chipMouse
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: parent.clicked()
-        }
-    }
+    // (工具小圆片 ToolChip 已提取至同目录 ToolChip.qml, 2026-10-02)
 }

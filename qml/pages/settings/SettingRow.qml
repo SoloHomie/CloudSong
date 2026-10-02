@@ -1,6 +1,6 @@
 import QtQuick
-import "../../theme"
-import "../display"
+import "../../../theme"
+import "../../components/display"
 
 // ═══════════════════════════════════════════════════════════════
 //  SettingRow — 设置行 (设置子页面共用, 2026-10-02 自 SettingsPage 内联组件提取)

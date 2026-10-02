@@ -227,42 +227,8 @@ Item {
 
             Rectangle { width: parent.width; height: 1; color: Theme.border_default }
 
-            // ── 菜单项 ──
-            component MenuRow: Rectangle {
-                id: menuItem
-                width: parent ? parent.width : 240
-                height: 34
-                color: itemMouse.containsMouse ? Theme.hover_bg : "transparent"
-
-                property string label: ""
-                property string hint:  ""
-                signal activated()
-
-                Text {
-                    anchors.left: parent.left; anchors.leftMargin: 12
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: menuItem.label
-                    color: Theme.text_primary
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 13
-                }
-                Text {
-                    anchors.right: parent.right; anchors.rightMargin: 12
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: menuItem.hint
-                    color: Theme.text_secondary
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 13
-                }
-                MouseArea {
-                    id: itemMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: { accountMenu.close(); menuItem.activated() }
-                }
-            }
-
+            // ── 菜单项 (MenuRow 已提取至同目录 MenuRow.qml, 2026-10-02;
+            //    菜单关闭动作移入各行 onActivated) ──
             // 升级入口 (仅免费用户)
             Rectangle {
                 visible: !root.pro
@@ -281,16 +247,16 @@ Item {
                 }
             }
 
-            MenuRow { label: "账户管理"; hint: "›"; onActivated: root.accountClicked() }
-            MenuRow { label: "我的订阅"; hint: root.pro ? root.badgeTip : "未订阅"; onActivated: root.subscriptionClicked() }
-            MenuRow { label: "兑换码";   hint: "›"; onActivated: root.redeemClicked() }
-            MenuRow { label: "订单记录"; hint: "›"; onActivated: root.orderClicked() }
+            MenuRow { label: "账户管理"; hint: "›"; onActivated: { accountMenu.close(); root.accountClicked() } }
+            MenuRow { label: "我的订阅"; hint: root.pro ? root.badgeTip : "未订阅"; onActivated: { accountMenu.close(); root.subscriptionClicked() } }
+            MenuRow { label: "兑换码";   hint: "›"; onActivated: { accountMenu.close(); root.redeemClicked() } }
+            MenuRow { label: "订单记录"; hint: "›"; onActivated: { accountMenu.close(); root.orderClicked() } }
 
             Rectangle { width: parent.width; height: 1; color: Theme.border_default }
 
             MenuRow {
                 label: "退出登录"
-                onActivated: root.logoutRequested()
+                onActivated: { accountMenu.close(); root.logoutRequested() }
             }
 
             Item { width: 1; height: 6 }

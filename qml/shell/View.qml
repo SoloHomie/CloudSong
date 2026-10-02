@@ -1,6 +1,9 @@
 import QtQuick
 import "../theme"
 import "../pages"
+import "../pages/recommend"
+import "../pages/settings"
+import "../pages/listenmode"
 import "../components/transition"
 
 // ═══════════════════════════════════════════════════════════════

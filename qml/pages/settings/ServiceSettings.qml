@@ -1,6 +1,5 @@
 import QtQuick
 import "../../components/layout"
-import "../../components/panels"
 
 // ═══════════════════════════════════════════════════════════════
 //  ServiceSettings — 设置子页面: 服务 (云漫游 / 歌单迁移)

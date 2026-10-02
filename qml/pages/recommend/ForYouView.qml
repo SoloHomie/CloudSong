@@ -2,10 +2,8 @@ import QtQuick
 import "../../theme"
 import "../../mock"
 import "../../components/display"
-import "../../components/buttons"
 import "../../components/controls"
 import "../../components/business"
-import "../../components/recommend"
 
 // ═══════════════════════════════════════════════════════════════
 //  ForYouView — 推荐页子页面: 为你推荐 (模块化首页)
@@ -14,7 +12,7 @@ import "../../components/recommend"
 //  模块可开/关/排序 (右上角「自定义首页」进入编辑态), 偏好存 MockData.recommendModules
 //  待 C++ RecommendService + ConfigService 替换 (页面消费方式不变)
 //  2026-10-02 自 RecommendPage 拆分; 歌单网格/热歌两模块体已提取至
-//  components/recommend/ (SheetGridModule/HotModule), 每日推荐直接用业务组件
+//  同目录 (SheetGridModule/HotModule), 每日推荐直接用业务组件
 //  DailyMixCard (已分类, 再包一层即空壳)
 // ═══════════════════════════════════════════════════════════════
 Item {

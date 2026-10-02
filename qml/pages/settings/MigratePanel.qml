@@ -1,7 +1,7 @@
 import QtQuick
-import "../../theme"
-import "../display"
-import "../buttons"
+import "../../../theme"
+import "../../components/display"
+import "../../components/buttons"
 
 // ═══════════════════════════════════════════════════════════════
 //  MigratePanel — 歌单迁移面板 (设置页"服务"分类折叠卡内容)

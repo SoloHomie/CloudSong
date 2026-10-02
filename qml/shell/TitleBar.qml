@@ -139,39 +139,7 @@ Item {
         }
     }
 
-    // ── 窗口控制按钮 ──
-    component WinBtn: Rectangle {
-        width: 44; height: parent.height
-        color: mouseArea.containsMouse ? hoverBg : "transparent"
-        radius: 0
-        property string icon: ""
-        property color hoverBg: Qt.rgba(1, 1, 1, 0.1)
-        signal clicked()
-        Image {
-            id: btnIcon
-            anchors.centerIn: parent
-            source: parent.icon
-            sourceSize: Qt.size(128, 128)
-            fillMode: Image.PreserveAspectFit
-            smooth: true; antialiasing: true
-            width: 14; height: 14
-            opacity: mouseArea.containsMouse ? 1.0 : 0.6
-            Behavior on opacity { NumberAnimation { duration: 150 } }
-            layer.enabled: !Theme.isDark
-            layer.effect: MultiEffect {
-                colorizationColor: Theme.text_primary
-                colorization: 1.0
-            }
-        }
-        MouseArea {
-            id: mouseArea
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: parent.clicked()
-        }
-    }
-
+    // ── 窗口控制按钮 (WinBtn 已提取至同目录 WinBtn.qml, 2026-10-02) ──
     Row {
         id: winRow
         anchors.right: parent.right
@@ -211,33 +179,5 @@ Item {
             onClicked: { if (root.appWindow) root.appWindow.close() }
         }
     }
-
-    // ── 圆形图标按钮 (导航用, 28×28) ──
-    component NavBtn: Item {
-        width: 28
-        height: 28
-        property string icon: ""
-        property bool enabled: true
-        signal clicked()
-
-        Rectangle {
-            visible: navMouse.containsMouse && parent.enabled
-            anchors.fill: parent
-            radius: 14
-            color: Theme.hover_bg
-        }
-        IconImage {
-            anchors.centerIn: parent
-            source: parent.icon
-            size: 16
-            color: parent.enabled ? Theme.text_primary : Theme.text_disabled
-        }
-        MouseArea {
-            id: navMouse
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: parent.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-            onClicked: if (parent.enabled) parent.clicked()
-        }
-    }
+    // (NavBtn 已提取至同目录 NavBtn.qml, 2026-10-02)
 }

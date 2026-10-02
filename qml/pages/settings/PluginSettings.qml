@@ -1,7 +1,6 @@
 import QtQuick
 import "../../mock"
 import "../../components/layout"
-import "../../components/panels"
 
 // ═══════════════════════════════════════════════════════════════
 //  PluginSettings — 设置子页面: 插件管理

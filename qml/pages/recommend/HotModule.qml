@@ -1,5 +1,5 @@
 import QtQuick
-import "../business"
+import "../../components/business"
 
 // ═══════════════════════════════════════════════════════════════
 //  HotModule — 推荐页模块组件: 今日热歌 (工具栏 + 歌曲表)

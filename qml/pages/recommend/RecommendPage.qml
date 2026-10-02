@@ -1,15 +1,13 @@
 import QtQuick
-import "recommend"
-import "../components/display"
-import "../components/buttons"
+import "../../components/display"
+import "../../components/buttons"
 
 // ═══════════════════════════════════════════════════════════════
 //  RecommendPage — 推荐页外壳 (TabBar + 子页面容器)
 //  2026-10-01 个性化重做: Tab1 为你推荐模块化首页 / Tab2 排行榜
 //  2026-10-02 拆分: 两 tab 内容拆为 qml/pages/recommend/ 子页面
-//  (ForYouView 为你推荐 / RankingView 排行榜), 模块体组件提取至
-//  components/recommend/, 排序小按钮提取至 components/buttons/MoveBtn;
-//  本页只剩 TabBar+「自定义首页」按钮+子页容器, 视觉交互零变化
+//  (ForYouView 为你推荐 / RankingView 排行榜), 模块体组件与排序小按钮
+//  MoveBtn 均归入本目录; 本页只剩 TabBar+「自定义首页」按钮+子页容器, 视觉交互零变化
 // ═══════════════════════════════════════════════════════════════
 Item {
     id: root

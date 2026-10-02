@@ -1,7 +1,7 @@
 import QtQuick
-import "../../theme"
-import "../buttons"
-import "../controls"
+import "../../../theme"
+import "../../components/buttons"
+import "../../components/controls"
 
 // ═══════════════════════════════════════════════════════════════
 //  RoamPanel — 云漫游面板 (设置页"服务"分类折叠卡内容)
@@ -313,34 +313,5 @@ Column {
         }
     }
 
-    // ── 漫游开关行 (标题+副标题 + 右侧开关) ──
-    component RoamSwitchRow: Item {
-        id: rsr
-        width: parent.width
-        height: 48
-        property string title: ""
-        property string desc: ""
-        property bool checked: false
-        signal toggled(bool v)
-
-        Column {
-            anchors { left: parent.left; leftMargin: 20; verticalCenter: parent.verticalCenter }
-            spacing: 3
-            Text {
-                text: rsr.title
-                font { family: Theme.fontFamily; pixelSize: 13 }
-                color: Theme.text_primary
-            }
-            Text {
-                text: rsr.desc
-                font { family: Theme.fontFamily; pixelSize: 11 }
-                color: Theme.text_hint
-            }
-        }
-        SuretySwitch {
-            anchors { right: parent.right; rightMargin: 20; verticalCenter: parent.verticalCenter }
-            checked: rsr.checked
-            onToggled: function(v) { rsr.checked = v; rsr.toggled(v) }
-        }
-    }
+    // (漫游开关行 RoamSwitchRow 已提取至同目录 RoamSwitchRow.qml, 2026-10-02)
 }

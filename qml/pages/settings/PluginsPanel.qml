@@ -1,9 +1,9 @@
 import QtQuick
-import "../../theme"
-import "../../dialogs"
-import "../display"
-import "../buttons"
-import "../controls"
+import "../../../theme"
+import "../../../dialogs"
+import "../../components/display"
+import "../../components/buttons"
+import "../../components/controls"
 
 // ═══════════════════════════════════════════════════════════════
 //  PluginsPanel — 插件管理面板 (设置页"插件"分类折叠卡内容)

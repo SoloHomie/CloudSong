@@ -1,5 +1,5 @@
 import QtQuick
-import "../business"
+import "../../components/business"
 
 // ═══════════════════════════════════════════════════════════════
 //  SheetGridModule — 推荐页模块组件: 歌单网格 (猜你喜欢 / 精选歌单共用)
