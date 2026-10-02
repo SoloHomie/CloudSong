@@ -37,13 +37,13 @@
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
     <QtInstall>6.11.1_msvc2022_64</QtInstall>
-    <QtModules>quick</QtModules>
+    <QtModules>quick;widgets</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
     <QtQMLDebugEnable>true</QtQMLDebugEnable>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
     <QtInstall>6.11.1_msvc2022_64</QtInstall>
-    <QtModules>quick</QtModules>
+    <QtModules>quick;widgets</QtModules>
     <QtBuildConfig>release</QtBuildConfig>
   </PropertyGroup>
   <Target Name="QtMsBuildNotFound" BeforeTargets="CustomBuild;ClCompile" Condition="!Exists('$(QtMsBuild)\qt.targets') or !Exists('$(QtMsBuild)\qt.props')">
@@ -111,6 +111,7 @@
     <ClCompile Include="pluginruntime.cpp" />
     <ClCompile Include="pluginservice.cpp" />
     <ClCompile Include="recommendservice.cpp" />
+    <ClCompile Include="trayiconservice.cpp" />
     <!-- QuickJS-ng 0.17.0 (vendored 3rdparty/quickjs, M0.5 插件运行时; 仅核心库, quickjs-libc 刻意不纳入)
          第三方 C 代码: 关 /sdl(C4146 负号作用于无符号被提级为 error) + W2(压 C4267 等无谓噪音) -->
     <ClCompile Include="3rdparty\quickjs\quickjs.c">
@@ -141,6 +142,7 @@
     <QtMoc Include="inputservice.h" />
     <QtMoc Include="pluginservice.h" />
     <QtMoc Include="recommendservice.h" />
+    <QtMoc Include="trayiconservice.h" />
     <QtMoc Include="pluginruntime.h" />
     <QtMoc Include="pluginruntime_worker.h" />
     <QtRcc Include="qml.qrc" />

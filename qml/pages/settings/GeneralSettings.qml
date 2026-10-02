@@ -1,6 +1,7 @@
 import QtQuick
 import "../../theme"
 import "../../components/controls"
+import "../../components/display"
 
 // ═══════════════════════════════════════════════════════════════
 //  GeneralSettings — 设置子页面: 通用 (外观 / 字体 / 启动行为)
@@ -69,6 +70,27 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     checked: root.autoLaunch
                     onToggled: function(v) { root.autoLaunch = v }
+                }
+            }
+            SettingRow {
+                title: "任务栏播控"
+                // 悬停开关显示说明 tooltip (2026-10-02 用户要求: 设置项也要有提示)
+                Item {
+                    id: trayWrap
+                    width: traySwitch.width
+                    height: traySwitch.height
+                    anchors.verticalCenter: parent.verticalCenter
+                    SuretySwitch {
+                        id: traySwitch
+                        checked: AppCfg.trayEnabled
+                        onToggled: function(v) { AppCfg.trayEnabled = v }
+                    }
+                    HoverHandler { id: trayHover }
+                    Tooltip {
+                        text: "在任务栏通知区显示播控图标, 点击切换播放 / 暂停"
+                        shown: trayHover.hovered
+                        anchorItem: trayWrap
+                    }
                 }
             }
             SettingRow {

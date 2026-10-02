@@ -14,6 +14,7 @@
 #include "inputservice.h"
 #include "pluginservice.h"
 #include "recommendservice.h"
+#include "trayiconservice.h"
 
 namespace {
 // ── 无边框窗口 (BallsHackPro 同款 DWM 方法) ──
@@ -168,6 +169,13 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("Plugins", new PluginService(&app));
     // 推荐服务 (2026-10-02 推荐算法 C++ 化: 每日推荐+口味画像, 纯内存同步计算)
     engine.rootContext()->setContextProperty("Recommend", new RecommendService(&app));
+    // 任务栏播控图标 (设置页"任务栏播控"开关; enabled 直连 AppCfg, 播放状态由 QML 推入)
+    TrayIconService* tray = new TrayIconService(&app);
+    tray->setEnabled(AppConfig::instance()->trayEnabled());
+    QObject::connect(AppConfig::instance(), &AppConfig::trayEnabledChanged, tray, [tray] {
+        tray->setEnabled(AppConfig::instance()->trayEnabled());
+    });
+    engine.rootContext()->setContextProperty("TrayIcon", tray);
     engine.load(QUrl(QStringLiteral("qrc:/qt/qml/cloudsong/qml/main.qml")));
     if (engine.rootObjects().isEmpty())
         return -1;

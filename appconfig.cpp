@@ -12,6 +12,7 @@ AppConfig::AppConfig(QObject* parent)
     , m_themeIndex(m_settings.value(QStringLiteral("themeIndex"), 2).toInt())
     , m_materialIndex(m_settings.value(QStringLiteral("materialIndex"), 0).toInt())
     , m_recommendBackdropIndex(m_settings.value(QStringLiteral("recommendBackdropIndex"), 0).toInt())
+    , m_trayEnabled(m_settings.value(QStringLiteral("trayEnabled"), true).toBool())
 {
 }
 
@@ -55,4 +56,18 @@ void AppConfig::setRecommendBackdropIndex(int index)
     m_recommendBackdropIndex = index;
     m_settings.setValue(QStringLiteral("recommendBackdropIndex"), index);
     emit recommendBackdropIndexChanged();
+}
+
+bool AppConfig::trayEnabled() const
+{
+    return m_trayEnabled;
+}
+
+void AppConfig::setTrayEnabled(bool on)
+{
+    if (m_trayEnabled == on)
+        return;
+    m_trayEnabled = on;
+    m_settings.setValue(QStringLiteral("trayEnabled"), on);
+    emit trayEnabledChanged();
 }
