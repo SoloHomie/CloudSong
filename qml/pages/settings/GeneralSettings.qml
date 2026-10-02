@@ -87,7 +87,7 @@ Item {
                     }
                     HoverHandler { id: thumbHover }
                     Tooltip {
-                        text: "悬停任务栏图标时在缩略图上方显示 上一首 / 播放 / 下一首 播控条"
+                        text: "在任务栏顶端常驻显示一条播控条: 封面/歌名 + 上一首/播放/下一首, 双击可展开或收起主窗口"
                         shown: thumbHover.hovered
                         anchorItem: thumbWrap
                     }

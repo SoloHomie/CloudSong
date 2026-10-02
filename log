@@ -1,7 +1,7 @@
 QML debugging is enabled. Only use this in a safe environment.
-qt.qml.propertyCache.append: Member enabled of the object BarBtn_QMLTYPE_14 overrides a member of the base object. Consider renaming it or adding final or override specifier
+qt.qml.propertyCache.append: Member enabled of the object SuretyTagSelector_QMLTYPE_17 overrides a member of the base object. Consider renaming it or adding final or override specifier
+qt.qml.propertyCache.append: Member enabled of the object SuretyBtn_QMLTYPE_37 overrides a member of the base object. Consider renaming it or adding final or override specifier
+qt.qml.propertyCache.append: Member enabled of the object SuretySwitch_QMLTYPE_71 overrides a member of the base object. Consider renaming it or adding final or override specifier
 [PluginRuntime] 插件加载完成: 2 停用: 0
-qt.qml.propertyCache.append: Member enabled of the object SuretyTagSelector_QMLTYPE_16 overrides a member of the base object. Consider renaming it or adding final or override specifier
-qt.qml.propertyCache.append: Member enabled of the object NavBtn_QMLTYPE_30 overrides a member of the base object. Consider renaming it or adding final or override specifier
-qt.qml.propertyCache.append: Member enabled of the object SuretyBtn_QMLTYPE_31 overrides a member of the base object. Consider renaming it or adding final or override specifier
-qt.qml.propertyCache.append: Member enabled of the object SuretySwitch_QMLTYPE_65 overrides a member of the base object. Consider renaming it or adding final or override specifier
+qt.qml.propertyCache.append: Member enabled of the object BarBtn_QMLTYPE_192 overrides a member of the base object. Consider renaming it or adding final or override specifier
+qt.qml.propertyCache.append: Member enabled of the object NavBtn_QMLTYPE_213 overrides a member of the base object. Consider renaming it or adding final or override specifier

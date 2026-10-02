@@ -100,18 +100,6 @@ Window {
         playback: MockPlayback
     }
 
-    // 任务栏缩略图播控条 (2026-10-02 用户拍板"和汽水音乐一样": 悬停任务栏按钮弹 上一首/播放/下一首);
-    // 播放状态推入 C++ TaskbarThumbService, 按钮点击信号转发 MockPlayback。
-    // 用 Binding 而非 "TaskThumb.playing:" 限定名绑定: 编译期看不到 context property,
-    // 限定名绑定会被当成附着类型解析 → "Non-existent attached object" (2026-10-02 实测)
-    Binding { target: TaskThumb; property: "playing"; value: MockPlayback.playing }
-    Connections {
-        target: TaskThumb
-        function onPrevRequested() { MockPlayback.prev() }
-        function onToggleRequested() { MockPlayback.playPause() }
-        function onNextRequested() { MockPlayback.next() }
-    }
-
     // 登录/注册/重置 弹窗 (自 Glowling 移植; 纯 UI, 表单动作全部转发为信号, 待 C++ AuthService 接线)
     AuthDialog {
         id: authDialog

@@ -33,6 +33,7 @@
         <file>qml/shell/BarBtn.qml</file>
         <file>qml/shell/QueueRow.qml</file>
         <file>qml/shell/MenuRow.qml</file>
+        <file>qml/shell/TaskbarBar.qml</file>
         <file>qml/dialogs/AuthDialog.qml</file>
         <file>qml/dialogs/AddPluginDialog.qml</file>
         <file>qml/dialogs/LoginForm.qml</file>

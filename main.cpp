@@ -14,7 +14,7 @@
 #include "inputservice.h"
 #include "pluginservice.h"
 #include "recommendservice.h"
-#include "taskbarthumbservice.h"
+#include "taskbarbarservice.h"
 
 namespace {
 // ── 无边框窗口 (BallsHackPro 同款 DWM 方法) ──
@@ -26,6 +26,10 @@ struct FrameFilter : QAbstractNativeEventFilter {
     bool nativeEventFilter(const QByteArray &, void *message, qintptr *result) override
     {
         MSG *msg = static_cast<MSG *>(message);
+
+        // 任务栏播控条等无边框小窗 (无 WS_THICKFRAME) 不参与主窗边框处理 (2026-10-02)
+        if (!(GetWindowLongPtr(msg->hwnd, GWL_STYLE) & WS_THICKFRAME))
+            return false;
 
         // ── 消除标题栏但保留三边边框 (与 BallsHackPro 一致) ──
         if (msg->message == WM_NCCALCSIZE) {
@@ -169,15 +173,16 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("Plugins", new PluginService(&app));
     // 推荐服务 (2026-10-02 推荐算法 C++ 化: 每日推荐+口味画像, 纯内存同步计算)
     engine.rootContext()->setContextProperty("Recommend", new RecommendService(&app));
-    // 任务栏缩略图播控条 (2026-10-02 用户拍板"和汽水音乐一样": 悬停任务栏按钮弹
-    // 上一首/播放/下一首, ITaskbarList3 ThumbBar; 设置页"任务栏播控"开关直连 AppCfg)
-    TaskbarThumbService* taskThumb = new TaskbarThumbService(&app);
-    taskThumb->setEnabled(AppConfig::instance()->taskbarPlayEnabled());
-    QObject::connect(AppConfig::instance(), &AppConfig::taskbarPlayEnabledChanged, taskThumb, [taskThumb] {
-        taskThumb->setEnabled(AppConfig::instance()->taskbarPlayEnabled());
+    // 任务栏播控条 (2026-10-02 用户拍板 MusicBar 同款: 贴靠任务栏顶端的常驻播控条,
+    // 封面/歌名 + 上一首/播放/下一首, 双击信息区=展开/收起主窗; 设置页"任务栏播控"开关直连 AppCfg)
+    TaskbarBarService* taskbarBar = new TaskbarBarService(&app);
+    taskbarBar->setEnabled(AppConfig::instance()->taskbarPlayEnabled());
+    QObject::connect(AppConfig::instance(), &AppConfig::taskbarPlayEnabledChanged, taskbarBar, [taskbarBar] {
+        taskbarBar->setEnabled(AppConfig::instance()->taskbarPlayEnabled());
     });
-    engine.rootContext()->setContextProperty("TaskThumb", taskThumb);
+    engine.rootContext()->setContextProperty("TaskbarBar", taskbarBar);
     engine.load(QUrl(QStringLiteral("qrc:/qt/qml/cloudsong/qml/main.qml")));
+    engine.load(QUrl(QStringLiteral("qrc:/qt/qml/cloudsong/qml/shell/TaskbarBar.qml")));
     if (engine.rootObjects().isEmpty())
         return -1;
 
@@ -186,7 +191,15 @@ int main(int argc, char *argv[])
     if (win) {
         applyFrameless(win);
         win->show();
-        taskThumb->setWindow(win);   // 挂载缩略图播控条 (需要原生 HWND, 故在 show 之后)
+        taskbarBar->setMainWindow(win);
+        // 播控条窗口注入 C++ 服务贴靠任务栏 (objectName 定位; main.qml 之后加载)
+        for (QObject *obj : engine.rootObjects()) {
+            if (auto *w = qobject_cast<QQuickWindow *>(obj);
+                w && w->objectName() == QStringLiteral("taskbarBar")) {
+                taskbarBar->setBarWindow(w);
+                break;
+            }
+        }
 
         // 窗口材质 (云母/亚克力) 与标题栏明暗: 启动套用, 主题/材质/系统明暗变化时实时重挂
         const HWND hwnd = reinterpret_cast<HWND>(win->winId());
