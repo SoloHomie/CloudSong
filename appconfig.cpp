@@ -12,7 +12,7 @@ AppConfig::AppConfig(QObject* parent)
     , m_themeIndex(m_settings.value(QStringLiteral("themeIndex"), 2).toInt())
     , m_materialIndex(m_settings.value(QStringLiteral("materialIndex"), 0).toInt())
     , m_recommendBackdropIndex(m_settings.value(QStringLiteral("recommendBackdropIndex"), 0).toInt())
-    , m_trayEnabled(m_settings.value(QStringLiteral("trayEnabled"), true).toBool())
+    , m_taskbarPlayEnabled(m_settings.value(QStringLiteral("taskbarPlayEnabled"), true).toBool())
 {
 }
 
@@ -58,16 +58,16 @@ void AppConfig::setRecommendBackdropIndex(int index)
     emit recommendBackdropIndexChanged();
 }
 
-bool AppConfig::trayEnabled() const
+bool AppConfig::taskbarPlayEnabled() const
 {
-    return m_trayEnabled;
+    return m_taskbarPlayEnabled;
 }
 
-void AppConfig::setTrayEnabled(bool on)
+void AppConfig::setTaskbarPlayEnabled(bool on)
 {
-    if (m_trayEnabled == on)
+    if (m_taskbarPlayEnabled == on)
         return;
-    m_trayEnabled = on;
-    m_settings.setValue(QStringLiteral("trayEnabled"), on);
-    emit trayEnabledChanged();
+    m_taskbarPlayEnabled = on;
+    m_settings.setValue(QStringLiteral("taskbarPlayEnabled"), on);
+    emit taskbarPlayEnabledChanged();
 }

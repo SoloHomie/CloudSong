@@ -12,7 +12,7 @@ class AppConfig : public QObject
     Q_PROPERTY(int themeIndex READ themeIndex WRITE setThemeIndex NOTIFY themeIndexChanged)
     Q_PROPERTY(int materialIndex READ materialIndex WRITE setMaterialIndex NOTIFY materialIndexChanged)
     Q_PROPERTY(int recommendBackdropIndex READ recommendBackdropIndex WRITE setRecommendBackdropIndex NOTIFY recommendBackdropIndexChanged)
-    Q_PROPERTY(bool trayEnabled READ trayEnabled WRITE setTrayEnabled NOTIFY trayEnabledChanged)
+    Q_PROPERTY(bool taskbarPlayEnabled READ taskbarPlayEnabled WRITE setTaskbarPlayEnabled NOTIFY taskbarPlayEnabledChanged)
 public:
     static AppConfig* instance();
     explicit AppConfig(QObject* parent = nullptr);
@@ -29,20 +29,20 @@ public:
     int recommendBackdropIndex() const;
     void setRecommendBackdropIndex(int index);
 
-    // 任务栏播控图标（默认开; 设置页开关, TrayIconService 经此显隐）
-    bool trayEnabled() const;
-    void setTrayEnabled(bool on);
+    // 任务栏缩略图播控条（默认开; 设置页"任务栏播控"开关, TaskbarThumbService 经此显隐）
+    bool taskbarPlayEnabled() const;
+    void setTaskbarPlayEnabled(bool on);
 
 signals:
     void themeIndexChanged();
     void materialIndexChanged();
     void recommendBackdropIndexChanged();
-    void trayEnabledChanged();
+    void taskbarPlayEnabledChanged();
 
 private:
     QSettings m_settings;
     int m_themeIndex = 2;
     int m_materialIndex = 0;
     int m_recommendBackdropIndex = 0;
-    bool m_trayEnabled = true;
+    bool m_taskbarPlayEnabled = true;
 };

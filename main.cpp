@@ -14,7 +14,7 @@
 #include "inputservice.h"
 #include "pluginservice.h"
 #include "recommendservice.h"
-#include "trayiconservice.h"
+#include "taskbarthumbservice.h"
 
 namespace {
 // ── 无边框窗口 (BallsHackPro 同款 DWM 方法) ──
@@ -169,13 +169,14 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("Plugins", new PluginService(&app));
     // 推荐服务 (2026-10-02 推荐算法 C++ 化: 每日推荐+口味画像, 纯内存同步计算)
     engine.rootContext()->setContextProperty("Recommend", new RecommendService(&app));
-    // 任务栏播控图标 (设置页"任务栏播控"开关; enabled 直连 AppCfg, 播放状态由 QML 推入)
-    TrayIconService* tray = new TrayIconService(&app);
-    tray->setEnabled(AppConfig::instance()->trayEnabled());
-    QObject::connect(AppConfig::instance(), &AppConfig::trayEnabledChanged, tray, [tray] {
-        tray->setEnabled(AppConfig::instance()->trayEnabled());
+    // 任务栏缩略图播控条 (2026-10-02 用户拍板"和汽水音乐一样": 悬停任务栏按钮弹
+    // 上一首/播放/下一首, ITaskbarList3 ThumbBar; 设置页"任务栏播控"开关直连 AppCfg)
+    TaskbarThumbService* taskThumb = new TaskbarThumbService(&app);
+    taskThumb->setEnabled(AppConfig::instance()->taskbarPlayEnabled());
+    QObject::connect(AppConfig::instance(), &AppConfig::taskbarPlayEnabledChanged, taskThumb, [taskThumb] {
+        taskThumb->setEnabled(AppConfig::instance()->taskbarPlayEnabled());
     });
-    engine.rootContext()->setContextProperty("TrayIcon", tray);
+    engine.rootContext()->setContextProperty("TaskThumb", taskThumb);
     engine.load(QUrl(QStringLiteral("qrc:/qt/qml/cloudsong/qml/main.qml")));
     if (engine.rootObjects().isEmpty())
         return -1;
@@ -185,6 +186,7 @@ int main(int argc, char *argv[])
     if (win) {
         applyFrameless(win);
         win->show();
+        taskThumb->setWindow(win);   // 挂载缩略图播控条 (需要原生 HWND, 故在 show 之后)
 
         // 窗口材质 (云母/亚克力) 与标题栏明暗: 启动套用, 主题/材质/系统明暗变化时实时重挂
         const HWND hwnd = reinterpret_cast<HWND>(win->winId());
