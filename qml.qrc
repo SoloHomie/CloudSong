@@ -9,6 +9,7 @@
         <file>qml/components/controls/SuretyCheckBox.qml</file>
         <file>qml/components/controls/SuretySwitch.qml</file>
         <file>qml/components/controls/SuretyTagSelector.qml</file>
+        <file>qml/components/controls/SettingRow.qml</file>
         <file>qml/components/controls/CategoryBar.qml</file>
         <file>qml/components/controls/PasswordField.qml</file>
         <file>qml/components/controls/KeyBindChip.qml</file>
@@ -70,6 +71,13 @@
         <file>qml/pages/AlbumDetailPage.qml</file>
         <file>qml/pages/ArtistDetailPage.qml</file>
         <file>qml/pages/SettingsPage.qml</file>
+        <file>qml/pages/settings/AboutSettings.qml</file>
+        <file>qml/pages/settings/DataSettings.qml</file>
+        <file>qml/pages/settings/DownloadSettings.qml</file>
+        <file>qml/pages/settings/GeneralSettings.qml</file>
+        <file>qml/pages/settings/PlaybackSettings.qml</file>
+        <file>qml/pages/settings/PluginSettings.qml</file>
+        <file>qml/pages/settings/ServiceSettings.qml</file>
         <file>qml/assets/icons/player/chevron-left.svg</file>
         <file>qml/assets/icons/player/chevron-right.svg</file>
         <file>qml/assets/icons/player/chevron-down.svg</file>
