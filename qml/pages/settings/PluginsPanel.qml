@@ -1,6 +1,6 @@
 import QtQuick
-import "../../../theme"
-import "../../../dialogs"
+import "../../theme"
+import "../../dialogs"
 import "../../components/display"
 import "../../components/buttons"
 import "../../components/controls"
