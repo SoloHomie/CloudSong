@@ -20,12 +20,30 @@ MSBuild CloudSong.vcxproj -p:Configuration=Release -p:Platform=x64
 
 ## 目录结构
 
-- `qml/theme/` 主题令牌 (函数注入式配色)
-- `qml/components/` 公共组件 (controls/buttons/display/layout/overlay/cards/business)
-- `qml/shell/` 骨架: TitleBar / SideBar / View / PlayerBar / QueueDrawer
-- `qml/pages/` 16 页全量: 推荐 / 听歌模式 / 我喜欢 / 历史 / 我的歌单 / 本地音乐 / 下载 / 搜索 / 歌单详情 / 专辑详情 / 歌手详情 / 设置 / 主题 / 插件管理 / 云漫游 / 迁移
-- `qml/dialogs/` 统一弹窗 (DialogShell 窗体 + AuthDialog 登录/注册/重置 等)
-- `qml/mock/` MockData / MockPlayback 模拟数据 (与未来 C++ Service 同名, 待整体替换)
+```
+CloudSong/
+├── src/
+│   ├── app/       程序入口 (main.cpp)
+│   ├── core/      基础配置 (AppConfig)
+│   └── services/  业务服务, 每功能一对 h/cpp: Input / Plugin / PluginRuntime / Recommend / TaskbarBar
+├── 3rdparty/quickjs/   vendored QuickJS-ng (插件运行时, 勿改)
+├── qml/
+│   ├── theme/         主题令牌 (函数注入式配色)
+│   ├── components/    公共组件 (controls/buttons/display/layout/overlay/cards/business)
+│   ├── shell/         骨架: TitleBar / SideBar / View / PlayerBar / QueueDrawer
+│   ├── pages/         页面 (按功能分类, 见下)
+│   ├── dialogs/       统一弹窗 (DialogShell 窗体 + AuthDialog 登录/注册/重置 等)
+│   └── mock/          MockData / MockPlayback 模拟数据 (与 C++ Service 同名, 待整体替换)
+├── plugins/           JS 插件载荷 (构建时 xcopy 到输出目录, 运行时加载; 停用名单走 QSettings)
+├── fonts.qrc / qml.qrc 资源清单 (留根不动: 资源 URL 是运行时契约)
+└── CloudSong.vcxproj / .filters   (filters 虚拟目录与磁盘目录镜像)
+```
+
+## 添加新功能
+
+1. `src/services/` 加一对 `xxxservice.h/.cpp` (QObject + 信号, 在 main.cpp 注册上下文属性)
+2. `qml/pages/` 加页面 (同结构页面复用 `qml/templates/` 模板, 不要复制粘贴)
+3. 页面登记进 `qml.qrc`; 新增 h/cpp 在 VS 里右键"添加现有项"进工程 (vcxproj 显式列举文件, filters 同步加条目)
 
 ## 当前状态
 

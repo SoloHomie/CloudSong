@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Source Files">
@@ -21,29 +21,77 @@
       <UniqueIdentifier>{639EADAA-A684-42e4-A9AD-28FC9BCB8F7C}</UniqueIdentifier>
       <Extensions>ts</Extensions>
     </Filter>
+    <!-- 与磁盘目录镜像: src/{app,core,services} + 3rdparty -->
+    <Filter Include="src\app">
+      <UniqueIdentifier>{57A8FC4D-8FE7-428A-9AFC-EEBAE004D75B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\core">
+      <UniqueIdentifier>{83A782B9-B34E-4C41-BBF5-C4A09495AF98}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\services">
+      <UniqueIdentifier>{AD7940E2-CEFF-4339-AC11-E6CA9EDD9563}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3rdparty\quickjs">
+      <UniqueIdentifier>{16958571-9338-4620-BDD6-93788712FC6B}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\app\main.cpp">
+      <Filter>src\app</Filter>
     </ClCompile>
-    <ClCompile Include="appconfig.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\core\appconfig.cpp">
+      <Filter>src\core</Filter>
     </ClCompile>
-    <ClCompile Include="inputservice.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\services\inputservice.cpp">
+      <Filter>src\services</Filter>
     </ClCompile>
-    <QtMoc Include="appconfig.h">
-      <Filter>Header Files</Filter>
+    <ClCompile Include="src\services\pluginruntime.cpp">
+      <Filter>src\services</Filter>
+    </ClCompile>
+    <ClCompile Include="src\services\pluginservice.cpp">
+      <Filter>src\services</Filter>
+    </ClCompile>
+    <ClCompile Include="src\services\recommendservice.cpp">
+      <Filter>src\services</Filter>
+    </ClCompile>
+    <ClCompile Include="src\services\taskbarbarservice.cpp">
+      <Filter>src\services</Filter>
+    </ClCompile>
+    <ClCompile Include="3rdparty\quickjs\quickjs.c">
+      <Filter>3rdparty\quickjs</Filter>
+    </ClCompile>
+    <ClCompile Include="3rdparty\quickjs\dtoa.c">
+      <Filter>3rdparty\quickjs</Filter>
+    </ClCompile>
+    <ClCompile Include="3rdparty\quickjs\libregexp.c">
+      <Filter>3rdparty\quickjs</Filter>
+    </ClCompile>
+    <ClCompile Include="3rdparty\quickjs\libunicode.c">
+      <Filter>3rdparty\quickjs</Filter>
+    </ClCompile>
+    <QtMoc Include="src\core\appconfig.h">
+      <Filter>src\core</Filter>
     </QtMoc>
-    <QtMoc Include="inputservice.h">
-      <Filter>Header Files</Filter>
+    <QtMoc Include="src\services\inputservice.h">
+      <Filter>src\services</Filter>
+    </QtMoc>
+    <QtMoc Include="src\services\pluginservice.h">
+      <Filter>src\services</Filter>
+    </QtMoc>
+    <QtMoc Include="src\services\recommendservice.h">
+      <Filter>src\services</Filter>
+    </QtMoc>
+    <QtMoc Include="src\services\taskbarbarservice.h">
+      <Filter>src\services</Filter>
+    </QtMoc>
+    <QtMoc Include="src\services\pluginruntime.h">
+      <Filter>src\services</Filter>
+    </QtMoc>
+    <QtMoc Include="src\services\pluginruntime_worker.h">
+      <Filter>src\services</Filter>
     </QtMoc>
     <QtRcc Include="qml.qrc">
       <Filter>Resource Files</Filter>
     </QtRcc>
-    <None Include="main.qml">
-      <Filter>Source Files</Filter>
-    </None>
-
   </ItemGroup>
 </Project>

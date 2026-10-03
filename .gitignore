@@ -9,3 +9,4 @@ CloudSong/
 
 # 日志
 *.log
+/log

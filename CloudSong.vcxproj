@@ -70,11 +70,12 @@
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)3rdparty\quickjs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)src;$(ProjectDir)src\app;$(ProjectDir)src\core;$(ProjectDir)src\services;$(ProjectDir)3rdparty\quickjs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <PreBuildEvent>
       <!-- 字体二进制资源 (18MB 内嵌 qrc 会 C1060 撑爆 cl 前端堆, 故外挂 rcc; 两配置都生成) -->
-      <Command>$(QTDIR)\bin\rcc.exe -binary "$(ProjectDir)fonts.qrc" -o "$(OutDir)fonts.rcc"&#x0d;&#x0a;xcopy /E /I /Y "$(ProjectDir)plugins" "$(OutDir)plugins\" &gt; nul</Command>
+      <Command>$(QTDIR)\bin\rcc.exe -binary "$(ProjectDir)fonts.qrc" -o "$(OutDir)fonts.rcc"
+xcopy /E /I /Y "$(ProjectDir)plugins" "$(OutDir)plugins\" &gt; nul</Command>
     </PreBuildEvent>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -88,13 +89,14 @@
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)3rdparty\quickjs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)src;$(ProjectDir)src\app;$(ProjectDir)src\core;$(ProjectDir)src\services;$(ProjectDir)3rdparty\quickjs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
     </ClCompile>
     <PreBuildEvent>
       <!-- 字体二进制资源 (18MB 内嵌 qrc 会 C1060 撑爆 cl 前端堆, 故外挂 rcc) -->
-      <Command>$(QTDIR)\bin\rcc.exe -binary "$(ProjectDir)fonts.qrc" -o "$(OutDir)fonts.rcc"&#x0d;&#x0a;xcopy /E /I /Y "$(ProjectDir)plugins" "$(OutDir)plugins\" &gt; nul</Command>
+      <Command>$(QTDIR)\bin\rcc.exe -binary "$(ProjectDir)fonts.qrc" -o "$(OutDir)fonts.rcc"
+xcopy /E /I /Y "$(ProjectDir)plugins" "$(OutDir)plugins\" &gt; nul</Command>
     </PreBuildEvent>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -105,13 +107,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="appconfig.cpp" />
-    <ClCompile Include="inputservice.cpp" />
-    <ClCompile Include="pluginruntime.cpp" />
-    <ClCompile Include="pluginservice.cpp" />
-    <ClCompile Include="recommendservice.cpp" />
-    <ClCompile Include="taskbarbarservice.cpp" />
+    <ClCompile Include="src\app\main.cpp" />
+    <ClCompile Include="src\core\appconfig.cpp" />
+    <ClCompile Include="src\services\inputservice.cpp" />
+    <ClCompile Include="src\services\pluginruntime.cpp" />
+    <ClCompile Include="src\services\pluginservice.cpp" />
+    <ClCompile Include="src\services\recommendservice.cpp" />
+    <ClCompile Include="src\services\taskbarbarservice.cpp" />
     <!-- QuickJS-ng 0.17.0 (vendored 3rdparty/quickjs, M0.5 插件运行时; 仅核心库, quickjs-libc 刻意不纳入)
          第三方 C 代码: 关 /sdl(C4146 负号作用于无符号被提级为 error) + W2(压 C4267 等无谓噪音) -->
     <ClCompile Include="3rdparty\quickjs\quickjs.c">
@@ -138,15 +140,14 @@
       <SDLCheck>false</SDLCheck>
       <WarningLevel>Level2</WarningLevel>
     </ClCompile>
-    <QtMoc Include="appconfig.h" />
-    <QtMoc Include="inputservice.h" />
-    <QtMoc Include="pluginservice.h" />
-    <QtMoc Include="recommendservice.h" />
-    <QtMoc Include="taskbarbarservice.h" />
-    <QtMoc Include="pluginruntime.h" />
-    <QtMoc Include="pluginruntime_worker.h" />
+    <QtMoc Include="src\core\appconfig.h" />
+    <QtMoc Include="src\services\inputservice.h" />
+    <QtMoc Include="src\services\pluginservice.h" />
+    <QtMoc Include="src\services\recommendservice.h" />
+    <QtMoc Include="src\services\taskbarbarservice.h" />
+    <QtMoc Include="src\services\pluginruntime.h" />
+    <QtMoc Include="src\services\pluginruntime_worker.h" />
     <QtRcc Include="qml.qrc" />
-    <None Include="main.qml" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
