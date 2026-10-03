@@ -2,13 +2,14 @@ import QtQuick
 import "../../theme"
 import "../../components/buttons"
 import "../../components/layout"
+import "../../templates"
 
 // ═══════════════════════════════════════════════════════════════
 //  AboutSettings — 设置子页面: 关于 (版本/更新 / 开源致谢 / 协议与隐私)
 //  BallsHackPro 同款布局: 品牌头部区 + 折叠卡
 //  2026-10-02 自 SettingsPage 拆分
 // ═══════════════════════════════════════════════════════════════
-Item {
+SettingSubPage {
     id: root
     property string latestVersion: ""     // 更新检测结果 (待接 C++ UpdaterService)
     property bool checkingUpdate: false
@@ -21,19 +22,11 @@ Item {
         onTriggered: root.checkingUpdate = false
     }
 
-    Flickable {
-        id: flick
-        anchors.fill: parent
-        contentWidth: width
-        contentHeight: contentCol.height + 24
-        clip: true
-        boundsBehavior: Flickable.StopAtBounds
-
-        Column {
-            id: contentCol
-            anchors.horizontalCenter: parent.horizontalCenter
-            width: Math.min(parent.width - 48, 680)
-            spacing: 18
+    Column {
+        anchors.horizontalCenter: parent.horizontalCenter
+        width: Math.min(parent.width - 48, 680)
+        spacing: 18
+        bottomPadding: 24
 
             // 头部: 应用名 + 版本(可点跳仓库) + 检查更新按钮
             Column {
@@ -256,6 +249,5 @@ Item {
                     }
                 }
             }
-        }
     }
 }

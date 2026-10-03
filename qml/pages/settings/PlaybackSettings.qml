@@ -1,31 +1,24 @@
 import QtQuick
 import "../../components/controls"
 import "../../components/layout"
+import "../../templates"
 
 // ═══════════════════════════════════════════════════════════════
 //  PlaybackSettings — 设置子页面: 播放 (音质 / 歌词 / 系统集成, 整组折叠)
 //  2026-10-02 自 SettingsPage 拆分
 // ═══════════════════════════════════════════════════════════════
-Item {
+SettingSubPage {
     id: root
     property bool desktopLyric: false
     property bool smtcEnabled: true
     property bool autoDegrade: true       // 受限音源自动降级 (P0)
     property int qualityIdx: 0            // 0标准 1较高 2无损
 
-    Flickable {
-        id: flick
-        anchors.fill: parent
-        contentWidth: width
-        contentHeight: contentCol.height + 24
-        clip: true
-        boundsBehavior: Flickable.StopAtBounds
-
-        Column {
-            id: contentCol
-            anchors.horizontalCenter: parent.horizontalCenter
-            width: Math.min(parent.width - 48, 680)
-            spacing: 18
+    Column {
+        anchors.horizontalCenter: parent.horizontalCenter
+        width: Math.min(parent.width - 48, 680)
+        spacing: 18
+        bottomPadding: 24
 
             SuretyCollapse {
                 width: parent.width
@@ -80,6 +73,5 @@ Item {
                     }
                 }
             }
-        }
     }
 }

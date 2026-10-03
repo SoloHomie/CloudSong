@@ -1,28 +1,21 @@
 import QtQuick
 import "../../components/layout"
+import "../../templates"
 
 // ═══════════════════════════════════════════════════════════════
 //  ServiceSettings — 设置子页面: 服务 (云漫游 / 歌单迁移)
 //  2026-09-29 用户拍板: 原跳独立页改为折叠卡内嵌, 内容即面板组件
 //  2026-10-02 自 SettingsPage 拆分
 // ═══════════════════════════════════════════════════════════════
-Item {
+SettingSubPage {
     id: root
     signal navigate(string name, var params)
 
-    Flickable {
-        id: flick
-        anchors.fill: parent
-        contentWidth: width
-        contentHeight: contentCol.height + 24
-        clip: true
-        boundsBehavior: Flickable.StopAtBounds
-
-        Column {
-            id: contentCol
-            anchors.horizontalCenter: parent.horizontalCenter
-            width: Math.min(parent.width - 48, 680)
-            spacing: 18
+    Column {
+        anchors.horizontalCenter: parent.horizontalCenter
+        width: Math.min(parent.width - 48, 680)
+        spacing: 18
+        bottomPadding: 24
 
             SuretyCollapse {
                 width: parent.width
@@ -52,6 +45,5 @@ Item {
                     }
                 }
             }
-        }
     }
 }

@@ -40,27 +40,6 @@ Window {
         onSettingsClicked: view.push("settings")
         onSearchRequested: function(q) { view.push("search", { query: q }) }
         onLoginRequested: authDialog.open("login")
-
-        // 任务栏播控快捷按钮 (2026-10-02 用户拍板放标题栏; 播放/暂停 + 悬停提示, 其他逻辑先不做)
-        BarBtn {
-            icon: MockPlayback.playing ? "qrc:/qt/qml/cloudsong/qml/assets/icons/player/pause.svg"
-                                       : "qrc:/qt/qml/cloudsong/qml/assets/icons/player/play.svg"
-            tip: MockPlayback.playing ? "暂停" : "播放"
-            onClicked: MockPlayback.playPause()
-        }
-
-        // 推荐页背景选择 (仅推荐页显示; 常规/3D粒子/汽水渐变, 2026-10-02)
-        SuretyTagSelector {
-            visible: view.currentName === "recommend"
-            anchors.verticalCenter: parent.verticalCenter
-            displayMode: "segment"
-            selectedIndex: AppCfg.recommendBackdropIndex
-            segmentHeight: 26
-            fontSize: 11
-            minimumWidth: 0
-            model: [ { label: "常规" }, { label: "3D粒子" }, { label: "汽水" } ]
-            onTagSelected: function(i) { AppCfg.recommendBackdropIndex = i }
-        }
     }
 
     Row {

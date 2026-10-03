@@ -1,28 +1,21 @@
 import QtQuick
 import "../../mock"
 import "../../components/layout"
+import "../../templates"
 
 // ═══════════════════════════════════════════════════════════════
 //  PluginSettings — 设置子页面: 插件管理
 //  2026-09-29 用户拍板: 折叠卡内嵌, 不再跳页
 //  2026-10-02 自 SettingsPage 拆分
 // ═══════════════════════════════════════════════════════════════
-Item {
+SettingSubPage {
     id: root
 
-    Flickable {
-        id: flick
-        anchors.fill: parent
-        contentWidth: width
-        contentHeight: contentCol.height + 24
-        clip: true
-        boundsBehavior: Flickable.StopAtBounds
-
-        Column {
-            id: contentCol
-            anchors.horizontalCenter: parent.horizontalCenter
-            width: Math.min(parent.width - 48, 680)
-            spacing: 18
+    Column {
+        anchors.horizontalCenter: parent.horizontalCenter
+        width: Math.min(parent.width - 48, 680)
+        spacing: 18
+        bottomPadding: 24
 
             SuretyCollapse {
                 width: parent.width
@@ -34,6 +27,5 @@ Item {
                 subtitleFontSize: 11
                 content: Component { PluginsPanel {} }
             }
-        }
     }
 }

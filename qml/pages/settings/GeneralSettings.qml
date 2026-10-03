@@ -2,30 +2,23 @@ import QtQuick
 import "../../theme"
 import "../../components/controls"
 import "../../components/display"
+import "../../templates"
 
 // ═══════════════════════════════════════════════════════════════
 //  GeneralSettings — 设置子页面: 通用 (外观 / 字体 / 启动行为)
 //  2026-10-02 自 SettingsPage 拆分
 // ═══════════════════════════════════════════════════════════════
-Item {
+SettingSubPage {
     id: root
     property bool autoLaunch: false
     property bool minimizeToTray: true
     property int fontIdx: 0               // 0 MiSans 1 微软雅黑 (待接 C++ ConfigService 持久化)
 
-    Flickable {
-        id: flick
-        anchors.fill: parent
-        contentWidth: width
-        contentHeight: contentCol.height + 24
-        clip: true
-        boundsBehavior: Flickable.StopAtBounds
-
-        Column {
-            id: contentCol
-            anchors.horizontalCenter: parent.horizontalCenter
-            width: Math.min(parent.width - 48, 680)
-            spacing: 18
+    Column {
+        anchors.horizontalCenter: parent.horizontalCenter
+        width: Math.min(parent.width - 48, 680)
+        spacing: 18
+        bottomPadding: 24
 
             SettingRow {
                 title: "主题"
@@ -101,6 +94,5 @@ Item {
                     onToggled: function(v) { root.minimizeToTray = v }
                 }
             }
-        }
     }
 }

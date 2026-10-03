@@ -70,12 +70,6 @@ Item {
         height: 160
         spacing: 20
 
-        CoverArt {
-            width: 160
-            height: 160
-            seed: root.seed
-        }
-
         Column {
             width: parent.width - 180
             anchors.verticalCenter: parent.verticalCenter
