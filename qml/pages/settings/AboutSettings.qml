@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Layouts
 import "../../theme"
 import "../../components/buttons"
 import "../../components/layout"
@@ -248,6 +249,7 @@ SettingSubPage {
                         lineHeight: 1.6
                     }
                 }
+            Item {Layout.fillHeight: true }
             }
     }
 }

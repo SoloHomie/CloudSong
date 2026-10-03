@@ -55,6 +55,7 @@
         <file>qml/components/business/SongRow.qml</file>
         <file>qml/components/business/MediaGrid.qml</file>
         <file>qml/components/business/GridCell.qml</file>
+        <file>qml/components/business/LyricPlayer.qml</file>
         <file>qml/components/transition/PageSwitch.qml</file>
         <file>qml/components/skeleton/SkeletonBlock.qml</file>
         <file>qml/components/overlay/Popover.qml</file>
@@ -65,9 +66,6 @@
         <file>qml/shell/PlayerBar.qml</file>
         <file>qml/shell/QueueDrawer.qml</file>
         <file>qml/pages/recommend/RecommendPage.qml</file>
-        <file>qml/pages/recommend/SodaBackdrop.qml</file>
-        <file>qml/pages/recommend/ParticleBackdrop.qml</file>
-        <file>qml/pages/recommend/particles.frag.qsb</file>
         <file>qml/pages/listenmode/ListenModePage.qml</file>
         <file>qml/pages/FavoritePage.qml</file>
         <file>qml/pages/HistoryPage.qml</file>
@@ -78,6 +76,8 @@
         <file>qml/pages/SheetDetailPage.qml</file>
         <file>qml/pages/AlbumDetailPage.qml</file>
         <file>qml/pages/ArtistDetailPage.qml</file>
+        <file>qml/templates/SettingSubPage.qml</file>
+        <file>qml/templates/SongListPage.qml</file>
         <file>qml/pages/settings/SettingsPage.qml</file>
         <file>qml/pages/settings/AboutSettings.qml</file>
         <file>qml/pages/settings/SettingRow.qml</file>
