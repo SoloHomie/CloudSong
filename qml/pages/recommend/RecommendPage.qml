@@ -1,8 +1,6 @@
 import QtQuick
 import "../../theme"
 import "../../mock"
-import "../../components/display"
-import "../../components/controls"
 import "../../components/business"
 
 // ═══════════════════════════════════════════════════════════════
@@ -29,14 +27,6 @@ Item {
         MockPlayback.playIndex(0)
     }
 
-    // ── 背景: 画布 + 当前曲目封面氛围色 ──
-    Rectangle { anchors.fill: parent; color: Theme.bg_canvas }
-    CoverArt {
-        anchors.fill: parent
-        seed: MockPlayback.seed
-        radius: 0
-        opacity: 0.22
-    }
     // ── 顶部: 每日推荐徽标 + 曲目信息 (左) / 歌词工具 (右) ──
     Row {
         anchors { top: parent.top; topMargin: 16; left: parent.left; leftMargin: 24 }
@@ -59,19 +49,6 @@ Item {
             font { family: Theme.fontFamily; pixelSize: 14 }
             color: Theme.text_primary
         }
-    }
-
-    Row {
-        anchors { top: parent.top; topMargin: 16; right: parent.right; rightMargin: 24 }
-        spacing: 8
-
-        // 字号
-        ToolChip { text: "A-"; active: false; onClicked: lyric.lyricFontIdx = Math.max(0, lyric.lyricFontIdx - 1) }
-        ToolChip { text: "A+"; active: false; onClicked: lyric.lyricFontIdx = Math.min(2, lyric.lyricFontIdx + 1) }
-        // 翻译
-        ToolChip { text: "翻译"; active: lyric.showTrans; onClicked: lyric.showTrans = !lyric.showTrans }
-        // 桌面歌词
-        ToolChip { text: "桌面歌词"; active: MockPlayback.desktopLyric; onClicked: MockPlayback.desktopLyric = !MockPlayback.desktopLyric }
     }
 
     // ── 听歌区 (与听歌模式同款, 见 LyricPlayer) ──

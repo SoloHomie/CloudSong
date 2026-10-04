@@ -1,6 +1,5 @@
 import QtQuick
 import "../../theme"
-import QtQuick.Controls
 
 Item {
     id: root

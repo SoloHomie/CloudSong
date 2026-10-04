@@ -14,7 +14,7 @@ SettingSubPage {
     Column {
         anchors.horizontalCenter: parent.horizontalCenter
         width: Math.min(parent.width - 48, 680)
-        spacing: 18
+        spacing: 6
         bottomPadding: 24
 
             SuretyCollapse {

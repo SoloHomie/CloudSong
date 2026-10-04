@@ -1,7 +1,6 @@
 import QtQuick
 import "../../mock"
 import "../../components/buttons"
-import "../../components/controls"
 import "../../templates"
 
 // ═══════════════════════════════════════════════════════════════
@@ -14,7 +13,7 @@ SettingSubPage {
     Column {
         anchors.horizontalCenter: parent.horizontalCenter
         width: Math.min(parent.width - 48, 680)
-        spacing: 18
+        spacing: 3
         bottomPadding: 24
 
             SettingRow {

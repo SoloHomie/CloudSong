@@ -80,6 +80,10 @@
         <file>qml/templates/SongListPage.qml</file>
         <file>qml/pages/settings/SettingsPage.qml</file>
         <file>qml/pages/settings/AboutSettings.qml</file>
+        <file>qml/pages/settings/about/OpenSourceContent.qml</file>
+        <file>qml/pages/settings/about/UserAgreementContent.qml</file>
+        <file>qml/pages/settings/about/PrivacyContent.qml</file>
+        <file>qml/pages/settings/about/LicenseContent.qml</file>
         <file>qml/pages/settings/SettingRow.qml</file>
         <file>qml/pages/settings/RoamSwitchRow.qml</file>
         <file>qml/pages/settings/RoamPanel.qml</file>
@@ -133,6 +137,8 @@
         <file>qml/assets/icons/setting.svg</file>
         <file>qml/assets/icons/login.svg</file>
         <file>qml/assets/icons/back.svg</file>
+        <file>qml/assets/icons/kugou.svg</file>
+        <file>qml/assets/icons/netease.svg</file>
         <file>qml/assets/icons/sidebar/add.svg</file>
         <file>qml/assets/icons/sidebar/fav.svg</file>
         <file>qml/assets/icons/sidebar/playlist.svg</file>

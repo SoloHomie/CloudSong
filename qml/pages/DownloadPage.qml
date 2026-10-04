@@ -2,7 +2,6 @@ import QtQuick
 import "../theme"
 import "../mock"
 import "../components/display"
-import "../components/buttons"
 
 // ═══════════════════════════════════════════════════════════════
 //  DownloadPage — 下载管理 (进行中/已完成 两 tab + 进度条)

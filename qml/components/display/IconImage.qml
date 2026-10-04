@@ -13,6 +13,7 @@ Image {
     id: root
     property color color: Theme.text_secondary
     property real size: 16
+    property bool tint: true     // false = 保留源图原色 (品牌图标用)
     width: size
     height: size
     sourceSize: Qt.size(Math.max(1, Math.ceil(size * Screen.devicePixelRatio)),
@@ -23,6 +24,6 @@ Image {
     layer.enabled: true
     layer.effect: MultiEffect {
         colorizationColor: root.color
-        colorization: 1.0
+        colorization: root.tint ? 1.0 : 0.0
     }
 }

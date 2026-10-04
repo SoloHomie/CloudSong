@@ -1,6 +1,5 @@
 import QtQuick
 import "../../components/business"
-import "../../components/controls"
 
 // ═══════════════════════════════════════════════════════════════
 //  ListenModePage — 听歌模式 (原版 FullscreenPlayer 页面化)

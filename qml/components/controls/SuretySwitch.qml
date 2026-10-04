@@ -1,6 +1,5 @@
 import QtQuick
 import "../../theme"
-import QtQuick.Controls
 
 //=============================================================================
 // MySwitch — GitHub Primer Dark 风格可缩放开关

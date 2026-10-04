@@ -39,7 +39,7 @@ Item {
 
     Column {
         anchors { left: rs.left; leftMargin: 14; right: rs.right; rightMargin: rs.ctrlReserve; verticalCenter: rs.verticalCenter }
-        spacing: 2
+        spacing: 3
         Text {
             width: parent.width
             elide: Text.ElideRight

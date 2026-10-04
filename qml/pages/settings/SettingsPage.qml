@@ -11,6 +11,7 @@ import "../../components/controls"
 //  2026-10-02 拆分: 原单文件 589 行按分类拆为 qml/pages/settings/
 //  七子页面, 行组件提取为同目录 SettingRow; 本页只剩页头+分类栏+
 //  子页容器。各子页独立 Flickable, 切换分类保留各自滚动位置与折叠状态
+//  2026-10-04 懒加载: 子页首访才实例化(Loader active), 之后常驻保留状态
 //  持久化待接 C++ ConfigService; 当前仅内存态
 // ═══════════════════════════════════════════════════════════════
 Item {
@@ -42,16 +43,66 @@ Item {
     }
 
     // ── 内容区: 七分类子页面 (qml/pages/settings/), 仅当前分类可见 ──
+    //  懒加载: active 随首访置真, item 常驻后不再卸载 → 首次切换时才实例化,
+    //  滚动位置与折叠状态保留; visible 单独控制显隐
     Item {
         id: contentHost
         anchors { top: catBar.bottom; topMargin: 18; left: parent.left; right: parent.right; bottom: parent.bottom }
 
-        ServiceSettings  { visible: root.catIdx === 0; anchors.fill: parent; onNavigate: function(name, params) { root.navigate(name, params) } }
-        GeneralSettings  { visible: root.catIdx === 1; anchors.fill: parent }
-        PlaybackSettings { visible: root.catIdx === 2; anchors.fill: parent }
-        DownloadSettings { visible: root.catIdx === 3; anchors.fill: parent }
-        DataSettings     { visible: root.catIdx === 4; anchors.fill: parent }
-        PluginSettings   { visible: root.catIdx === 5; anchors.fill: parent }
-        AboutSettings    { visible: root.catIdx === 6; anchors.fill: parent }
+        Loader {
+            anchors.fill: parent
+            visible: root.catIdx === 0
+            active: root.catIdx === 0 || item !== null
+            sourceComponent: serviceComp
+            onLoaded: root.wireNav(item)
+        }
+        Loader {
+            anchors.fill: parent
+            visible: root.catIdx === 1
+            active: root.catIdx === 1 || item !== null
+            sourceComponent: generalComp
+        }
+        Loader {
+            anchors.fill: parent
+            visible: root.catIdx === 2
+            active: root.catIdx === 2 || item !== null
+            sourceComponent: playbackComp
+        }
+        Loader {
+            anchors.fill: parent
+            visible: root.catIdx === 3
+            active: root.catIdx === 3 || item !== null
+            sourceComponent: downloadComp
+        }
+        Loader {
+            anchors.fill: parent
+            visible: root.catIdx === 4
+            active: root.catIdx === 4 || item !== null
+            sourceComponent: dataComp
+        }
+        Loader {
+            anchors.fill: parent
+            visible: root.catIdx === 5
+            active: root.catIdx === 5 || item !== null
+            sourceComponent: pluginComp
+        }
+        Loader {
+            anchors.fill: parent
+            visible: root.catIdx === 6
+            active: root.catIdx === 6 || item !== null
+            sourceComponent: aboutComp
+        }
     }
+
+    // 子页 navigate 接线 (参数无类型 → qmllint 不查成员, 与 PageSwitch pageLoaded(var) 同法)
+    function wireNav(it) { it.navigate.connect(function(name, params) { root.navigate(name, params) }) }
+
+    // ── 子页面组件源 (懒加载用) ──
+    Component { id: serviceComp;  ServiceSettings {} }
+    Component { id: generalComp;  GeneralSettings {} }
+    Component { id: playbackComp; PlaybackSettings {} }
+    Component { id: downloadComp; DownloadSettings {} }
+    Component { id: dataComp;     DataSettings {} }
+    Component { id: pluginComp;   PluginSettings {} }
+    Component { id: aboutComp;    AboutSettings {} }
 }

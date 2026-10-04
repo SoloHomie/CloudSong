@@ -1,5 +1,4 @@
 import QtQuick
-import "../../theme"
 import "../buttons"
 import "../controls"
 

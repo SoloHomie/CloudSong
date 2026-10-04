@@ -4,7 +4,6 @@ import "theme"
 import "shell"
 import "dialogs"
 import "mock"
-import "components/controls"
 
 // 应用骨架: main.qml 只负责模块布局与跨模块接线 (各模块内容归各模块自己管理):
 //   标题栏 / 侧栏(条目自管) / 内容区(View 页面栈) / 播放条 / 队列抽屉 + 顶层弹窗

@@ -1,7 +1,6 @@
 import QtQuick
 import "../theme"
 import "../mock"
-import "../components/display"
 import "../components/business"
 import "../components/buttons"
 

@@ -1,7 +1,6 @@
 import QtQuick
 import "../../theme"
 import "../../components/buttons"
-import "../../components/controls"
 
 // ═══════════════════════════════════════════════════════════════
 //  RoamPanel — 云漫游面板 (设置页"服务"分类折叠卡内容)
@@ -16,7 +15,7 @@ Column {
     id: root
     anchors { left: parent.left; leftMargin: 14; right: parent.right; rightMargin: 14 }
     bottomPadding: 12
-    spacing: 16
+    spacing: 3
     signal navigate(string name, var params)
 
     // ── 状态 (mock; 待 C++ RoamService 替换) ──

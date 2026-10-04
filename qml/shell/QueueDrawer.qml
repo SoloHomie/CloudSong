@@ -1,6 +1,5 @@
 import QtQuick
 import "../theme"
-import "../mock"
 import "../components/display"
 
 // ═══════════════════════════════════════════════════════════════

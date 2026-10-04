@@ -13,7 +13,7 @@ Column {
     id: root
     anchors { left: parent.left; leftMargin: 14; right: parent.right; rightMargin: 14 }
     bottomPadding: 12
-    spacing: 14
+    spacing: 3
     signal navigate(string name, var params)
 
     property int step: 0                 // 0选择来源 1识别预览 2完成迁移

@@ -3,7 +3,6 @@ import QtQuick.Effects
 import "../theme"
 import "../components/buttons"
 import "../components/controls/search"
-import "../components/display"
 
 /// ──────────────────────────────────────────────────────────
 ///  自定义标题栏 (自 BallsHackPro 移植: 保留骨架+窗口控制

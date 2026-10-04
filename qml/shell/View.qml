@@ -1,5 +1,4 @@
 import QtQuick
-import "../theme"
 import "../pages"
 import "../pages/recommend"
 import "../pages/settings"
