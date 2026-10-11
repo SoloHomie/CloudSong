@@ -1,6 +1,13 @@
 <RCC>
     <qresource prefix="/qt/qml/cloudsong">
         <file>qml/main.qml</file>
+        <!-- M1 首页墙 (推倒重写 demo, 2026-10-12): 新模块 qml/wall/ -->
+        <file>qml/wall/qmldir</file>
+        <file>qml/wall/WallTheme.qml</file>
+        <file>qml/wall/DemoData.qml</file>
+        <file>qml/wall/WallTile.qml</file>
+        <file>qml/wall/WallHome.qml</file>
+        <file>qml/wall/noise.png</file>
         <file>qml/theme/Theme.qml</file>
         <file>qml/theme/qmldir</file>
         <file>qml/components/controls/SuretyTextField.qml</file>

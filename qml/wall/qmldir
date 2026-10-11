@@ -1,0 +1,4 @@
+singleton WallTheme 1.0 WallTheme.qml
+singleton DemoData 1.0 DemoData.qml
+WallHome 1.0 WallHome.qml
+WallTile 1.0 WallTile.qml
