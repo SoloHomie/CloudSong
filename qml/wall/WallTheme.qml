@@ -14,9 +14,8 @@ QtObject {
     readonly property color accent: "#f4f4f5"
 
     // ---- 缝 ----
-    // paper = mix(bg 90%, text) ≈ #212122; 常驻半透 (36% 透出墙面), 无模糊
+    // paper = mix(bg 90%, text) ≈ #212122; 实色纸条 (对标: 实色档缝 = 主题纸色; 墙两半为缝让位, 不再半透压磁贴)
     readonly property color seamPaper: "#212122"
-    readonly property real seamAlpha: 0.64
     readonly property color hairline: Qt.rgba(1, 1, 1, 0.12)
     readonly property color seamRing: Qt.rgba(1, 1, 1, 0.06)
 
