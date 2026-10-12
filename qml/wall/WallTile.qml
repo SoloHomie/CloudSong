@@ -89,27 +89,27 @@ Item {
         }
     ]
 
-    // ---- 让位补间 (事件驱动; 420ms OutCubic: 起步快、尾段缓, 无过冲 — 参照弹簧的慢起头实测偏拖沓) ----
+    // ---- 让位补间 (事件驱动; 300ms OutCubic: 起步快、尾段缓, 无过冲 — 参照弹簧的慢起头实测偏拖沓) ----
     ParallelAnimation {
         id: gearAnim
         NumberAnimation {
             id: gearX
-            target: tile; property: "x"; duration: 420
+            target: tile; property: "x"; duration: 300
             easing.type: Easing.OutCubic
         }
         NumberAnimation {
             id: gearY
-            target: tile; property: "y"; duration: 420
+            target: tile; property: "y"; duration: 300
             easing.type: Easing.OutCubic
         }
         NumberAnimation {
             id: gearW
-            target: tile; property: "width"; duration: 420
+            target: tile; property: "width"; duration: 300
             easing.type: Easing.OutCubic
         }
         NumberAnimation {
             id: gearH
-            target: tile; property: "height"; duration: 420
+            target: tile; property: "height"; duration: 300
             easing.type: Easing.OutCubic
         }
     }
@@ -283,15 +283,15 @@ Item {
             }
             SequentialAnimation {
                 running: true
-                PauseAnimation { duration: 100 }
+                PauseAnimation { duration: 70 }
                 ParallelAnimation {
                     NumberAnimation {
                         target: fcOverlay; property: "opacity"
-                        from: 0; to: 1; duration: 200; easing.type: Easing.InOutQuad
+                        from: 0; to: 1; duration: 140; easing.type: Easing.InOutQuad
                     }
                     NumberAnimation {
                         target: fcRise; property: "y"
-                        from: 12; to: 0; duration: 200; easing.type: Easing.InOutQuad
+                        from: 12; to: 0; duration: 140; easing.type: Easing.InOutQuad
                     }
                 }
             }

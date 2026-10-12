@@ -626,11 +626,11 @@ Item {
 
     Shortcut { sequence: "Escape"; onActivated: wall.unfocus() }
 
-    // 相机补间 (聚焦揭示; 320ms OutQuint — 提速: 相机先到位, 让位 420ms 收尾)
+    // 相机补间 (聚焦揭示; 230ms OutQuint — 提速: 相机先到位, 让位 300ms 收尾)
     ParallelAnimation {
         id: camAnim
-        NumberAnimation { id: camXTo; target: wall; property: "camX"; duration: 320; easing.type: Easing.OutQuint }
-        NumberAnimation { id: camYTo; target: wall; property: "camY"; duration: 320; easing.type: Easing.OutQuint }
+        NumberAnimation { id: camXTo; target: wall; property: "camX"; duration: 230; easing.type: Easing.OutQuint }
+        NumberAnimation { id: camYTo; target: wall; property: "camY"; duration: 230; easing.type: Easing.OutQuint }
     }
 
     // ---- 相机交互: 滚轮 + 指针拖动 (X/Y 限位 = 墙面覆盖视口, 缝可滑出屏收成标签) ----
