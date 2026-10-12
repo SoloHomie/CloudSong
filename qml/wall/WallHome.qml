@@ -695,11 +695,10 @@ Item {
             var now = Date.now()
             var dt = now - pan.moveAt
             if (pan.moveAt > 0 && dt > 0 && dt < 100) {
-                // 瞬时速度走时间常数 EMA (τ=72ms ⇔ 原型帧循环 0.8/0.2@60fps 同手感): 抹平事件处理
-                // 时刻抖动 (GC/动画会让 Date.now 的 dt 失准) — 松手滑距各方向才一致
-                var a = 1 - Math.exp(-dt / 72)
-                pan.velX = pan.velX * (1 - a) + (dx / dt * 1000) * a
-                pan.velY = pan.velY * (1 - a) + (dy / dt * 1000) * a
+                // 松手滑行以指针最后一段的瞬时速度为起点, 之后只递减 (2026-10-12 用户定案:
+                // 不做平滑/不加爬升 — 滑行起步速度必须等于手的速度, 否则滑行与手脱节)
+                pan.velX = dx / dt * 1000
+                pan.velY = dy / dt * 1000
             } else {
                 pan.velX = 0
                 pan.velY = 0
