@@ -694,14 +694,15 @@ Item {
         }
     }
 
-    // 松手滑行 (参考参数: 速度阈 40px/s, 上限 4000, 距最后一段超过 80ms 算停住不滑; 距离 ≈ 速度 × 0.09s)
+    // 松手滑行 (参考参数: 速度阈 40px/s, 上限 4000, 距最后一段超过 80ms 算停住不滑;
+    // 距离 = 速度 × power 0.3, 指数衰减 τ=280ms — OutExpo 时长 = 280 × 6.931 ≈ 1940ms)
     function glideAfter(vx, vy, xOnly, moveAt) {
         if (Date.now() - moveAt > 80)
             return
         var speed = Math.sqrt(vx * vx + vy * vy)
         if (speed < 40)
             return
-        var dist = Math.min(speed, 4000) * 0.09
+        var dist = Math.min(speed, 4000) * 0.3
         var gx = vx / speed * dist
         var gy = xOnly ? 0 : vy / speed * dist
         glideX.to = Math.max(wall.camMinXAt(wall.camScale), Math.min(wall.camMaxXAt(wall.camScale), wall.camX - gx / wall.camScale))
@@ -710,8 +711,8 @@ Item {
     }
     ParallelAnimation {
         id: glideAnim
-        NumberAnimation { id: glideX; target: wall; property: "camX"; duration: 800; easing.type: Easing.OutExpo }
-        NumberAnimation { id: glideY; target: wall; property: "camY"; duration: 800; easing.type: Easing.OutExpo }
+        NumberAnimation { id: glideX; target: wall; property: "camX"; duration: 1940; easing.type: Easing.OutExpo }
+        NumberAnimation { id: glideY; target: wall; property: "camY"; duration: 1940; easing.type: Easing.OutExpo }
     }
 
     // ---- 页签切换: 缝条不翻 (选中态由 tabBtn 的 Behavior 丝滑渐变), 墙面发翻牌波次 ----
