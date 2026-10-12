@@ -164,24 +164,20 @@ QtObject {
         return out
     }
 
-    // ---- 建场 ----
-    // 20 块 (bx -2..1 × by -2..2) × 每块 12 槽铺满视口 ± 相机平移/缩放余量; 初始页签 = 歌单
-    function buildScene() {
+    // ---- 建块 ----
+    // 单块 12 槽 (任意块坐标 — 无限墙的滑动窗口按需对任意块取数据); 序号 gi 沿用原建场口径
+    // ((row+2)*4+(col+2)) * 12 + s, 原点块 (-2,-2) → 0 — 首屏与旧 20 块场逐张一致; 内容 gi mod 库表
+    function blockSlots(blockCol, blockRow) {
+        var slots = orientedTemplates[blockOrientation(blockCol, blockRow)]
         var out = []
-        for (var by = -2; by <= 2; ++by) {
-            for (var bx = -2; bx <= 1; ++bx) {
-                var slots = orientedTemplates[blockOrientation(bx, by)]
-                var blockId = (by + 2) * 4 + (bx + 2)
-                for (var s = 0; s < slots.length; ++s) {
-                    var wr = worldRect(bx, by, slots[s])
-                    var gi = blockId * 12 + s
-                    out.push({ x: wr.x, y: wr.y, w: wr.w, h: wr.h,
-                               col: bx, row: by, slot: s,
-                               key: bx + "," + by + "," + s,
-                               gi: gi,
-                               item: itemFor("playlist", gi) })
-                }
-            }
+        for (var s = 0; s < slots.length; ++s) {
+            var wr = worldRect(blockCol, blockRow, slots[s])
+            var gi = ((blockRow + 2) * 4 + (blockCol + 2)) * 12 + s
+            out.push({ x: wr.x, y: wr.y, w: wr.w, h: wr.h,
+                       col: blockCol, row: blockRow, slot: s,
+                       key: blockCol + "," + blockRow + "," + s,
+                       gi: gi,
+                       item: itemFor("playlist", gi) })
         }
         return out
     }

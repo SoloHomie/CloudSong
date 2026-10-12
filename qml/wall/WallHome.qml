@@ -5,12 +5,15 @@ import "."
 pragma ComponentBehavior: Bound
 
 // M1 首页墙 (对标参照产品首页的"海报墙 + 中央缝"形态, 全部自绘)
-//   世界 = 20 块 × 每块 12×8 格自铺场, 按缝锚点分左右两半; 相机 = 视口中心世界坐标 (camX/camY) + 档位缩放 camScale
+//   世界 = 无限: 任意块坐标都能起建 (DemoData.blockSlots), 相机无任何限位 (对标: 无限层的相机无范围);
+//   磁贴走"滑动窗口"回收 — 每侧 3×3 块池, 窗口随粗档相机平移, 离场块的磁贴重定位给新进场块,
+//   交换一律发生在屏外 (窗口余量 340 世界px > 裁剪余量 100 屏幕px + 缝让位 ≤63px, 各档位均验过)
+//   世界按缝锚点分左右两半; 相机 = 视口中心世界坐标 (camX/camY) + 档位缩放 camScale
 //   缝 = 块边界上的 120px 窄缝: 墙两半各让开半个开口 + 半格, 纸条落在开口里不压磁贴 (对标 seamPlan 的 split)
 //   缝随墙走: 滑近屏幕边时连续收窄(墙两半跟着合拢), 收拢后边缘标签(纸色曲库条)从屏边滑入常驻;
-//   点标签 = 相机把缝拉回该侧边内 154px 处, 缝重新展开 — 相机 X 限位只管墙面铺满视口, 不再锁缝
+//   点标签 = 相机把缝拉回该侧边内 154px 处, 缝重新展开
 //   点击磁贴 = 就地聚焦展开 (这张变 6×6 大卡, 同块其余 11 张按让位表换小档重铺, 块外一律不动) +
-//   相机把大卡拖到窗口正中 (墙面覆盖限位内, 缝让位量已补偿); 同卡再点无反应, 点空白/Esc 收起 (相机不回位)
+//   相机把大卡拖到窗口正中 (缝让位量已补偿; 无限墙无界, 不必限位); 同卡再点无反应, 点空白/Esc 收起 (相机不回位)
 //   切页签 = 屏内磁贴翻牌波次 (屏外免动画直接换面; 缝条/选项不翻: 选中态 180ms 丝滑渐变)
 //   指针拖动: 拖平铺页面 = XY 平移; 拖缝条(书架) = 只走 X (按下点判档; 1:1 跟手, 松手按参考参数滑行)
 //   动画全部事件驱动 (无常驻动画, 规避本项目 vsync 空转实锤)
@@ -130,9 +133,10 @@ Item {
     }
 
     // ---- 世界的一半 (相机一致, 各自再按 shift 让开缝的半个开口; shift 为屏幕像素) ----
+    // 池 = 预建 108 张磁贴 (左侧区 = 块列 ≤ -1, 右侧区 = 列 ≥ 0); 位置/内容全部由滑动窗口落位,
+    // 声明期一律不绑定坐标 (回收重定位要写 x/y/w/h)
     component WallHalf: Item {
         id: half
-        property var source: []
         property real shift: 0
         property int side: 0   // -1 = 缝左 / +1 = 缝右 (裁剪取让位偏移用)
         x: wall.width / 2 - wall.camX * wall.camScale + half.shift
@@ -141,26 +145,12 @@ Item {
         transformOrigin: Item.TopLeft
 
         Repeater {
-            model: half.source
+            model: wall.poolPerSide
             delegate: WallTile {
-                required property var modelData
-                gi: modelData.gi
-                item: modelData.item
-                slotKey: modelData.key
-                col: modelData.col
-                row: modelData.row
-                slotIdx: modelData.slot
                 titlePx: Math.max(22, Math.min(36, 0.02 * wall.width))
                 panning: wall.panning   // 拖动/滑行中抑制 hover 抬升 (每穿过一张卡就起一段动画 = 拖动卡顿源)
                 visible: wall.tileInPlay(this, half.side)   // 屏外不渲染
-                // 坐标不绑定 (让位补间要写 x/y/w/h): 建场落位后自注册
-                Component.onCompleted: {
-                    x = modelData.x
-                    y = modelData.y
-                    width = modelData.w
-                    height = modelData.h
-                    wall.registerTile(this)
-                }
+                Component.onCompleted: wall.registerTile(this, half.side)
                 onActivated: wall.focusTile(this)
             }
         }
@@ -174,62 +164,160 @@ Item {
     property real camX: DemoData.seamAnchorX   // 初始 = 缝锚点 (块列 0 左缘缝中线), 缝落视口正中
     property real camY: camHomeY
     property int activeTab: 0
-    property var tiles: []   // 场景磁贴实例 (Repeater 创建时自注册; 换页签波次用)
-    property var tileByKey: ({})   // "块x,块y,槽位" → 磁贴 (让位时按块找齐 12 张)
-    // 建场注册: 记静止矩形 (收起还原用) + 进槽位索引
-    function registerTile(t) {
-        t.restX = t.x
-        t.restY = t.y
-        t.restW = t.width
-        t.restH = t.height
-        wall.tileByKey[t.slotKey] = t
+    property var tiles: []   // 全部磁贴实例 (池成员; 换页签波次用)
+    property var tileByKey: ({})   // "块x,块y,槽位" → 磁贴 (让位时按块找齐 12 张; 窗口外的块无键)
+    property var freeL: []   // 空闲池 (左侧区; 建位即交池, 由 ensureWindow 领用)
+    property var freeR: []
+    function registerTile(t, side) {
         wall.tiles.push(t)
+        if (side < 0)
+            wall.freeL.push(t)
+        else
+            wall.freeR.push(t)
+        // 首屏落位: 各磁贴注册有先后 — callLater 自动去重合并, 池齐后自然一次分配到位
+        Qt.callLater(wall.ensureWindow)
     }
-    // 视口裁剪: 离屏 (留 400px 余量) 的磁贴直接不渲染 — 240 张全提交=每帧万级节点, 裁掉后各动画才跑得动
-    // 裁剪读"粗档相机" cullX/cullY (移动每满 128px 才更新): 直读 camX 时 240 张卡各自的 visible 绑定
+    // 视口裁剪: 离屏 (留 100px 屏幕余量) 的磁贴直接不渲染 — 全池 216 张全提交=每帧万级节点, 裁掉后各动画才跑得动
+    // 裁剪读"粗档相机" cullX/cullY (移动每满 128px 才更新): 直读 camX 时 216 张卡各自的 visible 绑定
     // 会按每个指针事件全量重算 (高回报率鼠标下就是拖动卡顿大头); 粗档化后拖动/滚轮/滑行/补间全走
-    // 同一"每 128px 一档", 边界滞后 ≤128px 被 400px 余量吃住 (视感为零)。seamShift 不粗档: 缝只在贴屏边
+    // 同一"每 128px 一档"。余量取 100px 的依据: 窗口按块粒度宽供 (余量 340 世界px), 即使算上缝让位
+    // (≤63px) 折算, 各档位下"判为在屏"的块都必然还在窗口里 (只多不少); seamShift 不粗档: 缝只在贴屏边
     // 那 ~74px 内才变化, 常态平移时它本来就是常量
     property real cullX: DemoData.seamAnchorX
     property real cullY: wall.camHomeY
-    onCamXChanged: { if (Math.abs(wall.camX - wall.cullX) >= 128) wall.cullX = wall.camX }
-    onCamYChanged: { if (Math.abs(wall.camY - wall.cullY) >= 128) wall.cullY = wall.camY }
+    onCamXChanged: {
+        // 粗档相机每走一档: 可见性重算 + 滑动窗口跟上 (窗口余量 340 ≫ 档距 128, 进场的块必先在屏外就位)
+        if (Math.abs(wall.camX - wall.cullX) >= 128) {
+            wall.cullX = wall.camX
+            wall.ensureWindow()
+        }
+    }
+    onCamYChanged: {
+        if (Math.abs(wall.camY - wall.cullY) >= 128) {
+            wall.cullY = wall.camY
+            wall.ensureWindow()
+        }
+    }
     function tileInPlay(t, side) {
         var s = wall.camScale
         var l = wall.width / 2 - wall.cullX * s + side * wall.seamShift + t.x * s
         var tp = wall.height / 2 - wall.cullY * s + t.y * s
-        return l + t.width * s > -400 && l < wall.width + 400
-                && tp + t.height * s > -400 && tp < wall.height + 400
+        return l + t.width * s > -100 && l < wall.width + 100
+                && tp + t.height * s > -100 && tp < wall.height + 100
     }
 
-    // 相机 X/Y 限位 = 墙面覆盖视口 (块场 bx -2..1 × by -2..2, 同 buildScene): 缝允许滑到屏外, 贴边收窄成屏边标签
-    // (写成函数: 限位随 camScale 变, 调用即取当前值 — 之前写成只读绑定时启动期吃"绑定环"误报)
+    // ---- 无限墙的滑动窗口 (每侧 3×3 块 = 9 块 × 12 槽 = 108 张池; 覆盖 视口 + 340 世界px 余量) ----
+    // 覆盖裕度按本机视口上限 (1707×1067 逻辑 = 2560×1600@150%) 验过: 0.76 档下 3×3 恰好容住
+    // 视口 + 余量 (横 ≤3 列 / 纵 ≤3 行); 若将来跑在更大的逻辑视口上, 把 winCols/winRows 调大即可 (池随动)
+    readonly property int winCols: 3
+    readonly property int winRows: 3
+    readonly property int poolPerSide: wall.winCols * wall.winRows * DemoData.blockCols
     readonly property real wallBlockW: DemoData.blockCols * DemoData.pitch
     readonly property real wallBlockH: DemoData.blockRows * DemoData.pitch
-    function camMinXAt(s) { return -2 * wall.wallBlockW + (wall.width / 2) / s }
-    function camMaxXAt(s) { return 2 * wall.wallBlockW - DemoData.gap - (wall.width / 2) / s }
-    // Y 限位与 X 同语义 (原 ±816 定值换成覆盖式: 聚焦居中要拖得动, 平移也不再撞隐形墙)
-    function camMinYAt(s) { return -2 * wall.wallBlockH + (wall.height / 2) / s }
-    function camMaxYAt(s) { return 3 * wall.wallBlockH - DemoData.gap - (wall.height / 2) / s }
-    function clampCamX() {
-        var lo = wall.camMinXAt(wall.camScale)
-        var hi = wall.camMaxXAt(wall.camScale)
-        wall.camX = lo > hi ? DemoData.seamAnchorX : Math.max(lo, Math.min(hi, wall.camX))
+    property int winLCol: 0   // 左侧窗口原点 (块列; 左侧区 = 列 ≤ -1)
+    property int winLRow: 0
+    property int winRCol: 0   // 右侧窗口原点 (块列; 右侧区 = 列 ≥ 0)
+    property int winRRow: 0
+    property bool winReadyL: false
+    property bool winReadyR: false
+
+    // 按粗档相机把两侧窗口滑到覆盖 视口+余量 (块粒度; 只动进出窗口的块, 交换全在屏外)
+    function ensureWindow() {
+        var s = wall.camScale
+        var hw = (wall.width / 2) / s + 340
+        var hh = (wall.height / 2) / s + 340
+        var c0 = Math.floor((wall.cullX - hw) / wall.wallBlockW)
+        var c1 = Math.floor((wall.cullX + hw) / wall.wallBlockW)
+        var r0 = Math.floor((wall.cullY - hh) / wall.wallBlockH)
+        var r1 = Math.floor((wall.cullY + hh) / wall.wallBlockH)
+        var wr = Math.min(r0, r1 - (wall.winRows - 1))
+        wall.slideSide(-1, c0, Math.min(c1, -1), wr)   // 左侧: 块列 ≤ -1
+        wall.slideSide(1, Math.max(c0, 0), c1, wr)     // 右侧: 块列 ≥ 0 (两侧以缝锚点切分, 让位偏移不同)
     }
-    // 限位写回统一推迟到通知潮之后 (同步写 camX 会在 width→tier 级联里吃"绑定环"误报 — 实测)
-    onWidthChanged: Qt.callLater(wall.clampCamX)
+    function slideSide(side, a, b, wr) {
+        if (a > b)
+            return   // 该侧不在取景内: 窗口原地停驻 (其磁贴全在屏外, 不动最省)
+        var wc = Math.min(a, b - (wall.winCols - 1))   // 3 列窗口必然覆盖 [a..b] (区间宽 ≤ 3, 见覆盖裕度注释)
+        if (side > 0)
+            wc = Math.max(0, wc)   // 右侧窗口不得越过缝锚点
+        var ready = side < 0 ? wall.winReadyL : wall.winReadyR
+        var curCol = side < 0 ? wall.winLCol : wall.winRCol
+        var curRow = side < 0 ? wall.winLRow : wall.winRRow
+        if (ready && curCol === wc && curRow === wr)
+            return
+        var free = side < 0 ? wall.freeL : wall.freeR
+        var W = wall.winCols
+        var H = wall.winRows
+        if (ready) {
+            // 先释放离场块 (全在屏外) 再领取进场块 — 两窗口容量恒定, 空池数必然正好够
+            for (var c = curCol; c < curCol + W; ++c) {
+                for (var r = curRow; r < curRow + H; ++r) {
+                    if (c >= wc && c < wc + W && r >= wr && r < wr + H)
+                        continue
+                    wall.releaseBlock(c, r, free)
+                }
+            }
+            for (var c2 = wc; c2 < wc + W; ++c2) {
+                for (var r2 = wr; r2 < wr + H; ++r2) {
+                    if (c2 >= curCol && c2 < curCol + W && r2 >= curRow && r2 < curRow + H)
+                        continue
+                    wall.assignBlock(c2, r2, free)
+                }
+            }
+        } else {
+            if (free.length < W * H * DemoData.blockCols)
+                return   // 池还没建齐 (启动序): 等注册期的 callLater 再来
+            for (var c3 = wc; c3 < wc + W; ++c3)
+                for (var r3 = wr; r3 < wr + H; ++r3)
+                    wall.assignBlock(c3, r3, free)
+            if (side < 0)
+                wall.winReadyL = true
+            else
+                wall.winReadyR = true
+        }
+        if (side < 0) {
+            wall.winLCol = wc
+            wall.winLRow = wr
+        } else {
+            wall.winRCol = wc
+            wall.winRRow = wr
+        }
+    }
+    function releaseBlock(c, r, free) {
+        for (var s = 0; s < DemoData.blockCols; ++s) {
+            var key = c + "," + r + "," + s
+            var t = wall.tileByKey[key]
+            if (t === undefined)
+                continue
+            if (wall.focusedTile === t)
+                wall.unfocus()   // 聚焦块滑出窗口: 先收起再回收 (发生在屏外, 不可见)
+            delete wall.tileByKey[key]
+            free.push(t)
+        }
+    }
+    function assignBlock(c, r, free) {
+        var slots = DemoData.blockSlots(c, r)
+        for (var s = 0; s < slots.length; ++s) {
+            var t = free.pop()
+            if (t === undefined)
+                return   // 防御: 池配齐后不应发生 (两窗口容量恒定, 释放在前)
+            t.expanded = false
+            t.relocate(slots[s])
+            if (wall.activeTab !== 0)   // 不在初始页签: 新进场块直接上当期内容 (屏外, 免翻牌)
+                t.face = DemoData.itemFor(DemoData.tabKey(wall.activeTab), slots[s].gi)
+            wall.tileByKey[slots[s].key] = t
+        }
+    }
+    // 视口宽高/档位变了 → 需要覆盖的范围也变; 推迟到通知潮之后 (同步写吃"绑定环"误报 — 实测)
+    onWidthChanged: Qt.callLater(wall.ensureWindow)
+    onHeightChanged: Qt.callLater(wall.ensureWindow)
+    onCamScaleChanged: wall.ensureWindow()
 
-    readonly property var scene: DemoData.buildScene()
-    // 缝锚点左边的 slot 进左半, 右边进右半 (无 slot 跨过锚点 — 模板只在块内铺)
-    readonly property var sceneLeft: wall.scene.filter(function (s) { return s.x < DemoData.seamAnchorX })
-    readonly property var sceneRight: wall.scene.filter(function (s) { return s.x >= DemoData.seamAnchorX })
-
-    onTierChanged: { scaleAnim.to = tier; scaleAnim.restart(); Qt.callLater(wall.clampCamX) }
+    onTierChanged: { scaleAnim.to = tier; scaleAnim.restart() }
     NumberAnimation {
         id: scaleAnim
         target: wall; property: "camScale"
         duration: 420; easing.type: Easing.OutQuint
-        onStopped: wall.clampCamX()
     }
 
     // ---- 缝的几何 (骑世界: 近屏边按 room×2 连续收窄, 收到 <2px 即"收起" → 边缘标签顶上) ----
@@ -269,9 +357,9 @@ Item {
         onClicked: wall.unfocus()
     }
 
-    // ---- 世界两半 (磁贴场; 缝让位就是这两层各自偏移 ±seamShift) ----
-    WallHalf { source: wall.sceneLeft; shift: -wall.seamShift; side: -1 }
-    WallHalf { source: wall.sceneRight; shift: wall.seamShift; side: 1 }
+    // ---- 世界两半 (磁贴池; 缝让位就是这两层各自偏移 ±seamShift) ----
+    WallHalf { shift: -wall.seamShift; side: -1 }
+    WallHalf { shift: wall.seamShift; side: 1 }
 
     // ---- 背景第 3 层: 噪点 (自绘 160px 灰度图平铺, 近似 soft-light 颗粒) ----
     Image {
@@ -470,7 +558,7 @@ Item {
         var side = wall.seamSide
         var target = side === "left" ? wall.seamReopenPad : wall.width - wall.seamReopenPad
         var nx = wall.camX - (target - wall.seamCenterX) / wall.camScale
-        camXTo.to = Math.max(wall.camMinXAt(wall.camScale), Math.min(wall.camMaxXAt(wall.camScale), nx))
+        camXTo.to = nx
         camYTo.to = wall.camY
         camAnim.restart()
     }
@@ -580,7 +668,7 @@ Item {
         }
     }
 
-    // 聚焦相机 = 把展开卡 (世界矩形) 拖到窗口正中 (用户定语义); 只能拖到墙面覆盖限位为止
+    // 聚焦相机 = 把展开卡 (世界矩形) 拖到窗口正中 (用户定语义; 无限墙无界, 不必限位)
     function focusCamX(r) {
         var s = wall.camScale
         var side = (r.x + r.w / 2) < DemoData.seamAnchorX ? -1 : 1
@@ -593,11 +681,10 @@ Item {
             var shift = sw / 2 + (DemoData.gap / 2) * s * Math.min(1, sw / 16)
             nx = cx + side * shift / s
         }
-        return Math.max(wall.camMinXAt(s), Math.min(wall.camMaxXAt(s), nx))
+        return nx
     }
     function focusCamY(r) {
-        var s = wall.camScale
-        return Math.max(wall.camMinYAt(s), Math.min(wall.camMaxYAt(s), r.y + r.h / 2))
+        return r.y + r.h / 2
     }
 
     function focusTile(t) {
@@ -642,11 +729,11 @@ Item {
         NumberAnimation { id: camYTo; target: wall; property: "camY"; duration: 230; easing.type: Easing.OutQuint }
     }
 
-    // ---- 相机交互: 滚轮 + 指针拖动 (X/Y 限位 = 墙面覆盖视口, 缝可滑出屏收成标签) ----
+    // ---- 相机交互: 滚轮 + 指针拖动 (无界: 无限墙不设任何限位, 缝滑出屏后由边缘标签拉回) ----
     // 屏幕像素增量 → 相机 (除缩放); 拖缝条时 dy 传 0 = 只走 X
     function panBy(dx, dy) {
-        wall.camX = Math.max(wall.camMinXAt(wall.camScale), Math.min(wall.camMaxXAt(wall.camScale), wall.camX - dx / wall.camScale))
-        wall.camY = Math.max(wall.camMinYAt(wall.camScale), Math.min(wall.camMaxYAt(wall.camScale), wall.camY - dy / wall.camScale))
+        wall.camX -= dx / wall.camScale
+        wall.camY -= dy / wall.camScale
     }
 
     // 墙是否在拖动/滑行 (磁贴据此抑制 hover 抬升 — 参照原型"拖动中不触发", 防动画风暴)
@@ -733,13 +820,7 @@ Item {
         var decay = Math.exp(-dt / 500)
         wall.glideVx *= decay
         wall.glideVy *= decay
-        var x0 = wall.camX
-        var y0 = wall.camY
         wall.panBy(wall.glideVx * dt / 1000, wall.glideVy * dt / 1000)
-        if (wall.camX === x0)   // 被限位钳住 → 该轴惯性清零
-            wall.glideVx = 0
-        if (wall.camY === y0)
-            wall.glideVy = 0
         if (Math.sqrt(wall.glideVx * wall.glideVx + wall.glideVy * wall.glideVy) < 20)
             wall.stopGlide()   // 滑到 20px/s 以下落定
     }
@@ -758,7 +839,7 @@ Item {
     }
 
     // ---- 页签切换: 缝条不翻 (选中态由 tabBtn 的 Behavior 丝滑渐变), 墙面发翻牌波次 ----
-    // 只翻在屏的 (屏外直接换面, 不付 240 套动画的钱 — 卡顿大头)
+    // 只翻在屏的 (屏外直接换面, 不付 216 套动画的钱 — 卡顿大头)
     function switchTab(i) {
         if (i === wall.activeTab)
             return
@@ -772,7 +853,9 @@ Item {
                 t.flipNow(d)
                 continue
             }
-            var delay = (t.x + 3264) / 6528 * 160   // 左→右波次, 总扫过约 160ms
+            // 波次按磁贴在屏上的横位 (块坐标无界, 旧的左端常数已无意义): 左→右扫约 160ms
+            var sx = wall.width / 2 + (t.x - wall.camX) * wall.camScale
+            var delay = Math.max(0, Math.min(160, sx / wall.width * 160))
             t.flipTo(d, delay)
         }
     }

@@ -61,6 +61,30 @@ Item {
         gearAnim.restart()
     }
 
+    // 无限墙的窗口回收: 直接落位到新槽位 (调用点必在屏外; 中断一切过渡, 免动画)
+    function relocate(s) {
+        gearAnim.stop()
+        flipTimer.stop()
+        flipSeq.stop()
+        flipAngle = 0
+        col = s.col
+        row = s.row
+        slotIdx = s.slot
+        slotKey = s.key
+        gi = s.gi
+        restX = s.x
+        restY = s.y
+        restW = s.w
+        restH = s.h
+        x = s.x
+        y = s.y
+        width = s.w
+        height = s.h
+        item = s.item
+        face = s.item
+        pendingItem = null
+    }
+
     onExpandedChanged: {
         if (expanded) {
             hoverAnim.to = 0   // 大卡不带 hover 抬升
