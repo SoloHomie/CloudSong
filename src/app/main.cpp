@@ -181,6 +181,23 @@ int main(int argc, char *argv[])
         taskbarBar->setEnabled(AppConfig::instance()->taskbarPlayEnabled());
     });
     engine.rootContext()->setContextProperty("TaskbarBar", taskbarBar);
+    // ── 原生标题栏条带高 (逻辑px), 供 QML 悬浮顶栏对齐 (2026-10-12 用户: 顶部是 DWM 挤上去的原生
+    // 标题栏, 悬停区/拦截区要按它的原高算) — 组成 = SM_CYCAPTION + SM_CXPADDEDBORDER + SM_CXSIZEFRAME
+    // (实锤: Win11 150% 下 34+6+5=45 物理px, 与 WM_NCCALCSIZE 实测挤出量一致); 折算回 QML 逻辑
+    // 坐标后与 DPI 基本无关; 须在 engine.load 前设 (context 属性无 NOTIFY)
+    {
+        UINT sysDpi = 96;
+        static UINT (WINAPI *pfnGetDpiForSystem)() = nullptr;
+        if (!pfnGetDpiForSystem)
+            pfnGetDpiForSystem = reinterpret_cast<UINT (WINAPI *)()>(
+                GetProcAddress(GetModuleHandleW(L"user32.dll"), "GetDpiForSystem"));
+        if (pfnGetDpiForSystem)
+            sysDpi = pfnGetDpiForSystem();
+        const double nativeCaptionH = (GetSystemMetrics(SM_CYCAPTION)
+                                       + GetSystemMetrics(SM_CXPADDEDBORDER)
+                                       + GetSystemMetrics(SM_CXSIZEFRAME)) * 96.0 / sysDpi;
+        engine.rootContext()->setContextProperty(QStringLiteral("NativeCaptionH"), nativeCaptionH);
+    }
     engine.load(QUrl(QStringLiteral("qrc:/qt/qml/cloudsong/qml/main.qml")));
     engine.load(QUrl(QStringLiteral("qrc:/qt/qml/cloudsong/qml/shell/TaskbarBar.qml")));
     if (engine.rootObjects().isEmpty())

@@ -3,10 +3,13 @@ import QtQuick.Window
 import QtQuick.Effects
 import "../wall"
 
-// 悬浮标题栏 (M1 外壳): 平时隐形, 悬停窗口顶部 12px 滑出; 指针留在条内 (44px) 保持, 离开即收
+// 悬浮标题栏 (M1 外壳): 平时隐形, 悬停"原生标题栏条带"(NativeCaptionH, DWM 挤上后原高度)滑出;
+// 指针留在条内 (44px) 保持, 离开即收
 // 左 = 品牌字标; 右 = 自绘窗控 (最小化 / 最大化-还原 / 关闭; 深色专用图标, 不引旧 Theme)
 // 条内空白可拖窗 (startSystemMove), 双击最大化/还原
-// 隐藏态内容层 enabled:false — 点击穿透给墙, 不挡拖墙 (悬停判定挂根 Item, 不受此影响)
+// 标题栏区域 = 原生条带高 NativeCaptionH (2026-10-12 用户: "hovertitlebar 的区域就显示 titlebar;
+// 原生标题栏是通过 DWM 挤上去的, 要考虑它的高"): 悬停该条带即滑出; 隐藏态该条带 = 输入屏障 —
+// 鼠标全权接住不落墙上 (用户: "titlebar 不要鼠标穿透"), 按下即拖窗/双击最大化, 悬停也不给磁贴
 // (齿轮 / 搜索位留到 M2/M3 有页面可开再挂; 旧 shell TitleBar 已停用, 此为按新主题新写)
 Item {
     id: root
@@ -14,6 +17,11 @@ Item {
     property Window appWindow: null
     property bool revealed: false
     property Item backdrop: null   // 玻璃底板模糊源 (main.qml 传墙; null 时退化为纯着色)
+    // 原生标题栏条带高 (逻辑px; C++ 按系统 DPI 折算, 值恒定) — 悬停展开区 / 隐藏态输入屏障的准绳
+    // (context 属性 qmllint 解析不到, 恒定 unqualified 告警 — 本行豁免)
+    // qmllint disable unqualified
+    readonly property real captionH: NativeCaptionH
+    // qmllint enable unqualified
 
     signal settingsRequested()
 
@@ -21,14 +29,33 @@ Item {
     z: 1000
 
     // 悬停判定 (挂根 Item — 指针悬停窗控钮时 HoverHandler 依然 hovered, 不会被按钮 MouseArea 抢走):
-    //   进入顶部 12px → 展开; 指针离开整个条 (≤44px) → 收起; 条内移动不再收起
+    //   进入原生标题栏条带 (y ≤ captionH) → 展开; 指针离开整个条 (≤44px) → 收起; 条内移动不再收起
     // 用 point.position 的绑定 (HandlerPoint.position 带 NOTIFY, 官方推荐用法), 不依赖信号逐帧派发
     HoverHandler {
         id: hh
         onHoveredChanged: { if (!hh.hovered) root.revealed = false }
     }
-    readonly property bool nearTop: hh.hovered && hh.point.position.y <= 12
+    readonly property bool nearTop: hh.hovered && hh.point.position.y <= root.captionH
     onNearTopChanged: { if (root.nearTop) root.revealed = true }
+
+    // 隐藏态输入屏障: 原生标题栏条带 (高 captionH) 全权接住鼠标 —
+    // 按下即拖窗、双击最大化 (与展开态条内空白一致); hoverEnabled 连悬停也不给墙 (条带内磁贴不抬升)
+    MouseArea {
+        anchors { top: parent.top; left: parent.left; right: parent.right }
+        height: root.captionH
+        enabled: !root.revealed
+        acceptedButtons: Qt.LeftButton
+        hoverEnabled: true
+        onPressed: { if (root.appWindow) root.appWindow.startSystemMove() }
+        onDoubleClicked: {
+            if (!root.appWindow)
+                return
+            if (root.appWindow.visibility === Window.Maximized)
+                root.appWindow.showNormal()
+            else
+                root.appWindow.showMaximized()
+        }
+    }
 
     // 毛玻璃底板 (悬停滑出时与内容同步淡入): 抓墙顶条带 → MultiEffect 模糊 → 深色玻璃着色
     //   只在展开时 live (闲置/收起零开销); 走独立 MultiEffect 项 — 本机实锤浮层 layer.effect 会白板, 勿用
