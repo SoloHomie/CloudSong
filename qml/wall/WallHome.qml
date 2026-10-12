@@ -9,9 +9,10 @@ pragma ComponentBehavior: Bound
 //   磁贴走"滑动窗口"回收 — 每侧 3×3 块池, 窗口随粗档相机平移, 离场块的磁贴重定位给新进场块,
 //   交换一律发生在屏外 (窗口余量 340 世界px > 裁剪余量 100 屏幕px + 缝让位 ≤63px, 各档位均验过)
 //   世界按缝锚点分左右两半; 相机 = 视口中心世界坐标 (camX/camY) + 档位缩放 camScale
-//   缝 = 块边界上的 120px 窄缝: 墙两半各让开半个开口 + 半格, 纸条落在开口里不压磁贴 (对标 seamPlan 的 split)
-//   缝随墙走: 滑近屏幕边时连续收窄(墙两半跟着合拢), 收拢后边缘标签(纸色曲库条)从屏边滑入常驻;
-//   点标签 = 相机把缝拉回该侧边内 154px 处, 缝重新展开
+//   缝 = 块边界上的 120px 常宽缝: 墙两半各让开半个开口 + 半格 (让位量恒定), 纸条骑世界 1:1 随相机
+//   (2026-10-12 取消"贴屏边自动收窄": 参照 follow 耦合同样贴边收窄, 但收窄=让位量随相机位置变 —
+//    拖动过缝区时整墙非 1:1 (实测两半错速≈±2.4×/0.38×)、纸条与开口错位, 用户拍板取消, 改恒宽刚性);
+//   缝滑出屏不带收窄 — 边缘标签在缝中线离屏边 24px 内淡入常驻, 点它 = 相机把缝拉回该侧边内 154px
 //   点击磁贴 = 就地聚焦展开 (这张变 6×6 大卡, 同块其余 11 张按让位表换小档重铺, 块外一律不动) +
 //   相机把大卡拖到窗口正中 (缝让位量已补偿; 无限墙无界, 不必限位); 同卡再点无反应, 点空白/Esc 收起 (相机不回位)
 //   切页签 = 屏内磁贴翻牌波次 (屏外免动画直接换面; 缝条/选项不翻: 选中态 180ms 丝滑渐变)
@@ -181,8 +182,8 @@ Item {
     // 裁剪读"粗档相机" cullX/cullY (移动每满 128px 才更新): 直读 camX 时 216 张卡各自的 visible 绑定
     // 会按每个指针事件全量重算 (高回报率鼠标下就是拖动卡顿大头); 粗档化后拖动/滚轮/滑行/补间全走
     // 同一"每 128px 一档"。余量取 100px 的依据: 窗口按块粒度宽供 (余量 340 世界px), 即使算上缝让位
-    // (≤63px) 折算, 各档位下"判为在屏"的块都必然还在窗口里 (只多不少); seamShift 不粗档: 缝只在贴屏边
-    // 那 ~74px 内才变化, 常态平移时它本来就是常量
+    // (≤63px) 折算, 各档位下"判为在屏"的块都必然还在窗口里 (只多不少); seamShift 现为常量
+    // (缝不再随位置收窄, 2026-10-12) — 可见性绑定只跟 cullX/cullY 走
     property real cullX: DemoData.seamAnchorX
     property real cullY: wall.camHomeY
     onCamXChanged: {
@@ -320,14 +321,13 @@ Item {
         duration: 420; easing.type: Easing.OutQuint
     }
 
-    // ---- 缝的几何 (骑世界: 近屏边按 room×2 连续收窄, 收到 <2px 即"收起" → 边缘标签顶上) ----
-    readonly property real seamLayoutW: DemoData.seamHomeWidth                  // 内容排版宽 (开合不重排)
+    // ---- 缝的几何 (骑世界, 常宽: 开口不随相机位置变化 — 整墙与相机严格 1:1, 拖动无任何非线性) ----
+    readonly property real seamLayoutW: DemoData.seamHomeWidth                  // 内容排版宽 (常宽)
     readonly property real seamCenterX: wall.width / 2 + (DemoData.seamAnchorX - wall.camX) * wall.camScale
-    readonly property real seamW: Math.max(0, Math.min(seamLayoutW,
-                                     (Math.min(seamCenterX, wall.width - seamCenterX) - 14) * 2))
-    readonly property real seamShift: seamW / 2
-        + (DemoData.gap / 2) * wall.camScale * Math.min(1, seamW / 16)
-    // contentOpacity = (开口 / 排版宽 − .35) / .65 (对标公式): 开到三成五以下看不见
+    readonly property real seamDist: Math.min(seamCenterX, wall.width - seamCenterX)   // 缝中线→最近屏边
+    readonly property real seamW: seamLayoutW
+    readonly property real seamShift: seamLayoutW / 2 + (DemoData.gap / 2) * wall.camScale
+    // contentOpacity = (开口 / 排版宽 − .35) / .65 (对标公式; 开口恒 120 ⇒ 恒 1)
     readonly property real seamContentOpacity: Math.max(0, Math.min(1, (seamW / seamLayoutW - 0.35) / 0.65))
 
     // ---- 背景第 1 层: 底色 ----
@@ -389,7 +389,7 @@ Item {
         border.width: 1
     }
 
-    // ---- 缝 (块边界上的 120px 常驻窄缝; 位置随世界锚点, 墙两半已让位, 纸条落在开口里) ----
+    // ---- 缝 (块边界上的 120px 常驻窄缝, 常宽; 位置随世界锚点 1:1, 墙两半已让位, 纸条落在开口里, 滑出屏被窗口裁掉) ----
     Item {
         id: seam
         visible: wall.seamW >= 1
@@ -547,9 +547,9 @@ Item {
         }
     }
 
-    // ---- 边缘标签 (缝滑到屏外收拢后常驻屏边; 点它 = 相机把缝拉回该侧边内, 缝重新展开) ----
-    // 标签出现/滑入/淡入都跟 seamTabT 这一根连续量走 (缝宽 20→0 ⇒ 0→1), 与缝的收拢同一根动画
-    readonly property real seamTabT: Math.max(0, Math.min(1, (20 - wall.seamW) / 20))
+    // ---- 边缘标签 (缝滑近/滑出屏边时常驻屏边; 点它 = 相机把缝拉回该侧边内 154px 处) ----
+    // 标签出现/滑入/淡入跟 seamTabT 这一根连续量走 (缝中线离屏边 24px→14px ⇒ 0→1; 与旧收窄式同一时序, 只是不再动墙)
+    readonly property real seamTabT: Math.max(0, Math.min(1, (24 - wall.seamDist) / 10))
     readonly property string seamSide: wall.seamCenterX < wall.width / 2 ? "left" : "right"
     // 重新展开的落点: 缝中线停在该侧边内 154px (半开口 60 + 边距 14 + 富余 80)
     readonly property real seamReopenPad: DemoData.seamHomeWidth / 2 + 14 + 80
@@ -669,19 +669,11 @@ Item {
     }
 
     // 聚焦相机 = 把展开卡 (世界矩形) 拖到窗口正中 (用户定语义; 无限墙无界, 不必限位)
+    // 让位量现为常量 (缝不再随位置收窄): 半边偏移一步补偿即可
     function focusCamX(r) {
-        var s = wall.camScale
         var side = (r.x + r.w / 2) < DemoData.seamAnchorX ? -1 : 1
         var cx = r.x + r.w / 2
-        var nx = cx
-        // 磁贴在屏上还带所在半边的缝让位偏移; 让位量随缝宽变、缝宽又随落点变 — 两趟收敛 (开满/收起两常态下两趟即精确)
-        for (var pass = 0; pass < 2; ++pass) {
-            var scx = wall.width / 2 + (DemoData.seamAnchorX - nx) * s
-            var sw = Math.max(0, Math.min(DemoData.seamHomeWidth, (Math.min(scx, wall.width - scx) - 14) * 2))
-            var shift = sw / 2 + (DemoData.gap / 2) * s * Math.min(1, sw / 16)
-            nx = cx + side * shift / s
-        }
-        return nx
+        return cx + side * wall.seamShift / wall.camScale
     }
     function focusCamY(r) {
         return r.y + r.h / 2
@@ -780,15 +772,14 @@ Item {
             pan.lastTx = pan.translation.x
             pan.lastTy = pan.translation.y
             var now = Date.now()
-            var dt = now - pan.moveAt
-            if (pan.moveAt > 0 && dt > 0 && dt < 100) {
+            // dt 下限 1ms (参照原型同款 Math.max(1, ...)): 高回报率鼠标 (1000Hz+) 下同毫秒多事件是常态 —
+            // 旧 "dt>0 才记速, 否则清零" 会让这些事件把速度随机清零, 松手滑行忽滑忽停 (连续拖动速度突变)
+            var dt = Math.max(1, now - pan.moveAt)
+            if (pan.moveAt > 0) {
                 // 松手滑行以指针最后一段的瞬时速度为起点, 之后只递减 (2026-10-12 用户定案:
                 // 不做平滑/不加爬升 — 滑行起步速度必须等于手的速度, 否则滑行与手脱节)
                 pan.velX = dx / dt * 1000
                 pan.velY = dy / dt * 1000
-            } else {
-                pan.velX = 0
-                pan.velY = 0
             }
             pan.moveAt = now
             wall.panBy(dx, dy)
