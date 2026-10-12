@@ -8,8 +8,9 @@
         <file>qml/wall/WallTile.qml</file>
         <file>qml/wall/WallHome.qml</file>
         <file>qml/wall/noise.png</file>
-        <!-- M1 新外壳: 悬浮标题栏 (悬停顶部滑出; 下方 shell/* 为旧壳待删清单) -->
+        <!-- M1 新外壳: 悬浮标题栏 (悬停顶部滑出) + 设置弹窗; 下方 shell/* 为旧壳待删清单 -->
         <file>qml/shell/TopBar.qml</file>
+        <file>qml/shell/SettingsDialog.qml</file>
         <file>qml/theme/Theme.qml</file>
         <file>qml/theme/qmldir</file>
         <file>qml/components/controls/SuretyTextField.qml</file>

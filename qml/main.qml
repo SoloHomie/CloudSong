@@ -19,11 +19,18 @@ Window {
     color: "transparent"
 
     WallHome {
+        id: wall
         anchors.fill: parent
     }
 
     TopBar {
         anchors { top: parent.top; left: parent.left; right: parent.right }
         appWindow: win
+        backdrop: wall
+        onSettingsRequested: settingsDialog.open()
+    }
+
+    SettingsDialog {
+        id: settingsDialog
     }
 }

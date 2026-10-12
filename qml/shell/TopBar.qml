@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Window
+import QtQuick.Effects
 import "../wall"
 
 // 悬浮标题栏 (M1 外壳): 平时隐形, 悬停窗口顶部 12px 滑出; 指针留在条内 (44px) 保持, 离开即收
@@ -12,6 +13,10 @@ Item {
 
     property Window appWindow: null
     property bool revealed: false
+    property Item backdrop: null   // 玻璃底板模糊源 (main.qml 传墙; null 时退化为纯着色)
+
+    signal settingsRequested()
+
     height: 44
     z: 1000
 
@@ -24,6 +29,40 @@ Item {
     }
     readonly property bool nearTop: hh.hovered && hh.point.position.y <= 12
     onNearTopChanged: { if (root.nearTop) root.revealed = true }
+
+    // 毛玻璃底板 (悬停滑出时与内容同步淡入): 抓墙顶条带 → MultiEffect 模糊 → 深色玻璃着色
+    //   只在展开时 live (闲置/收起零开销); 走独立 MultiEffect 项 — 本机实锤浮层 layer.effect 会白板, 勿用
+    Item {
+        id: glass
+        anchors.fill: parent
+        opacity: root.revealed ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+
+        ShaderEffectSource {
+            id: barGrab
+            sourceItem: root.backdrop
+            live: root.revealed
+            sourceRect: Qt.rect(0, 0, root.width, root.height)
+            visible: false
+        }
+        MultiEffect {
+            anchors.fill: parent
+            source: barGrab
+            blurEnabled: true
+            blur: 0.9
+            blurMax: 28
+        }
+        // 深色玻璃着色 (+底缘发丝线)
+        Rectangle {
+            anchors.fill: parent
+            color: Qt.rgba(9 / 255, 9 / 255, 11 / 255, 0.52)
+            Rectangle {
+                anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+                height: 1
+                color: WallTheme.hairline
+            }
+        }
+    }
 
     // 内容层: 隐藏时禁用输入 + 透明; 展开 = 一次性 160ms 淡入 (非连续动画)
     Item {
@@ -49,6 +88,7 @@ Item {
         }
 
         Text {
+            id: brandText
             anchors.left: parent.left
             anchors.leftMargin: 18
             anchors.verticalCenter: parent.verticalCenter
@@ -59,6 +99,34 @@ Item {
             font.weight: 800
             font.letterSpacing: 0.6
             opacity: 0.92
+        }
+
+        // 设置入口 (齿轮; 措辞同窗控: 0.6→1.0 hover) — 打开设置弹窗 (SettingsDialog)
+        Rectangle {
+            id: btnGear
+            width: 32; height: 32
+            radius: 8
+            anchors.left: brandText.right
+            anchors.leftMargin: 8
+            anchors.verticalCenter: parent.verticalCenter
+            color: gearArea.containsMouse ? Qt.rgba(1, 1, 1, 0.1) : "transparent"
+            Image {
+                anchors.centerIn: parent
+                source: "qrc:/qt/qml/cloudsong/qml/assets/icons/setting.svg"
+                sourceSize: Qt.size(128, 128)
+                fillMode: Image.PreserveAspectFit
+                smooth: true; antialiasing: true
+                width: 18; height: 18
+                opacity: gearArea.containsMouse ? 1.0 : 0.6
+                Behavior on opacity { NumberAnimation { duration: 150 } }
+            }
+            MouseArea {
+                id: gearArea
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.settingsRequested()
+            }
         }
 
         // ---- 窗控三钮 (44×44 热区; sourceSize 128 高清栅格降采样到 14 — 旧 WinBtn 现成模式) ----
