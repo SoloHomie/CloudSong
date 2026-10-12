@@ -151,6 +151,7 @@ Item {
                 row: modelData.row
                 slotIdx: modelData.slot
                 titlePx: Math.max(22, Math.min(36, 0.02 * wall.width))
+                panning: wall.panning   // 拖动/滑行中抑制 hover 抬升 (每穿过一张卡就起一段动画 = 拖动卡顿源)
                 visible: wall.tileInPlay(this, half.side)   // 屏外不渲染
                 // 坐标不绑定 (让位补间要写 x/y/w/h): 建场落位后自注册
                 Component.onCompleted: {
@@ -185,10 +186,18 @@ Item {
         wall.tiles.push(t)
     }
     // 视口裁剪: 离屏 (留 400px 余量) 的磁贴直接不渲染 — 240 张全提交=每帧万级节点, 裁掉后各动画才跑得动
+    // 裁剪读"粗档相机" cullX/cullY (移动每满 128px 才更新): 直读 camX 时 240 张卡各自的 visible 绑定
+    // 会按每个指针事件全量重算 (高回报率鼠标下就是拖动卡顿大头); 粗档化后拖动/滚轮/滑行/补间全走
+    // 同一"每 128px 一档", 边界滞后 ≤128px 被 400px 余量吃住 (视感为零)。seamShift 不粗档: 缝只在贴屏边
+    // 那 ~74px 内才变化, 常态平移时它本来就是常量
+    property real cullX: DemoData.seamAnchorX
+    property real cullY: wall.camHomeY
+    onCamXChanged: { if (Math.abs(wall.camX - wall.cullX) >= 128) wall.cullX = wall.camX }
+    onCamYChanged: { if (Math.abs(wall.camY - wall.cullY) >= 128) wall.cullY = wall.camY }
     function tileInPlay(t, side) {
         var s = wall.camScale
-        var l = wall.width / 2 - wall.camX * s + side * wall.seamShift + t.x * s
-        var tp = wall.height / 2 - wall.camY * s + t.y * s
+        var l = wall.width / 2 - wall.cullX * s + side * wall.seamShift + t.x * s
+        var tp = wall.height / 2 - wall.cullY * s + t.y * s
         return l + t.width * s > -400 && l < wall.width + 400
                 && tp + t.height * s > -400 && tp < wall.height + 400
     }
@@ -640,6 +649,9 @@ Item {
         wall.camY = Math.max(wall.camMinYAt(wall.camScale), Math.min(wall.camMaxYAt(wall.camScale), wall.camY - dy / wall.camScale))
     }
 
+    // 墙是否在拖动/滑行 (磁贴据此抑制 hover 抬升 — 参照原型"拖动中不触发", 防动画风暴)
+    readonly property bool panning: pan.active || glideTimer.running
+
     WheelHandler {
         onWheel: function(event) {
             camAnim.stop()
@@ -683,8 +695,11 @@ Item {
             var now = Date.now()
             var dt = now - pan.moveAt
             if (pan.moveAt > 0 && dt > 0 && dt < 100) {
-                pan.velX = dx / dt * 1000
-                pan.velY = dy / dt * 1000
+                // 瞬时速度走时间常数 EMA (τ=72ms ⇔ 原型帧循环 0.8/0.2@60fps 同手感): 抹平事件处理
+                // 时刻抖动 (GC/动画会让 Date.now 的 dt 失准) — 松手滑距各方向才一致
+                var a = 1 - Math.exp(-dt / 72)
+                pan.velX = pan.velX * (1 - a) + (dx / dt * 1000) * a
+                pan.velY = pan.velY * (1 - a) + (dy / dt * 1000) * a
             } else {
                 pan.velX = 0
                 pan.velY = 0

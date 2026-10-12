@@ -32,6 +32,7 @@ Item {
     property var pendingItem: null
     property real flipAngle: 0
     property real hoverT: 0
+    property bool panning: false     // 墙拖动/滑行中: 抑制 hover 抬升 (参照原型: 拖动中不触发)
 
     readonly property var grad: WallTheme.gradFor(face !== null ? face.hue : 0)
     readonly property real pop: 1 + (16 / Math.max(1, width)) * hoverT
@@ -230,7 +231,7 @@ Item {
         anchors.fill: parent
         hoverEnabled: true
         acceptedButtons: Qt.LeftButton
-        onEntered: { if (!tile.expanded) { hoverAnim.to = 1; hoverAnim.restart() } }
+        onEntered: { if (!tile.expanded && !tile.panning) { hoverAnim.to = 1; hoverAnim.restart() } }
         onExited: { hoverAnim.to = 0; hoverAnim.restart() }
         onClicked: tile.activated()   // 聚焦展开 / 再点收起 (进集合页排 M2)
     }
