@@ -457,7 +457,7 @@ Item {
     // 重新展开的落点: 缝中线停在该侧边内 154px (半开口 60 + 边距 14 + 富余 80)
     readonly property real seamReopenPad: DemoData.seamHomeWidth / 2 + 14 + 80
     function reopenSeam() {
-        glideAnim.stop()
+        wall.stopGlide()
         var side = wall.seamSide
         var target = side === "left" ? wall.seamReopenPad : wall.width - wall.seamReopenPad
         var nx = wall.camX - (target - wall.seamCenterX) / wall.camScale
@@ -606,7 +606,7 @@ Item {
         var rects = DemoData.blockReflowRects(t.col, t.row, t.slotIdx)
         var nx = wall.focusCamX(rects[t.slotIdx])
         var ny = wall.focusCamY(rects[t.slotIdx])
-        glideAnim.stop()
+        wall.stopGlide()
         if (Math.abs(nx - wall.camX) > 0.5 || Math.abs(ny - wall.camY) > 0.5) {
             camXTo.to = nx
             camYTo.to = ny
@@ -643,7 +643,7 @@ Item {
     WheelHandler {
         onWheel: function(event) {
             camAnim.stop()
-            glideAnim.stop()
+            wall.stopGlide()
             wall.panBy(event.angleDelta.x / 120 * 90, event.angleDelta.y / 120 * 90)
         }
     }
@@ -663,7 +663,7 @@ Item {
         onActiveChanged: {
             if (pan.active) {
                 camAnim.stop()
-                glideAnim.stop()
+                wall.stopGlide()
                 pan.xOnly = wall.seamW >= 1
                         && Math.abs(pan.centroid.pressPosition.x - wall.seamCenterX) <= wall.seamW / 2
                 pan.lastTx = 0
@@ -694,25 +694,53 @@ Item {
         }
     }
 
-    // 松手滑行 (参考参数: 速度阈 40px/s, 上限 4000, 距最后一段超过 80ms 算停住不滑;
-    // 距离 = 速度 × power 0.3, 指数衰减 τ=280ms — OutExpo 时长 = 280 × 6.931 ≈ 1940ms)
+    // 松手滑行 (参考参数: 速度阈 40px/s, 上限 4000, 距最后一段超过 80ms 算停住不滑)
+    // 惯性 = 指数衰减 τ=500ms (滑行距离 = 速度 × τ ≈ 0.5s, 初始滑行速度 = 松手速度, 无缝衔接)
+    // 60Hz Timer 手动推进 — 本机 vsync 失效, NumberAnimation 驱动的渲染循环会 ~1000fps 空转
+    // (帧率不均/撕裂); 同原型 (dev/prototypes/bravais) 的帧循环做法
+    property real glideVx: 0
+    property real glideVy: 0
+    property double glideTickAt: 0
+    Timer {
+        id: glideTimer
+        interval: 16
+        repeat: true
+        onTriggered: wall.stepGlide()
+    }
+    function stopGlide() {
+        glideTimer.stop()
+        wall.glideVx = 0
+        wall.glideVy = 0
+    }
+    function stepGlide() {
+        var now = Date.now()
+        var dt = Math.max(1, Math.min(40, now - wall.glideTickAt))
+        wall.glideTickAt = now
+        var decay = Math.exp(-dt / 500)
+        wall.glideVx *= decay
+        wall.glideVy *= decay
+        var x0 = wall.camX
+        var y0 = wall.camY
+        wall.panBy(wall.glideVx * dt / 1000, wall.glideVy * dt / 1000)
+        if (wall.camX === x0)   // 被限位钳住 → 该轴惯性清零
+            wall.glideVx = 0
+        if (wall.camY === y0)
+            wall.glideVy = 0
+        if (Math.sqrt(wall.glideVx * wall.glideVx + wall.glideVy * wall.glideVy) < 20)
+            wall.stopGlide()   // 滑到 20px/s 以下落定
+    }
     function glideAfter(vx, vy, xOnly, moveAt) {
+        wall.stopGlide()
         if (Date.now() - moveAt > 80)
             return
         var speed = Math.sqrt(vx * vx + vy * vy)
         if (speed < 40)
             return
-        var dist = Math.min(speed, 4000) * 0.3
-        var gx = vx / speed * dist
-        var gy = xOnly ? 0 : vy / speed * dist
-        glideX.to = Math.max(wall.camMinXAt(wall.camScale), Math.min(wall.camMaxXAt(wall.camScale), wall.camX - gx / wall.camScale))
-        glideY.to = Math.max(wall.camMinYAt(wall.camScale), Math.min(wall.camMaxYAt(wall.camScale), wall.camY - gy / wall.camScale))
-        glideAnim.restart()
-    }
-    ParallelAnimation {
-        id: glideAnim
-        NumberAnimation { id: glideX; target: wall; property: "camX"; duration: 1940; easing.type: Easing.OutExpo }
-        NumberAnimation { id: glideY; target: wall; property: "camY"; duration: 1940; easing.type: Easing.OutExpo }
+        var capped = Math.min(speed, 4000)
+        wall.glideVx = vx / speed * capped
+        wall.glideVy = xOnly ? 0 : vy / speed * capped
+        wall.glideTickAt = Date.now()
+        glideTimer.restart()
     }
 
     // ---- 页签切换: 缝条不翻 (选中态由 tabBtn 的 Behavior 丝滑渐变), 墙面发翻牌波次 ----
