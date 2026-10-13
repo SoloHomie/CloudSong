@@ -4,10 +4,10 @@ import "."
 
 pragma ComponentBehavior: Bound
 
-// 墙上一块磁贴 (demo 一律当"集合": 双环堆叠边缘 + 左上角标 + 左下文案)
+// 墙上一块磁贴 (2026-10-14 用户: 双环堆叠边缘已去 — 边框只出现在选中卡; 常态卡无边框)
 // 翻牌 = 绕竖轴 0→90° (前半 150ms) → 90° 处换面 → 90→0° (后半 210ms); 由 switchTab 波次触发
 // 让位 = 聚焦展开时同块 12 张换挡 (gearTo; 420ms OutCubic 无过冲 — 比参照弹簧快, 用户实测提速)
-// 展开态 (expanded): 就地变 6×6 大卡 — 双环收起 + 常态削色退场 + 聚焦文案浮层 (更大字号, 揭示时序 100ms/200ms/升 12px) + 选中圆角 (cornerR 0→24, 与让位同拍过渡)
+// 展开态 (expanded): 就地变 6×6 大卡 — 常态削色退场 + 聚焦文案浮层 (更大字号, 揭示时序 100ms/200ms/升 12px) + 选中圆角 (cornerR 0→24, 与让位同拍过渡)
 // 点击 = activated() (WallHome 接: 聚焦展开; 同卡再点无反应 — 对标参照)
 // 提示: 本 demo 不复制任何封面图 — 全部用 hue 回退渐变, 保零素材依赖
 Item {
@@ -165,22 +165,6 @@ Item {
             target: tile; property: "height"; duration: 300
             easing.type: Easing.OutCubic
         }
-    }
-
-    // ---- 堆叠边缘 (集合专属双环; hover 时收起, 展开时隐去) ----
-    Rectangle {
-        visible: !tile.expanded
-        x: 6 * (1 - tile.hoverT); y: 6 * (1 - tile.hoverT)
-        width: tile.width; height: tile.height
-        color: "transparent"
-        border.color: Qt.rgba(1, 1, 1, 0.06); border.width: 1
-    }
-    Rectangle {
-        visible: !tile.expanded
-        x: 3 * (1 - tile.hoverT); y: 3 * (1 - tile.hoverT)
-        width: tile.width; height: tile.height
-        color: "transparent"
-        border.color: Qt.rgba(1, 1, 1, 0.11); border.width: 1
     }
 
     // ---- 封面 (回退渐变, 全幅) ----
