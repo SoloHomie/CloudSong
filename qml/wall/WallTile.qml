@@ -4,7 +4,7 @@ import "."
 
 pragma ComponentBehavior: Bound
 
-// 墙上一块磁贴 (2026-10-14 用户: 边框全去 — 双环堆叠边缘删, 选中描边("太亮")亦删; 选中只靠 变亮+圆角+放大+其余压暗 区分)
+// 墙上一块磁贴 (2026-10-14 用户: 边框全去 — 双环堆叠边缘删, 选中描边("太亮")亦删, **白边真根因=ShapePath 默认白描边, 已关**; 选中只靠 变亮+圆角+放大+其余压暗 区分)
 // 翻牌 = 绕竖轴 0→90° (前半 150ms) → 90° 处换面 → 90→0° (后半 210ms); 由 switchTab 波次触发
 // 让位 = 聚焦展开时同块 12 张换挡 (gearTo; 420ms OutCubic 无过冲 — 比参照弹簧快, 用户实测提速)
 // 展开态 (expanded): 就地变 6×6 大卡 — 常态削色退场 + 聚焦文案浮层 (更大字号, 揭示时序 100ms/200ms/升 12px) + 选中圆角 (cornerR 0→24, 与让位同拍过渡)
@@ -172,10 +172,14 @@ Item {
     // 改用 Shape 的 LinearGradient (任意角度): 圆角矩形路径 + 斜向渐变一步成型, 不再用"旋转方框+裁切";
     // 2026-10-14 锯齿轮: 旧 layer+mask 的圆角画在离屏纹理里, 主通道 4×MSAA 进不去 → 弧线毛边;
     // Shape 走主通道 + CurveRenderer 弧线平滑, 圆角/直角随 cornerR 无缝过渡
+    // 2026-10-14 白边真根因 (用户"平铺排列卡片有白色边框"): ShapePath 不写 strokeWidth 时默认描 1px 白边 —
+    // 上面这次改 Shape 时漏了它, 于是每张卡自带白圈 (与双环无关, 删双环后仍在); 修 = strokeWidth: 0
+    // (同 SoftRadial/播放三角既有写法; 项目其余 ShapePath 均已显式处理)
     Shape {
         anchors.fill: parent
         preferredRendererType: Shape.CurveRenderer
         ShapePath {
+            strokeWidth: 0
             fillGradient: LinearGradient {
                 // 轴 = 旧"方形旋转 -27°"的可见切片 (顶边中点朝下偏 27°, 半长 1.45×max/2)
                 x1: tile.width / 2 - tile.gradDirX * tile.gradHalf
