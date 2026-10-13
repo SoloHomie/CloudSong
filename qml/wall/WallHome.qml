@@ -16,7 +16,9 @@ pragma ComponentBehavior: Bound
 //   点击磁贴 = 就地聚焦展开 (这张变 6×6 大卡, 同块其余 11 张按让位表换小档重铺, 块外一律不动) +
 //   相机把大卡拖到窗口正中 (缝让位量已补偿; 无限墙无界, 不必限位); 同卡再点无反应, 点空白/Esc 收起 (相机不回位)
 //   切页签 = 屏内磁贴翻牌波次 (屏外免动画直接换面; 缝条/选项不翻: 选中态 180ms 丝滑渐变)
-//   指针拖动: 拖平铺页面 = XY 平移; 拖缝条(书架) = 只走 X (按下点判档; 1:1 跟手, 松手按参考参数滑行)
+//   指针拖动: 完全参照 (Folia) — 按下快照相机锚点, 每事件以 "锚点 + 屏幕总位移" 绝对定位 (非逐事件累加:
+//   丢/并事件自纠正, 零漂移); 应用按 4ms 桶合帧 (Chromium 给参照的 pointermove 自动合帧, Qt 不合并, 等价补齐);
+//   拖平铺页面 = XY 平移; 拖缝条(书架) = 只走 X (按下点判档; 1:1 跟手, 松手按参考参数滑行)
 //   动画全部事件驱动 (无常驻动画, 规避本项目 vsync 空转实锤)
 Item {
     id: wall
@@ -722,7 +724,7 @@ Item {
     }
 
     // ---- 相机交互: 滚轮 + 指针拖动 (无界: 无限墙不设任何限位, 缝滑出屏后由边缘标签拉回) ----
-    // 屏幕像素增量 → 相机 (除缩放); 拖缝条时 dy 传 0 = 只走 X
+    // 屏幕像素增量 → 相机 (除缩放); 滚轮/滑行用 — 指针拖动走锚点式 applyDragCam (参照 Folia)
     function panBy(dx, dy) {
         wall.camX -= dx / wall.camScale
         wall.camY -= dy / wall.camScale
@@ -739,7 +741,10 @@ Item {
         }
     }
 
-    // 指针拖动: 拖平铺页面 XY 跟手; 拖缝条(书架) 只走 X (按下点落在缝的 x 带内即判档)
+    // 指针拖动 (完全参照 Folia): 按下快照相机锚点; 每事件以 "锚点 + 屏幕总位移" 绝对定位 —
+    // 不做逐事件累加 (丢/并事件自纠正, 零漂移; 参照 applyCamera(anchor + n));
+    // 应用合帧: 4ms 桶内多事件只应用最后一段 (Chromium 给参照的 pointermove 自动合帧, Qt 不合并, 等价补齐);
+    // 拖平铺页面 XY 跟手; 拖缝条(书架) 只走 X (按下点落在缝的 x 带内即判档)
     DragHandler {
         id: pan
         target: null
@@ -750,27 +755,31 @@ Item {
         property real velX: 0
         property real velY: 0
         property double moveAt: 0
+        property real anchorCamX: 0   // 按下时的相机位置 (参照 down.camera)
+        property real anchorCamY: 0
 
         onActiveChanged: {
             if (pan.active) {
                 camAnim.stop()
                 wall.stopGlide()
+                dragFlush.stop()
                 pan.xOnly = wall.seamW >= 1
                         && Math.abs(pan.centroid.pressPosition.x - wall.seamCenterX) <= wall.seamW / 2
+                pan.anchorCamX = wall.camX
+                pan.anchorCamY = wall.camY
                 pan.lastTx = 0
                 pan.lastTy = 0
                 pan.velX = 0
                 pan.velY = 0
                 pan.moveAt = 0
             } else {
+                wall.applyDragCam()   // 收尾: 末段位移立即到位 (滑行起点 = 手最后停留的位置)
                 wall.glideAfter(pan.velX, pan.velY, pan.xOnly, pan.moveAt)
             }
         }
         onTranslationChanged: {
-            var dx = pan.translation.x - pan.lastTx
-            var dy = pan.xOnly ? 0 : (pan.translation.y - pan.lastTy)
-            pan.lastTx = pan.translation.x
-            pan.lastTy = pan.translation.y
+            if (!pan.active)
+                return
             var now = Date.now()
             // dt 下限 1ms (参照原型同款 Math.max(1, ...)): 高回报率鼠标 (1000Hz+) 下同毫秒多事件是常态 —
             // 旧 "dt>0 才记速, 否则清零" 会让这些事件把速度随机清零, 松手滑行忽滑忽停 (连续拖动速度突变)
@@ -778,12 +787,33 @@ Item {
             if (pan.moveAt > 0) {
                 // 松手滑行以指针最后一段的瞬时速度为起点, 之后只递减 (2026-10-12 用户定案:
                 // 不做平滑/不加爬升 — 滑行起步速度必须等于手的速度, 否则滑行与手脱节)
-                pan.velX = dx / dt * 1000
-                pan.velY = dy / dt * 1000
+                pan.velX = (pan.translation.x - pan.lastTx) / dt * 1000
+                pan.velY = pan.xOnly ? 0 : (pan.translation.y - pan.lastTy) / dt * 1000
             }
             pan.moveAt = now
-            wall.panBy(dx, dy)
+            pan.lastTx = pan.translation.x
+            pan.lastTy = pan.translation.y
+            if (now - wall.dragAppliedAt >= 4)
+                wall.applyDragCam()
+            else
+                dragFlush.restart()   // 桶内余下事件合并到收尾
         }
+    }
+
+    // 锚点应用 (参照 applyCamera): 相机 = 按下锚点 − 屏幕位移/缩放; 绝对定位, 无界不限位
+    // 4ms ≈ 本机 240Hz 帧距 (60Hz 机器上仍细于帧距, 只少不会多)
+    property double dragAppliedAt: 0
+    function applyDragCam() {
+        dragFlush.stop()
+        wall.dragAppliedAt = Date.now()
+        wall.camX = pan.anchorCamX - pan.translation.x / wall.camScale
+        wall.camY = pan.anchorCamY - (pan.xOnly ? 0 : pan.translation.y) / wall.camScale
+    }
+    // 单发收尾: 事件流停在桶中间 (拖动中暂停) 时把最后一段位移补上 — 墙不会停在旧位置等下一个事件
+    Timer {
+        id: dragFlush
+        interval: 5
+        onTriggered: wall.applyDragCam()
     }
 
     // 松手滑行 (参考参数: 速度阈 40px/s, 上限 4000, 距最后一段超过 80ms 算停住不滑)
