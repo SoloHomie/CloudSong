@@ -20,13 +20,15 @@ QtObject {
     readonly property color seamRing: Qt.rgba(1, 1, 1, 0.06)
 
     // ---- 磁贴遮罩 ----
-    // 底部压暗 (保证左下文案可读); 常态削色层, hover 时退场露出封面本色
+    // 底部压暗 (保证左下文案可读); 常态削色层
+    // (2026-10-14 用户: "默认所有卡片都是暗色, 只有选中时变为亮色卡片" — 常态整体压深,
+    //  hover 只部分提起 [见 WallTile], 全亮留给选中; 0.72 为可调常量)
     readonly property color shadeLow: Qt.rgba(0, 0, 0, 0.05)
     readonly property color shadeMid: Qt.rgba(0, 0, 0, 0.24)
     readonly property color shadeDeep: Qt.rgba(0, 0, 0, 0.92)
     readonly property color tintTop: Qt.rgba(61 / 255, 61 / 255, 63 / 255, 1)
     readonly property color tintBottom: Qt.rgba(26 / 255, 26 / 255, 29 / 255, 1)
-    readonly property real tintOpacity: 0.5
+    readonly property real tintOpacity: 0.72
 
     // 封面回退渐变: hue 决定两停 (亮顶 / 暗底), 无图也有色彩
     function gradFor(hue) {
