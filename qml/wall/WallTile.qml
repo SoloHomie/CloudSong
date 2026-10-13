@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Effects
 import "."
 
 pragma ComponentBehavior: Bound
@@ -6,7 +7,7 @@ pragma ComponentBehavior: Bound
 // 墙上一块磁贴 (demo 一律当"集合": 双环堆叠边缘 + 左上角标 + 左下文案)
 // 翻牌 = 绕竖轴 0→90° (前半 150ms) → 90° 处换面 → 90→0° (后半 210ms); 由 switchTab 波次触发
 // 让位 = 聚焦展开时同块 12 张换挡 (gearTo; 420ms OutCubic 无过冲 — 比参照弹簧快, 用户实测提速)
-// 展开态 (expanded): 就地变 6×6 大卡 — 双环收起 + 常态削色退场 + 聚焦文案浮层 (更大字号, 揭示时序 100ms/200ms/升 12px)
+// 展开态 (expanded): 就地变 6×6 大卡 — 双环收起 + 常态削色退场 + 聚焦文案浮层 (更大字号, 揭示时序 100ms/200ms/升 12px) + 选中圆角 (cornerR 0→24, 与让位同拍过渡)
 // 点击 = activated() (WallHome 接: 聚焦展开; 同卡再点无反应 — 对标参照)
 // 提示: 本 demo 不复制任何封面图 — 全部用 hue 回退渐变, 保零素材依赖
 Item {
@@ -33,6 +34,7 @@ Item {
     property real flipAngle: 0
     property real hoverT: 0
     property bool panning: false     // 墙拖动/滑行中: 抑制 hover 抬升 (参照原型: 拖动中不触发)
+    property real cornerR: 0         // 圆角半径 (世界单位; 0=直角) — 选中(展开)呈现圆角, 与让位同拍过渡
 
     readonly property var grad: WallTheme.gradFor(face !== null ? face.hue : 0)
     readonly property real pop: 1 + (16 / Math.max(1, width)) * hoverT
@@ -89,15 +91,38 @@ Item {
         if (expanded) {
             hoverAnim.to = 0   // 大卡不带 hover 抬升
             hoverAnim.restart()
+            cornerAnim.to = 24   // 选中 → 圆角卷起 (300ms OutCubic, 与让位同拍 — 卡片长大与卷角同步完成)
+            cornerAnim.restart()
             if (focusOverlay === null)
                 focusOverlay = focusCopyComp.createObject(tile)
-        } else if (focusOverlay !== null) {
-            focusOverlay.destroy()
-            focusOverlay = null
+        } else {
+            cornerAnim.to = 0    // 收起 → 回直角 (同拍; 换卡/回收也走这里, 屏外无所谓)
+            cornerAnim.restart()
+            if (focusOverlay !== null) {
+                focusOverlay.destroy()
+                focusOverlay = null
+            }
         }
     }
 
     z: tile.expanded ? 20 : (hoverT > 0.01 ? 3 : 0)
+
+    // ---- 选中圆角 (2026-10-14 用户: 选中卡片以圆角呈现, 圆角↔直角自然过渡) ----
+    // 整卡一张圆角遮罩: 封面斜向渐变是"裁切方框"做法 (圆角没法逐矩形跟随), 走 layer+mask 一次成型;
+    // 只有选中卡开着 layer (其余 215 张开销为零); radius 随 cornerR 过渡 = 直角↔圆角无跳变
+    layer.enabled: tile.cornerR > 0.01
+    layer.effect: MultiEffect {
+        maskEnabled: true
+        maskSource: cornerMask
+    }
+    Rectangle {
+        id: cornerMask
+        visible: false
+        layer.enabled: true
+        width: tile.width; height: tile.height
+        radius: tile.cornerR
+        color: "white"
+    }
 
     transform: [
         Rotation {
@@ -245,6 +270,14 @@ Item {
         id: hoverAnim
         target: tile
         property: "hoverT"
+        duration: 300
+        easing.type: Easing.OutCubic
+    }
+    // 圆角过渡 (选中/收起): 与让位 gearAnim 同 duration/缓动 — 两段过渡视觉上是一件事
+    NumberAnimation {
+        id: cornerAnim
+        target: tile
+        property: "cornerR"
         duration: 300
         easing.type: Easing.OutCubic
     }
