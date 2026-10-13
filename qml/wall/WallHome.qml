@@ -138,7 +138,7 @@ Item {
     }
 
     // ---- 世界的一半 (相机一致, 各自再按 shift 让开缝的半个开口; shift 为屏幕像素) ----
-    // 池 = 预建 108 张磁贴 (左侧区 = 块列 ≤ -1, 右侧区 = 列 ≥ 0); 位置/内容全部由滑动窗口落位,
+    // 池 = 预建 144 张磁贴 (左侧区 = 块列 ≤ -1, 右侧区 = 列 ≥ 0); 位置/内容全部由滑动窗口落位,
     // 声明期一律不绑定坐标 (回收重定位要写 x/y/w/h)
     component WallHalf: Item {
         id: half
@@ -183,8 +183,8 @@ Item {
         // 首屏落位: 各磁贴注册有先后 — callLater 自动去重合并, 池齐后自然一次分配到位
         Qt.callLater(wall.ensureWindow)
     }
-    // 视口裁剪: 离屏 (留 100px 屏幕余量) 的磁贴直接不渲染 — 全池 216 张全提交=每帧万级节点, 裁掉后各动画才跑得动
-    // 裁剪读"粗档相机" cullX/cullY (移动每满 128px 才更新): 直读 camX 时 216 张卡各自的 visible 绑定
+    // 视口裁剪: 离屏 (留 100px 屏幕余量) 的磁贴直接不渲染 — 全池 288 张全提交=每帧万级节点, 裁掉后各动画才跑得动
+    // 裁剪读"粗档相机" cullX/cullY (移动每满 128px 才更新): 直读 camX 时 288 张卡各自的 visible 绑定
     // 会按每个指针事件全量重算 (高回报率鼠标下就是拖动卡顿大头); 粗档化后拖动/滚轮/滑行/补间全走
     // 同一"每 128px 一档"。余量取 100px 的依据: 窗口按块粒度宽供 (余量 340 世界px), 即使算上缝让位
     // (≤63px) 折算, 各档位下"判为在屏"的块都必然还在窗口里 (只多不少); seamShift 现为常量
@@ -212,11 +212,15 @@ Item {
                 && tp + t.height * s > -100 && tp < wall.height + 100
     }
 
-    // ---- 无限墙的滑动窗口 (每侧 3×3 块 = 9 块 × 12 槽 = 108 张池; 覆盖 视口 + 340 世界px 余量) ----
-    // 覆盖裕度按本机视口上限 (1707×1067 逻辑 = 2560×1600@150%) 验过: 0.76 档下 3×3 恰好容住
-    // 视口 + 余量 (横 ≤3 列 / 纵 ≤3 行); 若将来跑在更大的逻辑视口上, 把 winCols/winRows 调大即可 (池随动)
+    // ---- 无限墙的滑动窗口 (每侧 3×4 块 = 12 块 × 12 槽 = 144 张池; 覆盖 视口 + 340 世界px 余量) ----
+    // 窗口必须容住 [cull ± (视口半高/s + 340)] 的块区间, 否则最外档缺块会切进视口 (2026-10-14
+    // "放大缩小后区域缺失" 根因): 纵向需求 = 2*((h/2)/s + 340)/1088 —— 0.76@1067 为 1.92 (3 行够),
+    // 0.52@1067 为 2.51 ⇒ 需 4 行 (3 行时窗口最外档缺块切进屏底 ~110px 条带, 约 1/5 相机相位复现;
+    // 0.64@1067 为 2.16 ⇒ 缺块不进屏, 4 行一并覆盖); 横向 0.76@1707 为 1.79 ⇒ 3 列, 本机视口上限
+    // (1707×1067 逻辑 = 2560×1600@150%) 下横缺块进屏需 w > 2924*s (>2222) 不可达。若将来跑在更大的
+    // 逻辑视口上, 把 winCols/winRows 调大即可 (池随动)
     readonly property int winCols: 3
-    readonly property int winRows: 3
+    readonly property int winRows: 4
     readonly property int poolPerSide: wall.winCols * wall.winRows * DemoData.blockCols
     readonly property real wallBlockW: DemoData.blockCols * DemoData.pitch
     readonly property real wallBlockH: DemoData.blockRows * DemoData.pitch
@@ -317,8 +321,9 @@ Item {
 
     // ---- 换块摊帧 (2026-10-13 用户"移动时卡顿, 可能是刷新板块"): 进场块不再单帧 72 张同步重排
     // (实测单次 1-3ms JS + 同帧场景图注册洪峰 = 快速拖动过每个块列边界的顿点), 改为入队,
-    // 每 16ms 领 3 块 (~0.34ms/块): 交换区必在视口外 ≥212 世界px, 全排 32ms 内完 (降速后最快滑行
-    // 也要 62ms 才追上) — 视觉零影响; 参照 Folia 边缘重钳制推迟 rAF 批量执行, 等价"每帧摊一点"
+    // 每 16ms 领一整列 (winRows 块, ~0.34ms/块): 交换区必在视口外 (340 − 100/s 世界px), 一列
+    // 1 拍内排完, 远早于最快滑行到达 (0.52 档也要 ~30ms) — 视觉零影响; 参照 Folia 边缘重钳制
+    // 推迟 rAF 批量执行, 等价"每帧摊一点"
     property var pendingBlocks: []
     property int pendingCount: 0
     function queueBlock(side, c, r) {
@@ -328,7 +333,7 @@ Item {
     function pumpBlocks() {
         if (wall.pendingCount === 0)
             return
-        var n = Math.min(3, wall.pendingCount)
+        var n = Math.min(wall.winRows, wall.pendingCount)
         while (n-- > 0) {
             var j = wall.pendingBlocks.shift()
             wall.pendingCount = wall.pendingBlocks.length
@@ -946,7 +951,7 @@ Item {
     }
 
     // ---- 页签切换: 缝条不翻 (选中态由 tabBtn 的 Behavior 丝滑渐变), 墙面发翻牌波次 ----
-    // 只翻在屏的 (屏外直接换面, 不付 216 套动画的钱 — 卡顿大头)
+    // 只翻在屏的 (屏外直接换面, 不付 288 套动画的钱 — 卡顿大头)
     function switchTab(i) {
         if (i === wall.activeTab)
             return

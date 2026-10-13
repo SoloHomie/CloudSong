@@ -105,16 +105,23 @@ QtObject {
     ]
 
     // ---- 块朝向 (格坐标镜像; 镜像保持槽位序, 卡在四种朝向里始终是同一槽位) ----
-    // 模板 = (col + row*2) % 4 (相邻块不同款); 镜像 = 坐标哈希 (场不显网格感)
+    // 模板 = (col + row*2) % 4 (相邻块不同款); 镜像 = 坐标哈希 (场不显网格感 — 参照 mixBlockCoords 原样移植)
+    // 2026-10-14 排版"不够乱"根因: 原弱哈希 (col*73856093)^(row*19349663) 的低 2 位只取决于
+    // (col%4, row%4) —— 73856093 ≡ 1、19349663 ≡ 3 (mod 4) —— 整场朝向 4×4 周期复读 (实测列 0..11 全 [0,5,10,15])
     function reflectRect(r, m) {
         var x = (m & 1) === 1 ? blockCols - r[0] - r[2] : r[0]
         var y = (m & 2) === 2 ? blockRows - r[1] - r[3] : r[1]
         return [x, y, r[2], r[3]]
     }
+    function mixBlockCoords(col, row) {
+        var v = Math.imul(col, 0x9e3779b1) ^ Math.imul(row, 0x85ebca6b)
+        v = Math.imul(v ^ (v >>> 15), 0x2c1b3c6d)
+        v ^= v >>> 12
+        return v >>> 0
+    }
     function blockOrientation(col, row) {
         var t = ((col + row * 2) % 4 + 4) % 4
-        var m = (((col * 73856093) ^ (row * 19349663)) >>> 0) % 4
-        return t * 4 + m
+        return t * 4 + mixBlockCoords(col, row) % 4
     }
 
     // 四种朝向展开的模板/让位表 (16 套, 静态预计算)
