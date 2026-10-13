@@ -6,8 +6,8 @@ pragma ComponentBehavior: Bound
 
 // 墙上一块磁贴 (2026-10-14 边框定稿: 常态零边框 — 双环堆叠边缘删 + 白边真根因(ShapePath 默认描边)关; 选中大卡 = 3px 白描边随圆角同拍淡入 + 变亮+圆角+放大+其余压暗)
 // 翻牌 = 绕竖轴 0→90° (前半 150ms) → 90° 处换面 → 90→0° (后半 210ms); 由 switchTab 波次触发
-// 让位 = 聚焦展开时同块 12 张换挡 (gearTo; 420ms OutCubic 无过冲 — 比参照弹簧快, 用户实测提速)
-// 展开态 (expanded): 就地变 6×6 大卡 — 常态削色退场 + 聚焦文案浮层 (更大字号, 揭示时序 100ms/200ms/升 12px) + 选中圆角 (cornerR 0→24, 与让位同拍过渡)
+// 让位 = 聚焦展开时同块 12 张换挡 (gearTo; 220ms OutCubic 无过冲 — 比参照弹簧快; 提速两轮 420→300→220, 用户"卡片的过渡可以再快点")
+// 展开态 (expanded): 就地变 6×6 大卡 — 常态削色退场 + 聚焦文案浮层 (更大字号, 揭示时序 50ms/110ms/升 12px) + 选中圆角 (cornerR 0→24, 与让位同拍过渡)
 // 点击 = activated() (WallHome 接: 聚焦展开; 同卡再点无反应 — 对标参照)
 // 提示: 本 demo 不复制任何封面图 — 全部用 hue 回退渐变, 保零素材依赖
 Item {
@@ -111,7 +111,7 @@ Item {
         if (expanded) {
             hoverAnim.to = 0   // 大卡不带 hover 抬升
             hoverAnim.restart()
-            cornerAnim.to = 24   // 选中 → 圆角卷起 (300ms OutCubic, 与让位同拍 — 卡片长大与卷角同步完成)
+            cornerAnim.to = 24   // 选中 → 圆角卷起 (220ms OutCubic, 与让位同拍 — 卡片长大与卷角同步完成)
             cornerAnim.restart()
             if (focusOverlay === null)
                 focusOverlay = focusCopyComp.createObject(tile)
@@ -142,27 +142,27 @@ Item {
         }
     ]
 
-    // ---- 让位补间 (事件驱动; 300ms OutCubic: 起步快、尾段缓, 无过冲 — 参照弹簧的慢起头实测偏拖沓) ----
+    // ---- 让位补间 (事件驱动; 220ms OutCubic: 起步快、尾段缓, 无过冲 — 参照弹簧的慢起头实测偏拖沓) ----
     ParallelAnimation {
         id: gearAnim
         NumberAnimation {
             id: gearX
-            target: tile; property: "x"; duration: 300
+            target: tile; property: "x"; duration: 220
             easing.type: Easing.OutCubic
         }
         NumberAnimation {
             id: gearY
-            target: tile; property: "y"; duration: 300
+            target: tile; property: "y"; duration: 220
             easing.type: Easing.OutCubic
         }
         NumberAnimation {
             id: gearW
-            target: tile; property: "width"; duration: 300
+            target: tile; property: "width"; duration: 220
             easing.type: Easing.OutCubic
         }
         NumberAnimation {
             id: gearH
-            target: tile; property: "height"; duration: 300
+            target: tile; property: "height"; duration: 220
             easing.type: Easing.OutCubic
         }
     }
@@ -256,7 +256,7 @@ Item {
         color: "black"
         opacity: tile.dimmed ? 0.4 : 0
         Behavior on opacity {
-            NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
         }
     }
 
@@ -303,11 +303,11 @@ Item {
         id: cornerAnim
         target: tile
         property: "cornerR"
-        duration: 300
+        duration: 220
         easing.type: Easing.OutCubic
     }
 
-    // ---- 聚焦文案浮层 (展开时创建: 更大字号; 揭示 = 100ms 后开始, 200ms 内自下 12px 淡入) ----
+    // ---- 聚焦文案浮层 (展开时创建: 更大字号; 揭示 = 50ms 后开始, 110ms 内自下 12px 淡入) ----
     Component {
         id: focusCopyComp
         Item {
@@ -348,15 +348,15 @@ Item {
             }
             SequentialAnimation {
                 running: true
-                PauseAnimation { duration: 70 }
+                PauseAnimation { duration: 50 }
                 ParallelAnimation {
                     NumberAnimation {
                         target: fcOverlay; property: "opacity"
-                        from: 0; to: 1; duration: 140; easing.type: Easing.InOutQuad
+                        from: 0; to: 1; duration: 110; easing.type: Easing.InOutQuad
                     }
                     NumberAnimation {
                         target: fcRise; property: "y"
-                        from: 12; to: 0; duration: 140; easing.type: Easing.InOutQuad
+                        from: 12; to: 0; duration: 110; easing.type: Easing.InOutQuad
                     }
                 }
             }
