@@ -18,8 +18,9 @@ pragma ComponentBehavior: Bound
 //   切页签 = 屏内磁贴翻牌波次 (屏外免动画直接换面; 缝条/选项不翻: 选中态 180ms 丝滑渐变)
 //   指针拖动: 完全参照 (Folia) — 按下即停滑行 + 按下快照相机锚点, 每事件以 "锚点 + 屏幕总位移" 绝对定位 (非逐事件累加:
 //   丢/并事件自纠正, 零漂移); 应用按 4ms 桶合帧 (Chromium 给参照的 pointermove 自动合帧, Qt 不合并, 等价补齐);
-//   拖平铺页面 = XY 平移; 拖缝条(书架) = 只走 X (按下点判档; 1:1 跟手, 松手按参考参数滑行,
-//   轻放近屏边 = 靠边磁吸贴边 [seamMagnet]; 甩 ≥1200px/s = 逃逸飞出屏, 边标签拉回)
+//   拖平铺页面 = XY 平移; 拖缝条(书架) = 只走 X (按下点判档; 1:1 跟手, 松手按参考参数滑行;
+//   靠边磁吸 [seamMagnet, 参考 Folia 缝到边即收起]: 割边(中线离边 < 半宽)松手/滑到 ⇒ 整条吸出屏,
+//   边缘标签接管点开拉回; 往回拉的动量除外 — 要么整条在屏, 要么整条出屏)
 //   动画全部事件驱动 (无常驻动画, 规避本项目 vsync 空转实锤)
 Item {
     id: wall
@@ -602,24 +603,25 @@ Item {
         camAnim.restart()
     }
 
-    // ---- 书架靠边磁吸 (2026-10-14 用户"这个书架做靠边磁吸") ----
-    // 松手轻放 (速度 < 逃逸阈): 书架中线落在该侧磁吸带内 ⇒ 相机补间吸到"贴边停靠位"
-    // (中线离边 = 半宽 60px — 整条书架贴住屏幕边, 不再停在半截卡边状态);
-    // 自由滑行途中闯进磁吸带 (速度已衰减到阈下) 同样被吸。
-    // 甩 (松手 ≥ 逃逸阈) 照旧自由滑行飞出屏 = 保留隐藏态 (边标签拉回); 拖动本体不动 (1:1 定案)
-    readonly property real seamDockPad: DemoData.seamHomeWidth / 2   // 贴边位: 中线离边 60px (整条贴边)
-    readonly property real seamMagnetIn: 80    // 磁吸带往屏内侧延伸 (自贴边位起 80px ⇒ 带边线离屏边 140px)
-    readonly property real seamMagnetOut: 30   // 中线已出屏边但未深出 (> 此值) 仍吸回
-    readonly property real seamEscapeV: 1200   // 逃逸速度 (屏幕 px/s): ≥ 即不被吸, 自由飞 (常量可调)
-    function seamMagnet(vx, vy) {
-        if (Math.sqrt(vx * vx + vy * vy) >= wall.seamEscapeV)
-            return false
+    // ---- 书架靠边磁吸 (2026-10-14 用户"这个书架做靠边磁吸"+"参考folia") ----
+    // Folia 语义 (components/wall/seamPlan.ts getSeamGeometry + bravaisSeamLevel): 开口到屏边装不下
+    // 就收起 (collapsed) — 缝不挤在边上露半截, 只留边缘标签当恢复入口 (手动收起 = hidden 层级)。
+    // 我们恒宽版的等价状态 = 整条书架吸出屏外 (中线停到屏外半宽 60px, 标签接管:
+    // 标签点开 = reopenSeam 拉回 154px, 同 Folia 悬浮按钮恢复)。
+    // 触发 = 中线离边 < 半宽 (整条已不在屏, 含刚被割边) — 要么整条在屏、要么整条出屏, 没有半截常态;
+    // "往回拉"的滑行动量除外 (vx 指向屏内 ⇒ 交给自由滑行, 会自己滑回整条在屏), 轻放与滑行闯带同一判定。
+    // 拖动本体不动 (1:1 定案); 已尽出屏 (中线 ≤ −60) 不再动 (深出后拉近只会多一段不可见位移)
+    readonly property real seamOffPad: DemoData.seamHomeWidth / 2   // 出屏位: 中线停到屏外半宽 60px
+    function seamMagnet(vx) {
         var c = wall.seamCenterX
         var left = c < wall.width / 2
-        var dock = left ? wall.seamDockPad : wall.width - wall.seamDockPad
-        if (left ? (c < -wall.seamMagnetOut || c > dock + wall.seamMagnetIn)
-                 : (c > wall.width + wall.seamMagnetOut || c < dock - wall.seamMagnetIn))
-            return false
+        if (left ? c >= wall.seamOffPad : c <= wall.width - wall.seamOffPad)
+            return false                         // 整条在屏 (含贴边): 装得下, 不动
+        var dock = left ? -wall.seamOffPad : wall.width + wall.seamOffPad
+        if (left ? c <= dock : c >= dock)
+            return false                         // 已尽出屏: 不再动
+        if ((left ? vx : -vx) > 0)
+            return false                         // 速度指向屏内 = 往回拉: 不吸, 让它滑进去
         wall.stopGlide()   // 滑行途中闯带: 先停自由滑行再吸 (轻放路径本已停, 无副作用)
         camXTo.to = wall.camX - (dock - c) / wall.camScale
         camYTo.to = wall.camY
@@ -899,7 +901,7 @@ Item {
     property real glideVx: 0
     property real glideVy: 0
     property double glideTickAt: 0
-    property bool glideShelf: false   // 在滑的是书架(缝条): 允许滑行途中被磁吸带捕获
+    property bool glideShelf: false   // 在滑的是书架(缝条): 滑行割到屏边会被吸出屏 (seamMagnet)
     Timer {
         id: glideTimer
         interval: 16
@@ -919,21 +921,21 @@ Item {
         wall.glideVx *= decay
         wall.glideVy *= decay
         wall.panBy(wall.glideVx * dt / 1000, wall.glideVy * dt / 1000)
-        // 自由滑行闯进书架磁吸带 (速度已衰减到逃逸阈下) → 吸到贴边位 (seamMagnet 内已停滑行)
-        if (wall.glideShelf && wall.seamMagnet(wall.glideVx, wall.glideVy))
+        // 自由滑行被割到屏边 (书架) → 吸出屏 (seamMagnet 内已停滑行; 往回拉的滑行不吸)
+        if (wall.glideShelf && wall.seamMagnet(wall.glideVx))
             return
         if (Math.sqrt(wall.glideVx * wall.glideVx + wall.glideVy * wall.glideVy) < 20)
             wall.stopGlide()   // 滑到 20px/s 以下落定
     }
     function glideAfter(vx, vy, xOnly, moveAt) {
         wall.stopGlide()
-        // 书架(缝条)松手: 先过磁吸判定 (轻放也吸 — 不受滑行速度阈/时效阈约束); 吸住则不再自由滑行
-        if (xOnly && wall.seamMagnet(vx, vy))
-            return
-        if (Date.now() - moveAt > 80)
-            return
         var speed = Math.sqrt(vx * vx + vy * vy)
-        if (speed < 40)
+        var willGlide = Date.now() - moveAt <= 80 && speed >= 40
+        // 书架(缝条)松手: 先过磁吸判定 — 割边 + 不往回拉 ⇒ 吸出屏 (轻放也吸, 不受滑行阈约束);
+        // 会滑且往回拉 ⇒ 交给自由滑行 (seamMagnet 同判, 滑行途中闯带也吸)
+        if (xOnly && wall.seamMagnet(willGlide ? vx : 0))
+            return
+        if (!willGlide)
             return
         var capped = Math.min(speed, 2600)
         wall.glideVx = vx / speed * capped
