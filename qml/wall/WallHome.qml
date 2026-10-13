@@ -152,6 +152,7 @@ Item {
             delegate: WallTile {
                 titlePx: Math.max(22, Math.min(36, 0.02 * wall.width))
                 panning: wall.panning   // 拖动/滑行中抑制 hover 抬升 (每穿过一张卡就起一段动画 = 拖动卡顿源)
+                dimmed: wall.focusedTile !== null && wall.focusedTile !== this   // 选中期间其余卡内容暗色
                 visible: wall.tileInPlay(this, half.side)   // 屏外不渲染
                 Component.onCompleted: wall.registerTile(this, half.side)
                 onActivated: wall.focusTile(this)

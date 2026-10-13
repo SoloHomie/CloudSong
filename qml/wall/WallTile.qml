@@ -1,5 +1,5 @@
 import QtQuick
-import QtQuick.Effects
+import QtQuick.Shapes
 import "."
 
 pragma ComponentBehavior: Bound
@@ -35,9 +35,29 @@ Item {
     property real hoverT: 0
     property bool panning: false     // 墙拖动/滑行中: 抑制 hover 抬升 (参照原型: 拖动中不触发)
     property real cornerR: 0         // 圆角半径 (世界单位; 0=直角) — 选中(展开)呈现圆角, 与让位同拍过渡
+    property bool dimmed: false      // 其他卡内容暗色 (选中期间由 WallHome 置位; 黑罩淡入淡出)
 
     readonly property var grad: WallTheme.gradFor(face !== null ? face.hue : 0)
     readonly property real pop: 1 + (16 / Math.max(1, width)) * hoverT
+    // 封面斜向渐变轴 (复刻旧"方形旋转 -27°"的可见切片): 方向 = 下偏 27°, 半长 = 1.45×max/2
+    readonly property real gradDirX: Math.sin(27 * Math.PI / 180)
+    readonly property real gradDirY: Math.cos(27 * Math.PI / 180)
+    readonly property real gradHalf: 0.725 * Math.max(tile.width, tile.height)
+    // 圆角矩形路径 (cornerR 驱动; 直角时退化为普通矩形 — 未选中卡与旧渲染逐像素一致)
+    readonly property string roundRectPath: {
+        var w = tile.width, h = tile.height
+        var r = Math.max(0, Math.min(tile.cornerR, Math.min(w, h) / 2))
+        if (r <= 0.01)
+            return "M 0 0 H " + w + " V " + h + " H 0 Z"
+        return "M " + r + " 0 H " + (w - r)
+                + " A " + r + " " + r + " 0 0 1 " + w + " " + r
+                + " V " + (h - r)
+                + " A " + r + " " + r + " 0 0 1 " + (w - r) + " " + h
+                + " H " + r
+                + " A " + r + " " + r + " 0 0 1 0 " + (h - r)
+                + " V " + r
+                + " A " + r + " " + r + " 0 0 1 " + r + " 0 Z"
+    }
 
     function flipTo(d, delay) {
         pendingItem = d
@@ -107,23 +127,6 @@ Item {
 
     z: tile.expanded ? 20 : (hoverT > 0.01 ? 3 : 0)
 
-    // ---- 选中圆角 (2026-10-14 用户: 选中卡片以圆角呈现, 圆角↔直角自然过渡) ----
-    // 整卡一张圆角遮罩: 封面斜向渐变是"裁切方框"做法 (圆角没法逐矩形跟随), 走 layer+mask 一次成型;
-    // 只有选中卡开着 layer (其余 215 张开销为零); radius 随 cornerR 过渡 = 直角↔圆角无跳变
-    layer.enabled: tile.cornerR > 0.01
-    layer.effect: MultiEffect {
-        maskEnabled: true
-        maskSource: cornerMask
-    }
-    Rectangle {
-        id: cornerMask
-        visible: false
-        layer.enabled: true
-        width: tile.width; height: tile.height
-        radius: tile.cornerR
-        color: "white"
-    }
-
     transform: [
         Rotation {
             axis { x: 0; y: 1; z: 0 }
@@ -181,35 +184,42 @@ Item {
     }
 
     // ---- 封面 (回退渐变, 全幅) ----
-    // 目标形态为 145° 斜向渐变; QML 的 Gradient 只支持水平/垂直, 用放大旋转的矩形 + 裁切近似
-    Item {
+    // 目标形态为 145° 斜向渐变; QML Rectangle 的 Gradient 只支持水平/垂直 —
+    // 改用 Shape 的 LinearGradient (任意角度): 圆角矩形路径 + 斜向渐变一步成型, 不再用"旋转方框+裁切";
+    // 2026-10-14 锯齿轮: 旧 layer+mask 的圆角画在离屏纹理里, 主通道 4×MSAA 进不去 → 弧线毛边;
+    // Shape 走主通道 + CurveRenderer 弧线平滑, 圆角/直角随 cornerR 无缝过渡
+    Shape {
         anchors.fill: parent
-        clip: true
-        Rectangle {
-            width: Math.max(tile.width, tile.height) * 1.45
-            height: width
-            anchors.centerIn: parent
-            rotation: -27
-            gradient: Gradient {
+        preferredRendererType: Shape.CurveRenderer
+        ShapePath {
+            fillGradient: LinearGradient {
+                // 轴 = 旧"方形旋转 -27°"的可见切片 (顶边中点朝下偏 27°, 半长 1.45×max/2)
+                x1: tile.width / 2 - tile.gradDirX * tile.gradHalf
+                y1: tile.height / 2 - tile.gradDirY * tile.gradHalf
+                x2: tile.width / 2 + tile.gradDirX * tile.gradHalf
+                y2: tile.height / 2 + tile.gradDirY * tile.gradHalf
                 GradientStop { position: 0; color: tile.grad[0] }
                 GradientStop { position: 1; color: tile.grad[1] }
             }
+            PathSvg { path: tile.roundRectPath }
         }
-        // 底部压暗
-        Rectangle {
-            anchors.fill: parent
-            gradient: Gradient {
-                GradientStop { position: 0.0; color: WallTheme.shadeLow }
-                GradientStop { position: 0.34; color: WallTheme.shadeLow }
-                GradientStop { position: 0.56; color: WallTheme.shadeMid }
-                GradientStop { position: 1.0; color: WallTheme.shadeDeep }
-            }
+    }
+    // 底部压暗
+    Rectangle {
+        anchors.fill: parent
+        radius: tile.cornerR
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: WallTheme.shadeLow }
+            GradientStop { position: 0.34; color: WallTheme.shadeLow }
+            GradientStop { position: 0.56; color: WallTheme.shadeMid }
+            GradientStop { position: 1.0; color: WallTheme.shadeDeep }
         }
     }
 
     // ---- 常态削色层 (hover 时退场, 展开时全退; 露出封面本色) ----
     Rectangle {
         anchors.fill: parent
+        radius: tile.cornerR
         opacity: tile.expanded ? 0 : WallTheme.tintOpacity * (1 - tile.hoverT)
         gradient: Gradient {
             GradientStop { position: 0; color: WallTheme.tintTop }
@@ -220,6 +230,7 @@ Item {
     // hover 提亮
     Rectangle {
         anchors.fill: parent
+        radius: tile.cornerR
         color: Qt.rgba(1, 1, 1, 0.06 * tile.hoverT)
     }
 
@@ -246,6 +257,27 @@ Item {
             maximumLineCount: 2
             elide: Text.ElideRight
         }
+    }
+
+    // ---- 其他卡内容暗色 (2026-10-14 用户: 选中时其他选项内容暗色): 黑罩在文案之上, 整体压暗, 淡入淡出 ----
+    Rectangle {
+        anchors.fill: parent
+        radius: tile.cornerR
+        color: "black"
+        opacity: tile.dimmed ? 0.4 : 0
+        Behavior on opacity {
+            NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+        }
+    }
+
+    // ---- 选中描边 (2026-10-14 用户: 选中的选项直接边框): 随圆角同拍淡入 (opacity 绑 cornerR, 同一段过渡) ----
+    Rectangle {
+        anchors.fill: parent
+        radius: tile.cornerR
+        color: "transparent"
+        border.width: 3
+        border.color: WallTheme.text
+        opacity: tile.cornerR / 24
     }
 
     // ---- 交互 ----
