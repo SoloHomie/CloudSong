@@ -264,7 +264,7 @@ Item {
                 for (var r2 = wr; r2 < wr + H; ++r2) {
                     if (c2 >= curCol && c2 < curCol + W && r2 >= curRow && r2 < curRow + H)
                         continue
-                    wall.assignBlock(c2, r2, free)
+                    wall.queueBlock(side, c2, r2)   // 摊帧领取 (不再单帧 72 张同步重排 — 见 queueBlock 注释)
                 }
             }
         } else {
@@ -310,6 +310,41 @@ Item {
                 t.face = DemoData.itemFor(DemoData.tabKey(wall.activeTab), slots[s].gi)
             wall.tileByKey[slots[s].key] = t
         }
+    }
+
+    // ---- 换块摊帧 (2026-10-13 用户"移动时卡顿, 可能是刷新板块"): 进场块不再单帧 72 张同步重排
+    // (实测单次 1-3ms JS + 同帧场景图注册洪峰 = 快速拖动过每个块列边界的顿点), 改为入队,
+    // 每 16ms 领 3 块 (~0.34ms/块): 交换区必在视口外 ≥212 世界px, 全排 32ms 内完 (降速后最快滑行
+    // 也要 62ms 才追上) — 视觉零影响; 参照 Folia 边缘重钳制推迟 rAF 批量执行, 等价"每帧摊一点"
+    property var pendingBlocks: []
+    property int pendingCount: 0
+    function queueBlock(side, c, r) {
+        wall.pendingBlocks.push({ side: side, c: c, r: r })
+        wall.pendingCount = wall.pendingBlocks.length
+    }
+    function pumpBlocks() {
+        if (wall.pendingCount === 0)
+            return
+        var n = Math.min(3, wall.pendingCount)
+        while (n-- > 0) {
+            var j = wall.pendingBlocks.shift()
+            wall.pendingCount = wall.pendingBlocks.length
+            var curCol = j.side < 0 ? wall.winLCol : wall.winRCol
+            var curRow = j.side < 0 ? wall.winLRow : wall.winRRow
+            // 过时 (连续滑动已把窗口挪走) / 重复入队 (折返滑动) — 丢, 磁贴留在空池等下次进场
+            if (j.c < curCol || j.c >= curCol + wall.winCols
+                    || j.r < curRow || j.r >= curRow + wall.winRows)
+                continue
+            if (wall.tileByKey[j.c + "," + j.r + ",0"] !== undefined)
+                continue
+            wall.assignBlock(j.c, j.r, j.side < 0 ? wall.freeL : wall.freeR)
+        }
+    }
+    Timer {
+        // 摊帧节拍: 有积压才跑 (闲置零成本); 不依赖渲染回调 (渲染帧停转也不误事)
+        interval: 16; repeat: true
+        running: wall.pendingCount > 0
+        onTriggered: wall.pumpBlocks()
     }
     // 视口宽高/档位变了 → 需要覆盖的范围也变; 推迟到通知潮之后 (同步写吃"绑定环"误报 — 实测)
     onWidthChanged: Qt.callLater(wall.ensureWindow)
@@ -828,7 +863,9 @@ Item {
         onTriggered: wall.applyDragCam(pan.lastTx, pan.lastTy)
     }
 
-    // 松手滑行 (参考参数: 速度阈 40px/s, 上限 4000, 距最后一段超过 80ms 算停住不滑)
+    // 松手滑行 (参考参数: 速度阈 40px/s, 上限 2600, 距最后一段超过 80ms 算停住不滑)
+    // 2026-10-13 用户"限制滑动速度 — 快速滑动就会导致卡顿": 峰值 4000→2600 — 相机越快, 换块/裁剪事件
+    // 频率越高 (每块列边界一爆), 峰值降 35% 即把这些事件的总频率压下来; 拖动本体仍 1:1 (定案)
     // 惯性 = 指数衰减 τ=500ms (滑行距离 = 速度 × τ ≈ 0.5s, 初始滑行速度 = 松手速度, 无缝衔接)
     // 60Hz Timer 手动推进 — 本机 vsync 失效, NumberAnimation 驱动的渲染循环会 ~1000fps 空转
     // (帧率不均/撕裂); 同原型 (dev/prototypes/bravais) 的帧循环做法
@@ -864,7 +901,7 @@ Item {
         var speed = Math.sqrt(vx * vx + vy * vy)
         if (speed < 40)
             return
-        var capped = Math.min(speed, 4000)
+        var capped = Math.min(speed, 2600)
         wall.glideVx = vx / speed * capped
         wall.glideVy = xOnly ? 0 : vy / speed * capped
         wall.glideTickAt = Date.now()
