@@ -198,26 +198,8 @@ Item {
         color: Qt.rgba(1, 1, 1, 0.06 * tile.hoverT)
     }
 
-    // ---- 左上角标 ----
-    Rectangle {
-        x: 14; y: 14
-        width: badgeText.implicitWidth + 16
-        height: 22
-        color: Qt.rgba(0, 0, 0, 0.62)
-        Text {
-            id: badgeText
-            x: 8
-            anchors.verticalCenter: parent.verticalCenter
-            text: tile.face !== null ? DemoData.badgeFor(tile.face) : ""
-            color: Qt.rgba(1, 1, 1, 0.85)
-            font.family: WallTheme.fontFamily
-            font.pixelSize: 11
-            font.weight: 800
-            font.letterSpacing: 1.32
-        }
-    }
-
     // ---- 左下文案 (展开时让位给聚焦文案浮层) ----
+    // 2026-10-13 用户"先不要每个卡片上的小字": 左上角标与副标题小字已去, 只留大标题
     Column {
         opacity: tile.expanded ? 0 : 1
         anchors {
@@ -237,15 +219,6 @@ Item {
             lineHeightMode: Text.ProportionalHeight
             wrapMode: Text.Wrap
             maximumLineCount: 2
-            elide: Text.ElideRight
-        }
-        Text {
-            width: parent.width
-            text: tile.face !== null ? tile.face.subtitle : ""
-            color: WallTheme.textDim
-            font.family: WallTheme.fontFamily
-            font.pixelSize: 13
-            font.weight: 650
             elide: Text.ElideRight
         }
     }
