@@ -4,7 +4,7 @@ import "."
 
 pragma ComponentBehavior: Bound
 
-// 墙上一块磁贴 (2026-10-14 用户: 双环堆叠边缘已去 — 边框只出现在选中卡; 常态卡无边框)
+// 墙上一块磁贴 (2026-10-14 用户: 边框全去 — 双环堆叠边缘删, 选中描边("太亮")亦删; 选中只靠 变亮+圆角+放大+其余压暗 区分)
 // 翻牌 = 绕竖轴 0→90° (前半 150ms) → 90° 处换面 → 90→0° (后半 210ms); 由 switchTab 波次触发
 // 让位 = 聚焦展开时同块 12 张换挡 (gearTo; 420ms OutCubic 无过冲 — 比参照弹簧快, 用户实测提速)
 // 展开态 (expanded): 就地变 6×6 大卡 — 常态削色退场 + 聚焦文案浮层 (更大字号, 揭示时序 100ms/200ms/升 12px) + 选中圆角 (cornerR 0→24, 与让位同拍过渡)
@@ -252,16 +252,6 @@ Item {
         Behavior on opacity {
             NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
         }
-    }
-
-    // ---- 选中描边 (2026-10-14 用户: 选中的选项直接边框): 随圆角同拍淡入 (opacity 绑 cornerR, 同一段过渡) ----
-    Rectangle {
-        anchors.fill: parent
-        radius: tile.cornerR
-        color: "transparent"
-        border.width: 3
-        border.color: WallTheme.text
-        opacity: tile.cornerR / 24
     }
 
     // ---- 交互 ----
