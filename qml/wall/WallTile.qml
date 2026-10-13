@@ -256,7 +256,16 @@ Item {
         hoverEnabled: true
         acceptedButtons: Qt.LeftButton
         onEntered: { if (!tile.expanded && !tile.panning) { hoverAnim.to = 1; hoverAnim.restart() } }
-        onExited: { hoverAnim.to = 0; hoverAnim.restart() }
+        onExited: {
+            // 空退出不上动画 (对标 Folia: 拖动时 capture 让海报收不到 hover): 拖动/滑行中每穿过一张卡
+            // exit 都会来, hoverT 恒 0 若仍 restart 一段 0→0 的 300ms NumberAnimation, 每个存活动画
+            // 都把渲染循环踢成满速 (2026-10-13 实测: 空闲 ~0fps ↔ 空动画 240fps 连续渲染) —
+            // 快速连续拖动时链式空转 = 卡顿; hoverT>0 的真实退出 / 进场动画未落又立刻出 照常回落
+            if (tile.hoverT > 0 || hoverAnim.running) {
+                hoverAnim.to = 0
+                hoverAnim.restart()
+            }
+        }
         onClicked: tile.activated()   // 聚焦展开 / 再点收起 (进集合页排 M2)
     }
     NumberAnimation {
