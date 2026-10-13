@@ -16,7 +16,7 @@ pragma ComponentBehavior: Bound
 //   点击磁贴 = 就地聚焦展开 (这张变 6×6 大卡, 同块其余 11 张按让位表换小档重铺, 块外一律不动) +
 //   相机把大卡拖到窗口正中 (缝让位量已补偿; 无限墙无界, 不必限位); 同卡再点无反应, 点空白/Esc 收起 (相机不回位)
 //   切页签 = 屏内磁贴翻牌波次 (屏外免动画直接换面; 缝条/选项不翻: 选中态 180ms 丝滑渐变)
-//   指针拖动: 完全参照 (Folia) — 按下快照相机锚点, 每事件以 "锚点 + 屏幕总位移" 绝对定位 (非逐事件累加:
+//   指针拖动: 完全参照 (Folia) — 按下即停滑行 + 按下快照相机锚点, 每事件以 "锚点 + 屏幕总位移" 绝对定位 (非逐事件累加:
 //   丢/并事件自纠正, 零漂移); 应用按 4ms 桶合帧 (Chromium 给参照的 pointermove 自动合帧, Qt 不合并, 等价补齐);
 //   拖平铺页面 = XY 平移; 拖缝条(书架) = 只走 X (按下点判档; 1:1 跟手, 松手按参考参数滑行)
 //   动画全部事件驱动 (无常驻动画, 规避本项目 vsync 空转实锤)
@@ -758,6 +758,13 @@ Item {
         property real anchorCamX: 0   // 按下时的相机位置 (参照 down.camera)
         property real anchorCamY: 0
 
+        // 参照: pointerdown 即 stopPan — 按下就停滑行, 不等过阈值 (实测 GrabPassive=按下时刻)
+        // 枚举在 QPointingDevice 上 (QML 名 PointerDevice; PointerHandler/DragHandler 上均取不到)
+        onGrabChanged: function(transition, point) {
+            if (transition === PointerDevice.GrabPassive)
+                wall.stopGlide()
+        }
+
         onActiveChanged: {
             if (pan.active) {
                 camAnim.stop()
@@ -771,9 +778,14 @@ Item {
                 pan.lastTy = 0
                 pan.velX = 0
                 pan.velY = 0
-                pan.moveAt = 0
+                // 速度采样起点 = 激活时刻. 实测激活那一发的 translation 值不变 (仍 0) 不发
+                // translationChanged, 激活后首个事件的 T 才跳到"距按下总位移" — 若像旧版用 0 当
+                // "无样本"哨兵, 只拖一段的快速一甩就永远采不到速度, 松手不滑行
+                pan.moveAt = Date.now()
             } else {
-                wall.applyDragCam()   // 收尾: 末段位移立即到位 (滑行起点 = 手最后停留的位置)
+                // 收尾: 末段位移立即到位 (滑行起点 = 手最后停留的位置); 必须用 lastTx/lastTy —
+                // 实测 DragHandler.translation 在松手 (active→false) 时已归零, 直接读它会把相机弹回锚点
+                wall.applyDragCam(pan.lastTx, pan.lastTy)
                 wall.glideAfter(pan.velX, pan.velY, pan.xOnly, pan.moveAt)
             }
         }
@@ -784,36 +796,36 @@ Item {
             // dt 下限 1ms (参照原型同款 Math.max(1, ...)): 高回报率鼠标 (1000Hz+) 下同毫秒多事件是常态 —
             // 旧 "dt>0 才记速, 否则清零" 会让这些事件把速度随机清零, 松手滑行忽滑忽停 (连续拖动速度突变)
             var dt = Math.max(1, now - pan.moveAt)
-            if (pan.moveAt > 0) {
-                // 松手滑行以指针最后一段的瞬时速度为起点, 之后只递减 (2026-10-12 用户定案:
-                // 不做平滑/不加爬升 — 滑行起步速度必须等于手的速度, 否则滑行与手脱节)
-                pan.velX = (pan.translation.x - pan.lastTx) / dt * 1000
-                pan.velY = pan.xOnly ? 0 : (pan.translation.y - pan.lastTy) / dt * 1000
-            }
+            // 松手滑行以指针最后一段的瞬时速度为起点, 之后只递减 (2026-10-12 用户定案:
+            // 不做平滑/不加爬升 — 滑行起步速度必须等于手的速度, 否则滑行与手脱节)
+            pan.velX = (pan.translation.x - pan.lastTx) / dt * 1000
+            pan.velY = pan.xOnly ? 0 : (pan.translation.y - pan.lastTy) / dt * 1000
             pan.moveAt = now
             pan.lastTx = pan.translation.x
             pan.lastTy = pan.translation.y
             if (now - wall.dragAppliedAt >= 4)
-                wall.applyDragCam()
+                wall.applyDragCam(pan.lastTx, pan.lastTy)
             else
                 dragFlush.restart()   // 桶内余下事件合并到收尾
         }
     }
 
     // 锚点应用 (参照 applyCamera): 相机 = 按下锚点 − 屏幕位移/缩放; 绝对定位, 无界不限位
+    // 位移一律由调用点传入 (lastTx/lastTy 快照), 不读 pan.translation — 实测 Qt 语义: 激活瞬间
+    // translation 报 0, 激活后首个事件才跳到"距按下"总位移, 松手 (active→false) 时又已归零
     // 4ms ≈ 本机 240Hz 帧距 (60Hz 机器上仍细于帧距, 只少不会多)
     property double dragAppliedAt: 0
-    function applyDragCam() {
+    function applyDragCam(tx, ty) {
         dragFlush.stop()
         wall.dragAppliedAt = Date.now()
-        wall.camX = pan.anchorCamX - pan.translation.x / wall.camScale
-        wall.camY = pan.anchorCamY - (pan.xOnly ? 0 : pan.translation.y) / wall.camScale
+        wall.camX = pan.anchorCamX - tx / wall.camScale
+        wall.camY = pan.anchorCamY - (pan.xOnly ? 0 : ty) / wall.camScale
     }
     // 单发收尾: 事件流停在桶中间 (拖动中暂停) 时把最后一段位移补上 — 墙不会停在旧位置等下一个事件
     Timer {
         id: dragFlush
         interval: 5
-        onTriggered: wall.applyDragCam()
+        onTriggered: wall.applyDragCam(pan.lastTx, pan.lastTy)
     }
 
     // 松手滑行 (参考参数: 速度阈 40px/s, 上限 4000, 距最后一段超过 80ms 算停住不滑)
