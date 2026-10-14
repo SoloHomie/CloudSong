@@ -4,24 +4,19 @@ import "."
 
 pragma ComponentBehavior: Bound
 
-// M1 首页墙 (对标参照产品首页的"海报墙 + 中央缝"形态, 全部自绘)
+// M1 首页墙 (对标参照产品首页的"海报墙"形态, 全部自绘)
 //   世界 = 无限: 任意块坐标都能起建 (DemoData.blockSlots), 相机无任何限位 (对标: 无限层的相机无范围);
-//   磁贴走"滑动窗口"回收 — 每侧 3×3 块池, 窗口随粗档相机平移, 离场块的磁贴重定位给新进场块,
-//   交换一律发生在屏外 (窗口余量 340 世界px > 裁剪余量 100 屏幕px + 缝让位 ≤63px, 各档位均验过)
-//   世界按缝锚点分左右两半; 相机 = 视口中心世界坐标 (camX/camY) + 档位缩放 camScale
-//   缝 = 块边界上的 120px 常宽缝: 墙两半各让开半个开口 + 半格 (让位量恒定), 纸条骑世界 1:1 随相机
-//   (2026-10-12 取消"贴屏边自动收窄": 参照 follow 耦合同样贴边收窄, 但收窄=让位量随相机位置变 —
-//    拖动过缝区时整墙非 1:1 (实测两半错速≈±2.4×/0.38×)、纸条与开口错位, 用户拍板取消, 改恒宽刚性);
-//   缝滑出屏不带收窄 — 边缘标签在缝中线离屏边 24px 内淡入常驻, 点它 = 相机把缝拉回该侧边内 154px
+//   磁贴走"滑动窗口"回收 — 每侧 3×4 块池, 窗口随粗档相机平移, 离场块的磁贴重定位给新进场块,
+//   交换一律发生在屏外 (窗口余量 340 世界px > 裁剪余量 100 屏幕px, 各档位均验过)
+//   世界按块列 0 分左右两半 (两块池); 相机 = 视口中心世界坐标 (camX/camY) + 档位缩放 camScale
 //   点击磁贴 = 就地聚焦展开 (这张变 6×6 大卡, 同块其余 11 张按让位表换小档重铺, 块外一律不动) +
-//   相机把大卡拖到窗口正中 (缝让位量已补偿; 无限墙无界, 不必限位); 同卡再点无反应, 点空白/Esc 收起 (相机不回位)
-//   切页签 = 屏内磁贴翻牌波次 (屏外免动画直接换面; 缝条/选项不翻: 选中态 180ms 丝滑渐变)
-//   指针拖动: 完全参照 (Folia) — 按下即停滑行 + 按下快照相机锚点, 每事件以 "锚点 + 屏幕总位移" 绝对定位 (非逐事件累加:
-//   丢/并事件自纠正, 零漂移); 应用按 4ms 桶合帧 (Chromium 给参照的 pointermove 自动合帧, Qt 不合并, 等价补齐);
-//   拖平铺页面 = XY 平移; 拖缝条(书架) = 只走 X (按下点判档; 1:1 跟手, 松手按参考参数滑行;
-//   靠边磁吸 [seamMagnet, 参考 Folia 缝到边即收起]: 割边(中线离边 < 半宽)松手/滑到 ⇒ 整条吸出屏,
-//   边缘标签接管点开拉回; 往回拉的动量除外 — 要么整条在屏, 要么整条出屏)
-//   动画全部事件驱动 (无常驻动画, 规避本项目 vsync 空转实锤)
+//   相机把大卡拖到窗口正中 (无限墙无界, 不必限位); 同卡再点无反应, 点空白/Esc 收起 (相机不回位)
+//   切页签 = 屏内磁贴翻牌波次 (switchTab 保留; 入口待接 — 原书架页签已随书架移除, 2026-10-14)
+//   指针拖动: QML 内置 Flickable (2026-10-14 用户"用 qml 自带的滑动策略" — 取代 Folia 移植的
+//   锚点相机/4ms 合帧/滑行 Timer 自研链): 相机 = flick.contentX/contentY (1:1 屏幕像素, camX/camY
+//   由此推导), 拖动/滑行/惯性速度全走 Qt 内置, 平铺页面 XY 两轴自由
+//   中央书架(缝条)+靠边磁吸+边缘标签 已于 2026-10-14 按用户"可以不要这个书架"整条移除
+//   动画全部事件驱动 (无常驻动画; Flickable 滑行是内置动画驱动 — 本机 vsync 失效, 手感不对再节流)
 Item {
     id: wall
 
@@ -137,15 +132,16 @@ Item {
         }
     }
 
-    // ---- 世界的一半 (相机一致, 各自再按 shift 让开缝的半个开口; shift 为屏幕像素) ----
+    // ---- 世界的一半 (相机一致; 两半 = 两块池, 只按分界分职, 无视觉偏移) ----
     // 池 = 预建 144 张磁贴 (左侧区 = 块列 ≤ -1, 右侧区 = 列 ≥ 0); 位置/内容全部由滑动窗口落位,
     // 声明期一律不绑定坐标 (回收重定位要写 x/y/w/h)
     component WallHalf: Item {
         id: half
-        property real shift: 0
-        property int side: 0   // -1 = 缝左 / +1 = 缝右 (裁剪取让位偏移用)
-        x: wall.width / 2 - wall.camX * wall.camScale + half.shift
-        y: wall.height / 2 - wall.camY * wall.camScale
+        property int side: 0   // -1 = 分界左 / +1 = 分界右 (= 注册入哪个池)
+        // 内容坐标常驻 (画布中心 + 视口中心); 相机位移全在 flick.contentX/Y —
+        // 视图位置 = half.x − contentX = 视口中心 − camX×camScale
+        x: wall.canvasCx + wall.width / 2
+        y: wall.canvasCy + wall.height / 2
         scale: wall.camScale
         transformOrigin: Item.TopLeft
 
@@ -155,20 +151,32 @@ Item {
                 titlePx: Math.max(22, Math.min(36, 0.02 * wall.width))
                 panning: wall.panning   // 拖动/滑行中抑制 hover 抬升 (每穿过一张卡就起一段动画 = 拖动卡顿源)
                 dimmed: wall.focusedTile !== null && wall.focusedTile !== this   // 选中期间其余卡内容暗色
-                visible: wall.tileInPlay(this, half.side)   // 屏外不渲染
+                visible: wall.tileInPlay(this)   // 屏外不渲染
                 Component.onCompleted: wall.registerTile(this, half.side)
                 onActivated: wall.focusTile(this)
             }
         }
     }
 
-    // ---- 相机 ----
+    // ---- 相机 (2026-10-14 用户: 滑动策略换 QML 自带 Flickable) ----
     // 档位: 视口宽 <640 → 0.52 / <1100 → 0.64 / 否则 0.76 (客观参数)
     readonly property real tier: width < 640 ? 0.52 : (width < 1100 ? 0.64 : 0.76)
     property real camScale: tier
     readonly property real camHomeY: DemoData.blockRows * DemoData.pitch / 2   // 544 = 块中线
-    property real camX: DemoData.seamAnchorX   // 初始 = 缝锚点 (块列 0 左缘缝中线), 缝落视口正中
-    property real camY: camHomeY
+    // 相机 = 视口中心世界坐标; 唯一运动源 = flick.contentX/contentY (内置拖动+滑行),
+    // camX/camY 由此推导 (content 坐标 1:1 屏幕像素 → 拖动天然 1:1, 缩放不在这层)
+    readonly property real camX: (flick.contentX - wall.canvasCx) / wall.camScale
+    readonly property real camY: (flick.contentY - wall.canvasCy) / wall.camScale
+    // 巨画布 = 事实无限 (对标"无限, 没有边界"): 离初始位 ±2097152 世界px 的视野,
+    // 全速甩到边也要十几分钟, 实际够不到; float 精度在 2^21 处仍 0.25px 级
+    readonly property real canvasSize: 4194304
+    readonly property real canvasCx: wall.canvasSize / 2
+    readonly property real canvasCy: wall.canvasSize / 2
+    function contentXOf(cx) { return wall.canvasCx + cx * wall.camScale }
+    function contentYOf(cy) { return wall.canvasCy + cy * wall.camScale }
+    // 档位缩放期间的相机锚: camScale 参与 camX↔contentX 换算, 变化时用锚保持世界点不动 (缩放绕视口中心)
+    property real zoomAnchorCamX: 0
+    property real zoomAnchorCamY: 0
     property int activeTab: 0
     property var tiles: []   // 全部磁贴实例 (池成员; 换页签波次用)
     property var tileByKey: ({})   // "块x,块y,槽位" → 磁贴 (让位时按块找齐 12 张; 窗口外的块无键)
@@ -186,10 +194,9 @@ Item {
     // 视口裁剪: 离屏 (留 100px 屏幕余量) 的磁贴直接不渲染 — 全池 288 张全提交=每帧万级节点, 裁掉后各动画才跑得动
     // 裁剪读"粗档相机" cullX/cullY (移动每满 128px 才更新): 直读 camX 时 288 张卡各自的 visible 绑定
     // 会按每个指针事件全量重算 (高回报率鼠标下就是拖动卡顿大头); 粗档化后拖动/滚轮/滑行/补间全走
-    // 同一"每 128px 一档"。余量取 100px 的依据: 窗口按块粒度宽供 (余量 340 世界px), 即使算上缝让位
-    // (≤63px) 折算, 各档位下"判为在屏"的块都必然还在窗口里 (只多不少); seamShift 现为常量
-    // (缝不再随位置收窄, 2026-10-12) — 可见性绑定只跟 cullX/cullY 走
-    property real cullX: DemoData.seamAnchorX
+    // 同一"每 128px 一档"。余量取 100px 的依据: 窗口按块粒度宽供 (余量 340 世界px) —
+    // 各档位下"判为在屏"的块都必然还在窗口里 (只多不少) — 可见性绑定只跟 cullX/cullY 走
+    property real cullX: DemoData.blockAnchorX
     property real cullY: wall.camHomeY
     onCamXChanged: {
         // 粗档相机每走一档: 可见性重算 + 滑动窗口跟上 (窗口余量 340 ≫ 档距 128, 进场的块必先在屏外就位)
@@ -204,9 +211,9 @@ Item {
             wall.ensureWindow()
         }
     }
-    function tileInPlay(t, side) {
+    function tileInPlay(t) {
         var s = wall.camScale
-        var l = wall.width / 2 - wall.cullX * s + side * wall.seamShift + t.x * s
+        var l = wall.width / 2 - wall.cullX * s + t.x * s
         var tp = wall.height / 2 - wall.cullY * s + t.y * s
         return l + t.width * s > -100 && l < wall.width + 100
                 && tp + t.height * s > -100 && tp < wall.height + 100
@@ -242,14 +249,14 @@ Item {
         var r1 = Math.floor((wall.cullY + hh) / wall.wallBlockH)
         var wr = Math.min(r0, r1 - (wall.winRows - 1))
         wall.slideSide(-1, c0, Math.min(c1, -1), wr)   // 左侧: 块列 ≤ -1
-        wall.slideSide(1, Math.max(c0, 0), c1, wr)     // 右侧: 块列 ≥ 0 (两侧以缝锚点切分, 让位偏移不同)
+        wall.slideSide(1, Math.max(c0, 0), c1, wr)     // 右侧: 块列 ≥ 0 (两侧以块列 0 分界)
     }
     function slideSide(side, a, b, wr) {
         if (a > b)
             return   // 该侧不在取景内: 窗口原地停驻 (其磁贴全在屏外, 不动最省)
         var wc = Math.min(a, b - (wall.winCols - 1))   // 3 列窗口必然覆盖 [a..b] (区间宽 ≤ 3, 见覆盖裕度注释)
         if (side > 0)
-            wc = Math.max(0, wc)   // 右侧窗口不得越过缝锚点
+            wc = Math.max(0, wc)   // 右侧窗口不得越过分界 (块列 0)
         var ready = side < 0 ? wall.winReadyL : wall.winReadyR
         var curCol = side < 0 ? wall.winLCol : wall.winRCol
         var curRow = side < 0 ? wall.winLRow : wall.winRRow
@@ -357,7 +364,12 @@ Item {
     // 视口宽高/档位变了 → 需要覆盖的范围也变; 推迟到通知潮之后 (同步写吃"绑定环"误报 — 实测)
     onWidthChanged: Qt.callLater(wall.ensureWindow)
     onHeightChanged: Qt.callLater(wall.ensureWindow)
-    onCamScaleChanged: wall.ensureWindow()
+    // 档位缩放: contentX/Y 随 camScale 重标定, 世界点 (zoomAnchor) 停在视口中心 (等价旧"相机不动, 墙缩放")
+    onCamScaleChanged: {
+        flick.contentX = wall.canvasCx + wall.zoomAnchorCamX * wall.camScale
+        flick.contentY = wall.canvasCy + wall.zoomAnchorCamY * wall.camScale
+        wall.ensureWindow()
+    }
 
     // 启动期档位落定不做补间 (2026-10-14): Window 的 contentItem 尺寸到窗口显示时才就位 — 构造期
     // wall.width=0 (tier 0.52), 就位后真实宽直接跳档 (如 1440→0.76)。旧行为为这一跳白跑 420ms
@@ -368,6 +380,8 @@ Item {
     onTierChanged: {
         if (wall.width <= 0)
             return
+        wall.zoomAnchorCamX = wall.camX   // 先锚住世界点 (camScale 一写, camX 推导值就换了)
+        wall.zoomAnchorCamY = wall.camY
         if (!wall.tierBooted) {
             wall.tierBooted = true
             wall.camScale = tier
@@ -381,15 +395,6 @@ Item {
         target: wall; property: "camScale"
         duration: 420; easing.type: Easing.OutQuint
     }
-
-    // ---- 缝的几何 (骑世界, 常宽: 开口不随相机位置变化 — 整墙与相机严格 1:1, 拖动无任何非线性) ----
-    readonly property real seamLayoutW: DemoData.seamHomeWidth                  // 内容排版宽 (常宽)
-    readonly property real seamCenterX: wall.width / 2 + (DemoData.seamAnchorX - wall.camX) * wall.camScale
-    readonly property real seamDist: Math.min(seamCenterX, wall.width - seamCenterX)   // 缝中线→最近屏边
-    readonly property real seamW: seamLayoutW
-    readonly property real seamShift: seamLayoutW / 2 + (DemoData.gap / 2) * wall.camScale
-    // contentOpacity = (开口 / 排版宽 − .35) / .65 (对标公式; 开口恒 120 ⇒ 恒 1)
-    readonly property real seamContentOpacity: Math.max(0, Math.min(1, (seamW / seamLayoutW - 0.35) / 0.65))
 
     // ---- 背景第 1 层: 底色 ----
     Rectangle { anchors.fill: parent; color: WallTheme.bg }
@@ -412,269 +417,74 @@ Item {
         edgeAlpha: 0
     }
 
-    // ---- 空白点击 = 收起聚焦 (声明在墙面之前: 磁贴命中优先, 点缝/胶囊同效) ----
-    MouseArea {
+    // ---- 世界画布 = QML 内置 Flickable (2026-10-14 用户: "用 qml 自带的滑动策略") ----
+    // 拖动/滑行/惯性/速度全交 Qt 内置 (取代自研 DragHandler 锚点相机 + 4ms 合帧 + 5ms 收尾 + 滑行 Timer);
+    // content 坐标 1:1 屏幕像素 (缩放挂在两半上) → 拖动天然 1:1; camX/camY 由 contentX/Y 推导,
+    // 裁剪/滑窗回收/聚焦外围照旧。背景层声明在前=垫底, 噪点/暗角在后=浮面
+    Flickable {
+        id: flick
         anchors.fill: parent
-        onClicked: wall.unfocus()
-    }
+        contentWidth: wall.canvasSize
+        contentHeight: wall.canvasSize
+        // 初始相机 = 块分界/块中线 (声明绑定; 首次交互即被内置接管作废)
+        contentX: wall.canvasCx + DemoData.blockAnchorX * wall.camScale
+        contentY: wall.canvasCy + wall.camHomeY * wall.camScale
+        maximumFlickVelocity: 2600   // 沿用旧滑行速度上限 (常量可调; 减速曲线用内置默认)
 
-    // ---- 世界两半 (磁贴池; 缝让位就是这两层各自偏移 ±seamShift) ----
-    WallHalf { shift: -wall.seamShift; side: -1 }
-    WallHalf { shift: wall.seamShift; side: 1 }
+        // 拖动真开始时顺带收掉聚焦相机补间 (旧语义: 拖动激活即 camAnim.stop — 两条 contentX 写不得打架)
+        onMovementStarted: camAnim.stop()
 
-    // ---- 背景第 3 层: 噪点 (自绘 160px 灰度图平铺, 近似 soft-light 颗粒) ----
-    Image {
-        anchors.fill: parent
-        source: "noise.png"
-        fillMode: Image.Tile
-        smooth: false
-        opacity: 0.055
-    }
+        // 滚轮: 挂在 contentItem 上 (比 Flickable 内置滚轮更深, 先手消费 → 沿用旧 90px/格 手感)
+        WheelHandler {
+            onWheel: function(event) {
+                camAnim.stop()
+                wall.stopGlide()
+                wall.panBy(event.angleDelta.x / 120 * 90, event.angleDelta.y / 120 * 90)
+            }
+        }
 
-    // ---- 背景第 4 层: 暗角 ----
-    SoftRadial {
-        anchors.fill: parent
-        corePoint: Qt.point(wall.width / 2, wall.height / 2)
-        coreRadius: Math.sqrt(Math.pow(wall.width / 2, 2) + Math.pow(wall.height / 2, 2))
-        coreColor: "black"
-        coreAlpha: 0
-        edgeAlpha: 0.52
-        innerStop: 0.78
-    }
-
-    // ---- 墙面内圈发丝线 ----
-    Rectangle {
-        anchors.fill: parent
-        color: "transparent"
-        border.color: Qt.rgba(1, 1, 1, 0.07)
-        border.width: 1
-    }
-
-    // ---- 缝 (块边界上的 120px 常驻窄缝, 常宽; 位置随世界锚点 1:1, 墙两半已让位, 纸条落在开口里, 滑出屏被窗口裁掉) ----
-    Item {
-        id: seam
-        visible: wall.seamW >= 1
-        x: wall.seamCenterX - wall.seamW / 2
-        width: wall.seamW
-        height: wall.height
-        clip: true
-        z: 5
-
-        // 纸面 (主题纸色, 实色; 对标: 实色档的缝 = 纸色纸条)
-        Rectangle {
+        // 画布底铺满: 空白点击 = 收起聚焦 (声明在磁贴之前 → 磁贴命中优先; 拖动过阈值被 Flickable 收走,
+        // 与旧"根 MouseArea 垫底"同构; 点胶囊同效 — 它在上层且不接左键)
+        MouseArea {
             anchors.fill: parent
-            color: WallTheme.seamPaper
-            border.color: WallTheme.seamRing
+            onClicked: wall.unfocus()
+        }
+
+        // ---- 世界两半 (磁贴池; 只按分界分职) ----
+        WallHalf { side: -1 }
+        WallHalf { side: 1 }
+
+        // ---- 浮面三件 (盖过墙面; 顺序 = 噪点/暗角/发丝) ----
+        // 噪点 (自绘 160px 灰度图平铺; x/y 绑 contentX/Y = 钉视口, 屏幕定位与旧根级一致)
+        Image {
+            x: flick.contentX; y: flick.contentY
+            width: wall.width; height: wall.height
+            source: "noise.png"
+            fillMode: Image.Tile
+            smooth: false
+            opacity: 0.055
+        }
+
+        // ---- 暗角 (同上: 钉视口) ----
+        SoftRadial {
+            x: flick.contentX; y: flick.contentY
+            width: wall.width; height: wall.height
+            corePoint: Qt.point(wall.width / 2, wall.height / 2)
+            coreRadius: Math.sqrt(Math.pow(wall.width / 2, 2) + Math.pow(wall.height / 2, 2))
+            coreColor: "black"
+            coreAlpha: 0
+            edgeAlpha: 0.52
+            innerStop: 0.78
+        }
+
+        // ---- 墙面内圈发丝线 (同上: 钉视口) ----
+        Rectangle {
+            x: flick.contentX; y: flick.contentY
+            width: wall.width; height: wall.height
+            color: "transparent"
+            border.color: Qt.rgba(1, 1, 1, 0.07)
             border.width: 1
         }
-        Rectangle { width: 1; height: parent.height; color: WallTheme.hairline }
-        Rectangle {
-            anchors.right: parent.right
-            width: 1; height: parent.height
-            color: WallTheme.hairline
-        }
-
-        // 内容 (固定排版宽居中; 开口收窄时按 0.35 阈值淡出, 淡到不可见时同时禁用交互)
-        Item {
-            id: seamBody
-            width: DemoData.seamHomeWidth
-            height: seam.height
-            anchors.horizontalCenter: parent.horizontalCenter
-            opacity: wall.seamContentOpacity
-            enabled: wall.seamContentOpacity > 0.85
-
-            // 顶部: 标记 (三柱均衡器)
-            Item {
-                id: mark
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.top: parent.top
-                anchors.topMargin: 16
-                width: 20; height: 20
-                Rectangle { x: 3; y: 6; width: 3; height: 8; radius: 1.5; color: WallTheme.text }
-                Rectangle { x: 8.5; y: 2; width: 3; height: 16; radius: 1.5; color: WallTheme.text }
-                Rectangle { x: 14; y: 5; width: 3; height: 10; radius: 1.5; color: WallTheme.text }
-            }
-
-            // 竖排标题
-            Text {
-                id: seamTitle
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.top: mark.bottom
-                anchors.topMargin: 14
-                text: "曲\n库"
-                color: Qt.rgba(1, 1, 1, 0.9)
-                horizontalAlignment: Text.AlignHCenter
-                font.family: WallTheme.fontFamily
-                font.pixelSize: 15
-                font.weight: 800
-                lineHeight: 1.4
-            }
-
-            // 竖排页签
-            Column {
-                id: tabCol
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.top: seamTitle.bottom
-                anchors.topMargin: 18
-                spacing: 8
-                Repeater {
-                    model: DemoData.tabs
-                    delegate: Rectangle {
-                        id: tabBtn
-                        required property var modelData
-                        required property int index
-                        width: 24
-                        height: 54
-                        radius: 10
-                        color: tabBtn.index === wall.activeTab
-                               ? Qt.rgba(1, 1, 1, 0.14)
-                               : (tabHover.hovered ? Qt.rgba(1, 1, 1, 0.06) : "transparent")
-                        // 选中态丝滑换挡 (旧高亮渐隐 / 新高亮渐显; 时长取参考的非翻转过渡 180ms)
-                        Behavior on color {
-                            ColorAnimation { duration: 180; easing.type: Easing.InOutQuad }
-                        }
-                        Text {
-                            anchors.centerIn: parent
-                            text: tabBtn.modelData.label.split("").join("\n")
-                            color: tabBtn.index === wall.activeTab
-                                   ? WallTheme.text
-                                   : Qt.rgba(244 / 255, 244 / 255, 245 / 255, 0.45)
-                            Behavior on color {
-                                ColorAnimation { duration: 180; easing.type: Easing.InOutQuad }
-                            }
-                            horizontalAlignment: Text.AlignHCenter
-                            font.family: WallTheme.fontFamily
-                            font.pixelSize: 14
-                            font.weight: 700
-                            lineHeight: 1.15
-                        }
-                        HoverHandler { id: tabHover }
-                        TapHandler { onTapped: wall.switchTab(tabBtn.index) }
-                    }
-                }
-            }
-
-            // 底部: 坞 (搜索/队列/设置/更多) + 账户 + 帮助
-            Column {
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.bottom: parent.bottom
-                anchors.bottomMargin: 84
-                spacing: 14
-                Grid {
-                    columns: 2
-                    spacing: 4
-                    Repeater {
-                        model: ["search", "queue", "settings", "more"]
-                        delegate: Rectangle {
-                            id: dockBtn
-                            required property string modelData
-                            width: 40; height: 40; radius: 12
-                            color: dockHover.hovered ? Qt.rgba(1, 1, 1, 0.08) : "transparent"
-                            HoverHandler { id: dockHover }
-                            DockIcon {
-                                anchors.centerIn: parent
-                                kind: dockBtn.modelData
-                            }
-                        }
-                    }
-                }
-                Rectangle {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    width: 30; height: 30; radius: 15
-                    color: Qt.rgba(1, 1, 1, 0.10)
-                    border.color: Qt.rgba(1, 1, 1, 0.15); border.width: 1
-                    Text {
-                        anchors.centerIn: parent
-                        text: "我"
-                        color: Qt.rgba(1, 1, 1, 0.85)
-                        font.family: WallTheme.fontFamily
-                        font.pixelSize: 12
-                    }
-                }
-                Rectangle {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    width: 28; height: 28; radius: 14
-                    color: "transparent"
-                    border.color: Qt.rgba(1, 1, 1, 0.15); border.width: 1
-                    Text {
-                        anchors.centerIn: parent
-                        text: "?"
-                        color: Qt.rgba(1, 1, 1, 0.55)
-                        font.family: WallTheme.fontFamily
-                        font.pixelSize: 13
-                    }
-                }
-            }
-        }
-    }
-
-    // ---- 边缘标签 (缝滑近/滑出屏边时常驻屏边; 点它 = 相机把缝拉回该侧边内 154px 处) ----
-    // 标签出现/滑入/淡入跟 seamTabT 这一根连续量走 (缝中线离屏边 24px→14px ⇒ 0→1; 与旧收窄式同一时序, 只是不再动墙)
-    readonly property real seamTabT: Math.max(0, Math.min(1, (24 - wall.seamDist) / 10))
-    readonly property string seamSide: wall.seamCenterX < wall.width / 2 ? "left" : "right"
-    // 重新展开的落点: 缝中线停在该侧边内 154px (半开口 60 + 边距 14 + 富余 80)
-    readonly property real seamReopenPad: DemoData.seamHomeWidth / 2 + 14 + 80
-    function reopenSeam() {
-        wall.stopGlide()
-        var side = wall.seamSide
-        var target = side === "left" ? wall.seamReopenPad : wall.width - wall.seamReopenPad
-        var nx = wall.camX - (target - wall.seamCenterX) / wall.camScale
-        camXTo.to = nx
-        camYTo.to = wall.camY
-        camAnim.restart()
-    }
-
-    // ---- 书架靠边磁吸 (2026-10-14 用户"这个书架做靠边磁吸"+"参考folia") ----
-    // Folia 语义 (components/wall/seamPlan.ts getSeamGeometry + bravaisSeamLevel): 开口到屏边装不下
-    // 就收起 (collapsed) — 缝不挤在边上露半截, 只留边缘标签当恢复入口 (手动收起 = hidden 层级)。
-    // 我们恒宽版的等价状态 = 整条书架吸出屏外 (中线停到屏外半宽 60px, 标签接管:
-    // 标签点开 = reopenSeam 拉回 154px, 同 Folia 悬浮按钮恢复)。
-    // 触发 = 中线离边 < 半宽 (整条已不在屏, 含刚被割边) — 要么整条在屏、要么整条出屏, 没有半截常态;
-    // "往回拉"的滑行动量除外 (vx 指向屏内 ⇒ 交给自由滑行, 会自己滑回整条在屏), 轻放与滑行闯带同一判定。
-    // 拖动本体不动 (1:1 定案); 已尽出屏 (中线 ≤ −60) 不再动 (深出后拉近只会多一段不可见位移)
-    readonly property real seamOffPad: DemoData.seamHomeWidth / 2   // 出屏位: 中线停到屏外半宽 60px
-    function seamMagnet(vx) {
-        var c = wall.seamCenterX
-        var left = c < wall.width / 2
-        if (left ? c >= wall.seamOffPad : c <= wall.width - wall.seamOffPad)
-            return false                         // 整条在屏 (含贴边): 装得下, 不动
-        var dock = left ? -wall.seamOffPad : wall.width + wall.seamOffPad
-        if (left ? c <= dock : c >= dock)
-            return false                         // 已尽出屏: 不再动
-        if ((left ? vx : -vx) > 0)
-            return false                         // 速度指向屏内 = 往回拉: 不吸, 让它滑进去
-        wall.stopGlide()   // 滑行途中闯带: 先停自由滑行再吸 (轻放路径本已停, 无副作用)
-        camXTo.to = wall.camX - (dock - c) / wall.camScale
-        camYTo.to = wall.camY
-        camAnim.restart()
-        return true
-    }
-    Rectangle {
-        id: seamTab
-        z: 6
-        visible: wall.seamTabT > 0.02
-        opacity: wall.seamTabT
-        width: 32; height: 64   // 固定尺寸 (13px × 2 行 + padding, 同参照)
-        x: wall.seamSide === "left" ? -32 * (1 - wall.seamTabT)
-                                    : wall.width - 32 * wall.seamTabT
-        y: (wall.height - 64) / 2
-        color: WallTheme.seamPaper
-        border.color: WallTheme.seamRing
-        border.width: 1
-        radius: 6
-        Text {
-            id: tabText
-            anchors.centerIn: parent
-            text: "曲\n库"
-            color: WallTheme.text
-            horizontalAlignment: Text.AlignHCenter
-            font.family: WallTheme.fontFamily
-            font.pixelSize: 13
-            font.weight: 800
-            font.letterSpacing: 1.56
-            lineHeight: 1.25
-        }
-        TapHandler { onTapped: wall.reopenSeam() }
     }
 
     // ---- 迷你播放胶囊 (底部中央; demo 静态示意) ----
@@ -756,11 +566,8 @@ Item {
     }
 
     // 聚焦相机 = 把展开卡 (世界矩形) 拖到窗口正中 (用户定语义; 无限墙无界, 不必限位)
-    // 让位量现为常量 (缝不再随位置收窄): 半边偏移一步补偿即可
     function focusCamX(r) {
-        var side = (r.x + r.w / 2) < DemoData.seamAnchorX ? -1 : 1
-        var cx = r.x + r.w / 2
-        return cx + side * wall.seamShift / wall.camScale
+        return r.x + r.w / 2
     }
     function focusCamY(r) {
         return r.y + r.h / 2
@@ -783,8 +590,8 @@ Item {
         var ny = wall.focusCamY(rects[t.slotIdx])
         wall.stopGlide()
         if (Math.abs(nx - wall.camX) > 0.5 || Math.abs(ny - wall.camY) > 0.5) {
-            camXTo.to = nx
-            camYTo.to = ny
+            camXTo.to = wall.contentXOf(nx)
+            camYTo.to = wall.contentYOf(ny)
             camAnim.restart()
         }
     }
@@ -801,172 +608,43 @@ Item {
 
     Shortcut { sequence: "Escape"; onActivated: wall.unfocus() }
 
-    // 相机补间 (聚焦揭示; 180ms OutQuint — 提速二轮: 相机先到位, 让位 220ms 收尾)
+    // 相机补间 (聚焦揭示; 180ms OutQuint — 提速二轮: 相机先到位, 让位 220ms 收尾); 目标 = flick.content 坐标
     ParallelAnimation {
         id: camAnim
-        NumberAnimation { id: camXTo; target: wall; property: "camX"; duration: 180; easing.type: Easing.OutQuint }
-        NumberAnimation { id: camYTo; target: wall; property: "camY"; duration: 180; easing.type: Easing.OutQuint }
+        NumberAnimation { id: camXTo; target: flick; property: "contentX"; duration: 180; easing.type: Easing.OutQuint }
+        NumberAnimation { id: camYTo; target: flick; property: "contentY"; duration: 180; easing.type: Easing.OutQuint }
     }
 
-    // ---- 相机交互: 滚轮 + 指针拖动 (无界: 无限墙不设任何限位, 缝滑出屏后由边缘标签拉回) ----
-    // 屏幕像素增量 → 相机 (除缩放); 滚轮/滑行用 — 指针拖动走锚点式 applyDragCam (参照 Folia)
+    // ---- 相机交互: 滚轮 + 指针拖动 (无界: 无限墙不设任何限位) ----
+    // 拖动/滑行本体 = Flickable 内置 (2026-10-14 换装, 用户"用 qml 自带的滑动策略")。
+    // 旧自研链 (锚点相机 applyDragCam / 4ms 合帧 / 5ms 收尾 Timer / τ500 指数滑行 Timer) 已整体
+    // 移除; 滚轮挂 flick 内 (机制实证 tst_flickmech: 压住内置滚轮, 内容走且只走我们的 90px/格)
+    // 屏幕像素增量 → content 1:1 (content 即屏幕像素, 缩放挂在两半上 → 无需除 camScale)
     function panBy(dx, dy) {
-        wall.camX -= dx / wall.camScale
-        wall.camY -= dy / wall.camScale
+        flick.contentX -= dx
+        flick.contentY -= dy
     }
 
     // 墙是否在拖动/滑行 (磁贴据此抑制 hover 抬升 — 参照原型"拖动中不触发", 防动画风暴)
-    readonly property bool panning: pan.active || glideTimer.running
+    readonly property bool panning: flick.moving
 
-    WheelHandler {
-        onWheel: function(event) {
-            camAnim.stop()
-            wall.stopGlide()
-            wall.panBy(event.angleDelta.x / 120 * 90, event.angleDelta.y / 120 * 90)
-        }
-    }
-
-    // 指针拖动 (完全参照 Folia): 按下快照相机锚点; 每事件以 "锚点 + 屏幕总位移" 绝对定位 —
-    // 不做逐事件累加 (丢/并事件自纠正, 零漂移; 参照 applyCamera(anchor + n));
-    // 应用合帧: 4ms 桶内多事件只应用最后一段 (Chromium 给参照的 pointermove 自动合帧, Qt 不合并, 等价补齐);
-    // 拖平铺页面 XY 跟手; 拖缝条(书架) 只走 X (按下点落在缝的 x 带内即判档)
-    DragHandler {
-        id: pan
-        target: null
-        dragThreshold: 7
-        property bool xOnly: false
-        property real lastTx: 0
-        property real lastTy: 0
-        property real velX: 0
-        property real velY: 0
-        property double moveAt: 0
-        property real anchorCamX: 0   // 按下时的相机位置 (参照 down.camera)
-        property real anchorCamY: 0
-
-        // 参照: pointerdown 即 stopPan — 按下就停滑行, 不等过阈值 (实测 GrabPassive=按下时刻)
-        // 枚举在 QPointingDevice 上 (QML 名 PointerDevice; PointerHandler/DragHandler 上均取不到)
-        onGrabChanged: function(transition, point) {
-            if (transition === PointerDevice.GrabPassive)
+    // 按下点观察 (TapHandler: 被动抓且设计上不与 Flickable 抢拖动 — 实测判决: DragHandler 就算
+    // 阈值天文数字/永不激活, 其被动抓也会挡住内置抢抓, 拖动直接死; TapHandler 无此病)。
+    // 按下即停滑行 (旧语义, 不赌内置是否自行停)
+    TapHandler {
+        id: pressProbe
+        onPressedChanged: {
+            if (pressProbe.pressed)
                 wall.stopGlide()
         }
-
-        onActiveChanged: {
-            if (pan.active) {
-                camAnim.stop()
-                wall.stopGlide()
-                dragFlush.stop()
-                pan.xOnly = wall.seamW >= 1
-                        && Math.abs(pan.centroid.pressPosition.x - wall.seamCenterX) <= wall.seamW / 2
-                pan.anchorCamX = wall.camX
-                pan.anchorCamY = wall.camY
-                pan.lastTx = 0
-                pan.lastTy = 0
-                pan.velX = 0
-                pan.velY = 0
-                // 速度采样起点 = 激活时刻. 实测激活那一发的 translation 值不变 (仍 0) 不发
-                // translationChanged, 激活后首个事件的 T 才跳到"距按下总位移" — 若像旧版用 0 当
-                // "无样本"哨兵, 只拖一段的快速一甩就永远采不到速度, 松手不滑行
-                pan.moveAt = Date.now()
-            } else {
-                // 收尾: 末段位移立即到位 (滑行起点 = 手最后停留的位置); 必须用 lastTx/lastTy —
-                // 实测 DragHandler.translation 在松手 (active→false) 时已归零, 直接读它会把相机弹回锚点
-                wall.applyDragCam(pan.lastTx, pan.lastTy)
-                wall.glideAfter(pan.velX, pan.velY, pan.xOnly, pan.moveAt)
-            }
-        }
-        onTranslationChanged: {
-            if (!pan.active)
-                return
-            var now = Date.now()
-            // dt 下限 1ms (参照原型同款 Math.max(1, ...)): 高回报率鼠标 (1000Hz+) 下同毫秒多事件是常态 —
-            // 旧 "dt>0 才记速, 否则清零" 会让这些事件把速度随机清零, 松手滑行忽滑忽停 (连续拖动速度突变)
-            var dt = Math.max(1, now - pan.moveAt)
-            // 松手滑行以指针最后一段的瞬时速度为起点, 之后只递减 (2026-10-12 用户定案:
-            // 不做平滑/不加爬升 — 滑行起步速度必须等于手的速度, 否则滑行与手脱节)
-            pan.velX = (pan.translation.x - pan.lastTx) / dt * 1000
-            pan.velY = pan.xOnly ? 0 : (pan.translation.y - pan.lastTy) / dt * 1000
-            pan.moveAt = now
-            pan.lastTx = pan.translation.x
-            pan.lastTy = pan.translation.y
-            if (now - wall.dragAppliedAt >= 4)
-                wall.applyDragCam(pan.lastTx, pan.lastTy)
-            else
-                dragFlush.restart()   // 桶内余下事件合并到收尾
-        }
     }
 
-    // 锚点应用 (参照 applyCamera): 相机 = 按下锚点 − 屏幕位移/缩放; 绝对定位, 无界不限位
-    // 位移一律由调用点传入 (lastTx/lastTy 快照), 不读 pan.translation — 实测 Qt 语义: 激活瞬间
-    // translation 报 0, 激活后首个事件才跳到"距按下"总位移, 松手 (active→false) 时又已归零
-    // 4ms ≈ 本机 240Hz 帧距 (60Hz 机器上仍细于帧距, 只少不会多)
-    property double dragAppliedAt: 0
-    function applyDragCam(tx, ty) {
-        dragFlush.stop()
-        wall.dragAppliedAt = Date.now()
-        wall.camX = pan.anchorCamX - tx / wall.camScale
-        wall.camY = pan.anchorCamY - (pan.xOnly ? 0 : ty) / wall.camScale
-    }
-    // 单发收尾: 事件流停在桶中间 (拖动中暂停) 时把最后一段位移补上 — 墙不会停在旧位置等下一个事件
-    Timer {
-        id: dragFlush
-        interval: 5
-        onTriggered: wall.applyDragCam(pan.lastTx, pan.lastTy)
-    }
-
-    // 松手滑行 (参考参数: 速度阈 40px/s, 上限 2600, 距最后一段超过 80ms 算停住不滑)
-    // 2026-10-13 用户"限制滑动速度 — 快速滑动就会导致卡顿": 峰值 4000→2600 — 相机越快, 换块/裁剪事件
-    // 频率越高 (每块列边界一爆), 峰值降 35% 即把这些事件的总频率压下来; 拖动本体仍 1:1 (定案)
-    // 惯性 = 指数衰减 τ=500ms (滑行距离 = 速度 × τ ≈ 0.5s, 初始滑行速度 = 松手速度, 无缝衔接)
-    // 60Hz Timer 手动推进 — 本机 vsync 失效, NumberAnimation 驱动的渲染循环会 ~1000fps 空转
-    // (帧率不均/撕裂); 同原型 (dev/prototypes/bravais) 的帧循环做法
-    property real glideVx: 0
-    property real glideVy: 0
-    property double glideTickAt: 0
-    property bool glideShelf: false   // 在滑的是书架(缝条): 滑行割到屏边会被吸出屏 (seamMagnet)
-    Timer {
-        id: glideTimer
-        interval: 16
-        repeat: true
-        onTriggered: wall.stepGlide()
-    }
+    // 停滑行: 统一入口 (调用点不变; 滑行本体在内置, 取消即可)
     function stopGlide() {
-        glideTimer.stop()
-        wall.glideVx = 0
-        wall.glideVy = 0
-    }
-    function stepGlide() {
-        var now = Date.now()
-        var dt = Math.max(1, Math.min(40, now - wall.glideTickAt))
-        wall.glideTickAt = now
-        var decay = Math.exp(-dt / 500)
-        wall.glideVx *= decay
-        wall.glideVy *= decay
-        wall.panBy(wall.glideVx * dt / 1000, wall.glideVy * dt / 1000)
-        // 自由滑行被割到屏边 (书架) → 吸出屏 (seamMagnet 内已停滑行; 往回拉的滑行不吸)
-        if (wall.glideShelf && wall.seamMagnet(wall.glideVx))
-            return
-        if (Math.sqrt(wall.glideVx * wall.glideVx + wall.glideVy * wall.glideVy) < 20)
-            wall.stopGlide()   // 滑到 20px/s 以下落定
-    }
-    function glideAfter(vx, vy, xOnly, moveAt) {
-        wall.stopGlide()
-        var speed = Math.sqrt(vx * vx + vy * vy)
-        var willGlide = Date.now() - moveAt <= 80 && speed >= 40
-        // 书架(缝条)松手: 先过磁吸判定 — 割边 + 不往回拉 ⇒ 吸出屏 (轻放也吸, 不受滑行阈约束);
-        // 会滑且往回拉 ⇒ 交给自由滑行 (seamMagnet 同判, 滑行途中闯带也吸)
-        if (xOnly && wall.seamMagnet(willGlide ? vx : 0))
-            return
-        if (!willGlide)
-            return
-        var capped = Math.min(speed, 2600)
-        wall.glideVx = vx / speed * capped
-        wall.glideVy = xOnly ? 0 : vy / speed * capped
-        wall.glideShelf = xOnly
-        wall.glideTickAt = Date.now()
-        glideTimer.restart()
+        flick.cancelFlick()
     }
 
-    // ---- 页签切换: 缝条不翻 (选中态由 tabBtn 的 Behavior 丝滑渐变), 墙面发翻牌波次 ----
+    // ---- 页签切换 (墙面发翻牌波次; 入口待接 — 原书架页签已随书架移除, 2026-10-14) ----
     // 只翻在屏的 (屏外直接换面, 不付 288 套动画的钱 — 卡顿大头)
     function switchTab(i) {
         if (i === wall.activeTab)

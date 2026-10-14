@@ -2,7 +2,7 @@ import QtQuick
 pragma Singleton
 
 // M1 墙面主题 token (推倒重写 demo 专用, 独立于旧 theme/Theme; 旧树停用保留待删)
-// 深色默认: 5 token (bg / 文字三级 / accent) + 缝与磁贴的派生色 (数值 = 设计定案, 不引自参照项目素材)
+// 深色默认: 5 token (bg / 文字三级 / accent) + 分隔线与磁贴的派生色 (数值 = 设计定案, 不引自参照项目素材)
 QtObject {
     readonly property string fontFamily: "MiSans VF"
 
@@ -13,11 +13,8 @@ QtObject {
     readonly property color secondary: "#71717a"
     readonly property color accent: "#f4f4f5"
 
-    // ---- 缝 ----
-    // paper = mix(bg 90%, text) ≈ #212122; 实色纸条 (对标: 实色档缝 = 主题纸色; 墙两半为缝让位, 不再半透压磁贴)
-    readonly property color seamPaper: "#212122"
+    // ---- 分隔线/描边 (发丝线; TopBar 底缝等共用) ----
     readonly property color hairline: Qt.rgba(1, 1, 1, 0.12)
-    readonly property color seamRing: Qt.rgba(1, 1, 1, 0.06)
 
     // ---- 磁贴遮罩 ----
     // 底部压暗 (保证左下文案可读); 常态削色层

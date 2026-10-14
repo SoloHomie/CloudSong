@@ -4,7 +4,7 @@ pragma Singleton
 // M1 首页墙 demo 数据与几何 (纯 Mock; 服务实装后按《服务接口定案》替换)
 // 内容名字全部自写 (通用语汇) — 净室: 代码与素材不取自参照项目; 块模板与让位表 = 参照的平铺宽高参数 (用户指定采用)
 QtObject {
-    // ---- 页签 (首页窄缝里的竖排按钮) ----
+    // ---- 页签 (翻牌波次的内容组; UI 入口待接 — 原书架页签已随书架移除) ----
     readonly property var tabs: [
         { key: "playlist", label: "歌单" },
         { key: "album", label: "专辑" },
@@ -23,10 +23,8 @@ QtObject {
     readonly property int blockCols: 12
     readonly property int blockRows: 8
 
-    // ---- 缝 (首页窄缝) 与块边界锚点 ----
-    // 缝只开在块边界上 (无磁贴跨过): 块列 0 左缘的缝中线 = 0*块宽 − gap/2; 首页窄缝 = 开口/排版宽 120
-    readonly property real seamAnchorX: -gap / 2
-    readonly property real seamHomeWidth: 120
+    // ---- 块边界锚点 (左右两块池的分界 = 块列 0 左缘中点; 相机初始/裁剪原点用) ----
+    readonly property real blockAnchorX: -gap / 2
 
     // ---- 块模板 (12 卡整铺 12×8 格; {x,y,w,h} 格单位 — 采用参照的卡片平铺宽高设置) ----
     readonly property var templates: [
