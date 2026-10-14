@@ -7,6 +7,9 @@
 x64/
 CloudSong/
 
+# Qt Quick Compiler 生成文件 (2026-10-14 起 QmlCacheGenerate=true)
+GeneratedFiles/
+
 # 日志
 *.log
 /log

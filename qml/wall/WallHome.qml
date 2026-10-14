@@ -359,7 +359,23 @@ Item {
     onHeightChanged: Qt.callLater(wall.ensureWindow)
     onCamScaleChanged: wall.ensureWindow()
 
-    onTierChanged: { scaleAnim.to = tier; scaleAnim.restart() }
+    // 启动期档位落定不做补间 (2026-10-14): Window 的 contentItem 尺寸到窗口显示时才就位 — 构造期
+    // wall.width=0 (tier 0.52), 就位后真实宽直接跳档 (如 1440→0.76)。旧行为为这一跳白跑 420ms
+    // 相机补间 (本机 vsync 失效下 = 满速渲染风暴 + 每步 ensureWindow 换块), 是启动卡顿来源之一;
+    // 构造期 (还没真实尺寸) 不动作 (camScale 仍绑 tier), 首次带真实尺寸的落定直接赋值不补间,
+    // 之后的窗口缩放照旧补间
+    property bool tierBooted: false
+    onTierChanged: {
+        if (wall.width <= 0)
+            return
+        if (!wall.tierBooted) {
+            wall.tierBooted = true
+            wall.camScale = tier
+        } else {
+            scaleAnim.to = tier
+            scaleAnim.restart()
+        }
+    }
     NumberAnimation {
         id: scaleAnim
         target: wall; property: "camScale"

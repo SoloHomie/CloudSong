@@ -147,7 +147,11 @@ xcopy /E /I /Y "$(ProjectDir)plugins" "$(OutDir)plugins\" &gt; nul</Command>
     <QtMoc Include="src\services\taskbarbarservice.h" />
     <QtMoc Include="src\services\pluginruntime.h" />
     <QtMoc Include="src\services\pluginruntime_worker.h" />
-    <QtRcc Include="qml.qrc" />
+    <QtRcc Include="qml.qrc">
+      <!-- Qt Quick Compiler (2026-10-14 加载卡顿治理): qmlcachegen 构建期预编译 QML→字节码,
+           免去每次启动运行时的 V4 编译 (Debug 起启动引擎慢的首因, 实测 load 段 ~0.4s) -->
+      <QmlCacheGenerate>true</QmlCacheGenerate>
+    </QtRcc>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
